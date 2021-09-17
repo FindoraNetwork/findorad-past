@@ -1,9 +1,6 @@
 #![feature(generic_associated_types)]
 
-mod utxo;
-mod transaction;
-
-use transaction::FindoraTransaction;
+use findorad::utxo::{self, transaction::FindoraTransaction};
 
 use sha3::Sha3_512;
 

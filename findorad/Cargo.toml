@@ -5,10 +5,20 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "findorad"
+path = "src/bins/findorad.rs"
+
 [dependencies]
+zei = { git = "ssh://git@github.com/FindoraNetwork/zei", tag = "v0.1.4c" }
+bs3 = { git = "ssh://git@github.com/FindoraNetwork/bs3.git", default-features = false, features = ["nightly", "cbor"] }
 abcf = { git = "ssh://git@github.com/FindoraNetwork/abcf", branch = "feat-add-utxo" }
 abcf-utxo = { git = "ssh://git@github.com/FindoraNetwork/abcf", branch = "feat-add-utxo" }
 abcf-node = { git = "ssh://git@github.com/FindoraNetwork/abcf", branch = "feat-add-utxo" }
+ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
+rand = "0.7"
+rand_chacha = "0.2.2"
+rand_core = { version = "0.5.1", default-features = false, features = ["alloc"] }
 env_logger = "0.9.0"
 async-trait = "0.1.51"
 sha3 = "0.9.1"
