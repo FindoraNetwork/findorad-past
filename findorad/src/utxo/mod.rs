@@ -2,39 +2,38 @@ pub mod asset;
 pub mod coinbase;
 pub mod transaction;
 
-use abcf_utxo::{UTXOModule, Config};
-use asset::{AssetCode, PublicKey};
+use abcf_utxo::{Config, UTXOModule};
+use asset::AssetCode;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
+use zei::xfr::sig::{XfrKeyPair as KeyPair, XfrPublicKey as PublicKey, XfrSignature as Signature};
+
+pub type TxoSID = u64;
+pub type Amount = u64;
 
 #[derive(Debug, Clone)]
 pub struct UTXOConfig {}
 
-// TODO: use zei type
 impl Config for UTXOConfig {
-    type Address = u64;
+    type Address = PublicKey;
 
-    type Signature = u64;
+    type Signature = Signature;
 
-    type AssetCode = u64;
+    type AssetCode = AssetCode;
 
-    type PublicKey = u64;
+    type PublicKey = PublicKey;
 
-    type OutputId = u64;
+    type OutputId = TxoSID;
 }
 
 pub type UTXO<S> = UTXOModule<UTXOConfig, S>;
 pub type UtxoTx = abcf_utxo::Transaction<UTXOConfig>;
 
-
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
-pub struct TxoSID(pub u64);
-
 #[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
 pub struct TxOutPut {
     id: Option<TxoSID>,
     code: AssetCode,
-    amount: u64,
+    amount: Amount,
     owner: PublicKey,
 }
 

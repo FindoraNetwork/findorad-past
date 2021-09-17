@@ -1,10 +1,8 @@
+use crate::utxo::PublicKey;
 use rand::Rng;
 use rand_chacha::{rand_core, ChaChaRng};
 use rand_core::{CryptoRng, RngCore, SeedableRng};
 use serde::{Deserialize, Serialize};
-pub use zei::xfr::sig::{
-    XfrKeyPair as KeyPair, XfrPublicKey as PublicKey, XfrSignature as Signature,
-};
 use zei::xfr::structs::{AssetType as ZeiAssetType, ASSET_TYPE_LENGTH};
 
 const DEFAULT_DECIMALS: u8 = 6;

@@ -2,14 +2,9 @@
 //! Define Utxo related transactions
 //!
 
-use crate::utxo::{TxoSID, TxOutPut, asset::AssetCode};
-pub use zei::xfr::sig::{
-    XfrKeyPair as KeyPair, XfrPublicKey as PublicKey, XfrSignature as Signature,
-};
+use crate::utxo::{asset::AssetCode, KeyPair, PublicKey, Signature, TxOutPut, TxoSID, UtxoTx};
 use ruc::*;
 use serde::{Deserialize, Serialize};
-
-use crate::utxo::UtxoTx;
 
 #[derive(Serialize, Deserialize)]
 pub struct FindoraTransaction {

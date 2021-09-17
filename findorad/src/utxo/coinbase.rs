@@ -1,7 +1,4 @@
-use crate::utxo::{
-    AssetCode, PublicKey,
-    TxOutPut,
-};
+use crate::utxo::{asset::AssetCode, PublicKey, TxOutPut};
 
 pub fn mint(miner: PublicKey, asset: AssetCode, amount: u64) -> TxOutPut {
     TxOutPut::new(asset, amount, miner)
