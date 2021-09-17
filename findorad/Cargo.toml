@@ -6,3 +6,12 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+abcf = { git = "ssh://git@github.com/FindoraNetwork/abcf", branch = "feat-add-utxo" }
+abcf-utxo = { git = "ssh://git@github.com/FindoraNetwork/abcf", branch = "feat-add-utxo" }
+abcf-node = { git = "ssh://git@github.com/FindoraNetwork/abcf", branch = "feat-add-utxo" }
+env_logger = "0.9.0"
+async-trait = "0.1.51"
+sha3 = "0.9.1"
+digest = "0.9.0"
+serde_json = "1.0.68"
+serde = "1.0.130"
