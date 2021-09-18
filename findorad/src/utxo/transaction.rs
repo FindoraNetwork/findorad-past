@@ -2,20 +2,33 @@
 //! Define Utxo related transactions
 //!
 
-use crate::utxo::{asset::AssetCode, KeyPair, PublicKey, Signature, TxOutPut, TxoSID, UtxoTx};
+use crate::utxo::{AssetCode, KeyPair, OutputId, PublicKey, Signature, TxOutPut, UtxoTx};
 use ruc::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct FindoraTransaction {
-    pub v: u64,
+    pub body: Option<TxBody>,
+    pub issuer: Option<PublicKey>,
+    pub signature: Option<Signature>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum TxBody {
+    DefineAsset(DefineAssetBody),
+    IssueAsset(IssueAssetBody),
+    TransferAsset(TransferAssetBody),
 }
 
 impl abcf::Transaction for FindoraTransaction {}
 
 impl Default for FindoraTransaction {
     fn default() -> Self {
-        Self { v: 0 }
+        Self {
+            body: None,
+            issuer: None,
+            signature: None,
+        }
     }
 }
 
@@ -30,140 +43,96 @@ impl abcf::module::FromBytes for FindoraTransaction {
 
 impl Into<UtxoTx> for FindoraTransaction {
     fn into(self) -> UtxoTx {
-        UtxoTx::default()
+        self.body.map_or_else(
+            || UtxoTx::default(),
+            |body| match body {
+                TxBody::TransferAsset(_b) => {
+                    todo!()
+                }
+                TxBody::IssueAsset(_b) => {
+                    todo!()
+                }
+                TxBody::DefineAsset(_) => Default::default(),
+            },
+        )
     }
 }
-pub enum Transaction {
-    TransferAsset(TransferAsset),
-    DefineAsset(DefineAsset),
-    IssueAsset(IssueAsset),
-    NOOP,
+
+impl FindoraTransaction {
+    pub fn new(body: Option<TxBody>, issuer: &KeyPair) -> Self {
+        let signature = issuer.get_sk_ref().sign(
+            serde_json::to_string(&body).unwrap().as_bytes(),
+            issuer.get_pk_ref(),
+        );
+
+        Self {
+            body,
+            issuer: Some(issuer.get_pk_ref().clone()),
+            signature: Some(signature),
+        }
+    }
+
+    pub fn sign(&mut self, issuer: &KeyPair) {
+        self.signature = Some(issuer.get_sk_ref().sign(
+            serde_json::to_string(&self.body).unwrap().as_bytes(),
+            issuer.get_pk_ref(),
+        ));
+    }
+
+    pub fn verify(&self) -> Result<()> {
+        if self.issuer.is_none() || self.signature.is_none() || self.body.is_none() {
+            Err(eg!("Transaction with invalid fields"))
+        } else {
+            // For issuer and signature, `unwrap` will be safe here
+            self.issuer
+                .unwrap()
+                .verify(
+                    serde_json::to_string(&self.body).unwrap().as_bytes(),
+                    self.signature.as_ref().unwrap(),
+                )
+                .c(d!("Failed to verify signature"))
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransferAssetBody {
-    pub inputs: Vec<TxoSID>,
+    pub inputs: Vec<OutputId>,
     pub outputs: Vec<TxOutPut>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TransferAsset {
-    pub body: TransferAssetBody,
-    pub signature: Signature,
-}
-
-impl TransferAsset {
-    pub fn new(body: TransferAssetBody, owner: &KeyPair) -> Self {
-        let signature = owner.get_sk_ref().sign(
-            serde_json::to_string(&body).unwrap().as_bytes(),
-            owner.get_pk_ref(),
-        );
-
-        Self { body, signature }
-    }
-
-    pub fn add_input(&mut self, id: TxoSID) {
-        self.body.inputs.push(id);
+impl TransferAssetBody {
+    pub fn add_input(&mut self, id: OutputId) {
+        self.inputs.push(id);
     }
 
     pub fn add_output(&mut self, txo: TxOutPut) {
-        self.body.outputs.push(txo);
+        self.outputs.push(txo);
     }
 
     /// if idx is out of bounds, nothing will be removed
     pub fn remove_input(&mut self, idx: usize) {
-        if idx < self.body.inputs.len() {
-            self.body.inputs.remove(idx);
+        if idx < self.inputs.len() {
+            self.inputs.remove(idx);
         }
     }
 
     /// if idx is out of bounds, nothing will be removed
     pub fn remove_output(&mut self, idx: usize) {
-        if idx < self.body.outputs.len() {
-            self.body.outputs.remove(idx);
+        if idx < self.outputs.len() {
+            self.outputs.remove(idx);
         }
-    }
-
-    pub fn sign(&mut self, owner: &KeyPair) {
-        self.signature = owner.get_sk_ref().sign(
-            serde_json::to_string(&self.body).unwrap().as_bytes(),
-            owner.get_pk_ref(),
-        );
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefineAssetBody {
-    pub issuer: PublicKey,
     pub code: Option<AssetCode>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DefineAsset {
-    pub body: DefineAssetBody,
-    pub signature: Signature,
-}
-
-#[allow(dead_code)]
-impl DefineAsset {
-    pub fn new(body: DefineAssetBody, issuer: &KeyPair) -> Self {
-        let signature = issuer.get_sk_ref().sign(
-            serde_json::to_string(&body).unwrap().as_bytes(),
-            issuer.get_pk_ref(),
-        );
-
-        Self { body, signature }
-    }
-
-    fn verify(&self) -> Result<()> {
-        // 1. make sure data integrity
-        // 2. check if transaction body is valid
-        // 3. check signature
-        self.body
-            .issuer
-            .verify(
-                serde_json::to_string(&self.body).unwrap().as_bytes(),
-                &self.signature,
-            )
-            .c(d!("Failed to verify singature"))
-    }
-
-    fn check_context() -> Result<()> {
-        // we can do this now?
-        Ok(())
-    }
-
-    fn apply() -> Result<()> {
-        // yes, let's do it.
-        Ok(())
-    }
+    pub issuer: PublicKey,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct IssueAssetBody {
     pub units: u64,
-    pub isssuer: PublicKey,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct IssueAsset {
-    body: IssueAssetBody,
-    signature: Signature,
-}
-
-impl IssueAsset {
-    pub fn new(body: IssueAssetBody, issuer: &KeyPair) -> Self {
-        let signature = issuer.get_sk_ref().sign(
-            serde_json::to_string(&body).unwrap().as_bytes(),
-            issuer.get_pk_ref(),
-        );
-
-        Self { body, signature }
-    }
-}
-
-impl Default for Transaction {
-    fn default() -> Self {
-        Self::NOOP
-    }
+    pub issuer: PublicKey,
 }

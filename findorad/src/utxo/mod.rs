@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use zei::xfr::sig::{XfrKeyPair as KeyPair, XfrPublicKey as PublicKey, XfrSignature as Signature};
 
-pub type TxoSID = u64;
+pub type OutputId = u64;
 pub type Amount = u64;
 
 #[derive(Debug, Clone)]
@@ -23,7 +23,7 @@ impl Config for UTXOConfig {
 
     type PublicKey = PublicKey;
 
-    type OutputId = TxoSID;
+    type OutputId = OutputId;
 }
 
 pub type UTXO<S> = UTXOModule<UTXOConfig, S>;
@@ -31,7 +31,7 @@ pub type UtxoTx = abcf_utxo::Transaction<UTXOConfig>;
 
 #[derive(Debug, Clone, PartialOrd, Eq, PartialEq, Serialize, Deserialize)]
 pub struct TxOutPut {
-    id: Option<TxoSID>,
+    id: Option<OutputId>,
     code: AssetCode,
     amount: Amount,
     owner: PublicKey,
@@ -47,7 +47,7 @@ impl TxOutPut {
         }
     }
 
-    pub fn update_id(&mut self, id: TxoSID) {
+    pub fn update_id(&mut self, id: OutputId) {
         self.id = Some(id);
     }
 }
