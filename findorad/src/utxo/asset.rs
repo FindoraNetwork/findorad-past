@@ -3,6 +3,7 @@ use rand::Rng;
 use rand_chacha::{rand_core, ChaChaRng};
 use rand_core::{CryptoRng, RngCore, SeedableRng};
 use serde::{Deserialize, Serialize};
+use std::convert::TryFrom;
 use zei::xfr::structs::{AssetType as ZeiAssetType, ASSET_TYPE_LENGTH};
 
 const DEFAULT_DECIMALS: u8 = 6;
@@ -35,6 +36,20 @@ impl AssetCode {
     #[inline(always)]
     pub fn gen_random() -> Self {
         Self::gen_random_with_rng(&mut ChaChaRng::from_entropy())
+    }
+
+    /// Converts a string to an asset type code.
+    /// Truncates the code if the length is greater than 32 bytes.
+    ///
+    /// Used to customize the asset type code.
+    #[inline(always)]
+    pub fn new_from_str(s: &str) -> Self {
+        let mut as_vec = s.to_string().into_bytes();
+        as_vec.resize(ASSET_TYPE_LENGTH, 0u8);
+        let buf = <[u8; ASSET_TYPE_LENGTH]>::try_from(as_vec.as_slice()).unwrap();
+        Self {
+            val: ZeiAssetType(buf),
+        }
     }
 }
 

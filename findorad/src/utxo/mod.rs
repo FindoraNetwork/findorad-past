@@ -3,10 +3,12 @@ pub mod coinbase;
 pub mod transaction;
 
 use abcf_utxo::{Config, UTXOModule};
-use asset::AssetCode;
+pub use asset::AssetCode;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
-use zei::xfr::sig::{XfrKeyPair as KeyPair, XfrPublicKey as PublicKey, XfrSignature as Signature};
+pub use zei::xfr::sig::{
+    XfrKeyPair as KeyPair, XfrPublicKey as PublicKey, XfrSignature as Signature,
+};
 
 pub type OutputId = u64;
 pub type Amount = u64;
