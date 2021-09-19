@@ -6,13 +6,9 @@ pub struct Input {
     pub n: usize,
 }
 
-pub struct Output {
-    pub core: BlindAssetRecord,
-}
-
 pub struct UtxoTransacrion {
     pub inputs: Vec<Input>,
-    pub outputs: Vec<Output>,
+    pub outputs: Vec<BlindAssetRecord>,
     pub proof: AssetTypeAndAmountProof,
 }
 
@@ -27,13 +23,7 @@ impl From<&Transaction> for UtxoTransacrion {
             })
             .collect();
 
-        let outputs = tx
-            .outputs
-            .iter()
-            .map(|o| Output {
-                core: o.core.clone(),
-            })
-            .collect();
+        let outputs = tx.outputs.iter().map(|o| o.core.clone()).collect();
 
         Self {
             inputs,

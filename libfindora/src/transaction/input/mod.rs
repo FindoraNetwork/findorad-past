@@ -4,6 +4,7 @@ use zei::xfr::sig::XfrSignature;
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Operation {
     TransferAsset,
+    IssueAsset,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
