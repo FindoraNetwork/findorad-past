@@ -1,6 +1,7 @@
 #![feature(generic_associated_types)]
 
 mod utxo;
+mod coinbase;
 // mod transaction;
 
 // use transaction::FindoraTransaction;

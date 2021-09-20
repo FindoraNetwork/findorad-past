@@ -1,13 +1,13 @@
+
 use abcf::{Application, Event, bs3::model::{Map, Value}};
 use serde::{Deserialize, Serialize};
-use libfindora::utxo::UtxoTransacrion;
 
 /// Module's Event
 #[derive(Clone, Debug, Deserialize, Serialize, Event)]
 pub struct Event1 {}
 
-#[abcf::module(name = "utxo", version = 1, impl_version = "0.1.1", target_height = 0)]
-pub struct UtxoModule {
+#[abcf::module(name = "coinbase", version = 1, impl_version = "0.1.1", target_height = 0)]
+pub struct CoinbaseModule {
     // /// In memory.
     pub inner: u32,
     #[stateful]
@@ -19,14 +19,22 @@ pub struct UtxoModule {
 }
 
 #[abcf::rpcs]
-impl UtxoModule {}
+impl CoinbaseModule {}
 
 /// Module's block logic.
 #[abcf::application]
-impl Application for UtxoModule {
-    type Transaction = UtxoTransacrion;
+impl Application for CoinbaseModule {
+    type Transaction = MockTransaction;
 }
 
 /// Module's methods.
 #[abcf::methods]
-impl UtxoModule {}
+impl CoinbaseModule {}
+
+pub struct MockTransaction {}
+
+impl Default for MockTransaction {
+    fn default() -> Self {
+        MockTransaction {}
+    }
+}

@@ -1,15 +1,27 @@
 use crate::transaction::Transaction;
 use zei::xfr::structs::{AssetTypeAndAmountProof, BlindAssetRecord};
 
+#[derive(Debug, Default)]
 pub struct Input {
     pub txid: Vec<u8>,
     pub n: usize,
 }
 
+#[derive(Debug)]
 pub struct UtxoTransacrion {
     pub inputs: Vec<Input>,
     pub outputs: Vec<BlindAssetRecord>,
     pub proof: AssetTypeAndAmountProof,
+}
+
+impl Default for UtxoTransacrion {
+    fn default() -> Self {
+        UtxoTransacrion {
+            inputs: Vec::new(),
+            outputs: Vec::new(),
+            proof: AssetTypeAndAmountProof::NoProof,
+        }
+    }
 }
 
 impl From<&Transaction> for UtxoTransacrion {
