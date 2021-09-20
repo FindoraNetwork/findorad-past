@@ -2,21 +2,20 @@
 
 mod utxo;
 mod coinbase;
-// mod transaction;
 
-// use transaction::FindoraTransaction;
+use libfindora::transaction::Transaction;
+use sha3::Sha3_512;
 
-// use sha3::Sha3_512;
-
-// #[abcf::manager(
-//     name = "findorad",
-//     digest = "sha3::Sha3_512",
-//     version = 0,
-//     impl_version = "1.0.0",
-//     transaction = "FindoraTransaction"
-// )]
-// pub struct SimpleManager {
-//     pub utxo: utxo::UTXO,
-// }
+#[abcf::manager(
+    name = "findorad",
+    digest = "sha3::Sha3_512",
+    version = 0,
+    impl_version = "1.0.0",
+    transaction = "Transaction"
+)]
+pub struct SimpleManager {
+    pub coinbase: coinbase::CoinbaseModule,
+    pub utxo: utxo::UtxoModule,
+}
 
 fn main() {}

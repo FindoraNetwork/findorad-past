@@ -2,6 +2,7 @@ use zei::xfr::structs::BlindAssetRecord;
 
 use crate::transaction::{Transaction, OutputOperation};
 
+#[derive(Debug, Default)]
 pub struct CoinbaseTransacrion {
     pub outputs: Vec<BlindAssetRecord>,
 }

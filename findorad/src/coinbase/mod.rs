@@ -1,6 +1,6 @@
-
 use abcf::{Application, Event, bs3::model::{Map, Value}};
 use serde::{Deserialize, Serialize};
+use libfindora::coinbase::CoinbaseTransacrion;
 
 /// Module's Event
 #[derive(Clone, Debug, Deserialize, Serialize, Event)]
@@ -24,17 +24,10 @@ impl CoinbaseModule {}
 /// Module's block logic.
 #[abcf::application]
 impl Application for CoinbaseModule {
-    type Transaction = MockTransaction;
+    type Transaction = CoinbaseTransacrion;
 }
 
 /// Module's methods.
 #[abcf::methods]
 impl CoinbaseModule {}
 
-pub struct MockTransaction {}
-
-impl Default for MockTransaction {
-    fn default() -> Self {
-        MockTransaction {}
-    }
-}
