@@ -1,10 +1,11 @@
 use crate::transaction::Transaction;
+use serde::{Deserialize, Serialize};
 use zei::xfr::structs::{AssetTypeAndAmountProof, BlindAssetRecord};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Input {
     pub txid: Vec<u8>,
-    pub n: usize,
+    pub n: u32,
 }
 
 #[derive(Debug)]

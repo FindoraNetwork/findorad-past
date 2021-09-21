@@ -1,6 +1,6 @@
 use zei::xfr::structs::BlindAssetRecord;
 
-use crate::transaction::{Transaction, OutputOperation};
+use crate::transaction::{OutputOperation, Transaction};
 
 #[derive(Debug, Default)]
 pub struct CoinbaseTransacrion {
@@ -17,8 +17,6 @@ impl From<&Transaction> for CoinbaseTransacrion {
             }
         }
 
-        Self {
-            outputs,
-        }
+        Self { outputs }
     }
 }

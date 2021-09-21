@@ -1,12 +1,20 @@
-use abcf::{Application, Event, bs3::model::{Map, Value}};
-use serde::{Deserialize, Serialize};
+use abcf::{
+    bs3::model::{Map, Value},
+    Application, Event,
+};
 use libfindora::coinbase::CoinbaseTransacrion;
+use serde::{Deserialize, Serialize};
 
 /// Module's Event
 #[derive(Clone, Debug, Deserialize, Serialize, Event)]
 pub struct Event1 {}
 
-#[abcf::module(name = "coinbase", version = 1, impl_version = "0.1.1", target_height = 0)]
+#[abcf::module(
+    name = "coinbase",
+    version = 1,
+    impl_version = "0.1.1",
+    target_height = 0
+)]
 pub struct CoinbaseModule {
     // /// In memory.
     pub inner: u32,
@@ -30,4 +38,3 @@ impl Application for CoinbaseModule {
 /// Module's methods.
 #[abcf::methods]
 impl CoinbaseModule {}
-

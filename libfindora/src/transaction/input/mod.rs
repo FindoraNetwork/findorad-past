@@ -10,7 +10,7 @@ pub enum Operation {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Input {
     pub txid: Vec<u8>,
-    pub n: usize,
+    pub n: u32,
     pub operation: Operation,
     pub signature: XfrSignature,
 }

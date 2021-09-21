@@ -5,4 +5,4 @@ mod input;
 pub use input::{Input, Operation as InputOperation};
 
 mod output;
-pub use output::{Output, Operation as OutputOperation};
+pub use output::{Operation as OutputOperation, Output};

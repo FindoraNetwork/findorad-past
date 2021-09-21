@@ -1,7 +1,7 @@
 #![feature(generic_associated_types)]
 
-mod utxo;
 mod coinbase;
+mod utxo;
 
 use libfindora::transaction::Transaction;
 use sha3::Sha3_512;
