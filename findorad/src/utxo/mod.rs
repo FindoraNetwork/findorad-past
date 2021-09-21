@@ -1,13 +1,18 @@
+use std::convert::TryInto;
+
 use abcf::{
-    bs3::model::{Map, Value},
+    bs3::{
+        model::{Map, Value},
+        MapStore,
+    },
     manager::TContext,
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
-    Application, Event, Stateful, StatefulBatch, Stateless, StatelessBatch,
+    Application, Event, StatefulBatch, StatelessBatch,
 };
-use libfindora::utxo::{OutputId, UtxoTransacrion};
+use libfindora::{utxo::{OutputId, UtxoTransacrion, ValidateTransaction}};
 use rand_chacha::ChaChaRng;
 use serde::{Deserialize, Serialize};
-use zei::{setup::PublicParams, xfr::structs::BlindAssetRecord};
+use zei::{setup::PublicParams, xfr::{structs::BlindAssetRecord}};
 
 /// Module's Event
 #[derive(Clone, Debug, Deserialize, Serialize, Event)]
@@ -42,9 +47,51 @@ impl Application for UtxoModule {
     /// Execute transaction on state.
     async fn deliver_tx(
         &mut self,
-        _context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
-        _req: &RequestDeliverTx<Self::Transaction>,
-    ) -> Result<ResponseDeliverTx> {
+        context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        req: &RequestDeliverTx<Self::Transaction>,
+    ) -> abcf::Result<ResponseDeliverTx> {
+        let tx = &req.tx;
+
+        let mut validate_tx = ValidateTransaction {
+            inputs: Vec::new(),
+            outputs: Vec::new(),
+            proof: tx.proof.clone(),
+        };
+
+        for input in &tx.inputs {
+            let record = context.stateful.output_set.get(input)?;
+            if let Some(r) = record {
+                validate_tx.inputs.push(r.clone());
+            } else {
+                return Err(abcf::Error::ABCIApplicationError(90001, String::from("Output doesn't exists.")));
+            }
+        }
+
+        let result = validate_tx.verify(&mut self.prng, &mut self.params);
+
+        match result {
+            Ok(_) => {
+                // TODO: May panic when access store.
+                for input in &tx.inputs {
+                    context.stateful.output_set.remove(input)?;
+                }
+                for i in 0 .. tx.outputs.len() {
+                    let output = &tx.outputs[i];
+
+                    let output_id = OutputId {
+                        txid: tx.txid.clone(),
+                        n: i.try_into().map_err(|e| {
+                            abcf::Error::ABCIApplicationError(90003, format!("{}", e))
+                        })?,
+                    };
+
+                    context.stateful.output_set.insert(output_id, output.clone())?;
+                }
+            }
+            Err(e) => {
+                abcf::Error::ABCIApplicationError(90002, format!("{}", e));
+            }
+        }
         Ok(Default::default())
     }
 }

@@ -5,6 +5,7 @@ use super::{Input, Output};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Transaction {
+    pub txid: Vec<u8>,
     pub inputs: Vec<Input>,
     pub outputs: Vec<Output>,
     pub proof: AssetTypeAndAmountProof,
@@ -15,6 +16,7 @@ impl abcf::Transaction for Transaction {}
 impl Default for Transaction {
     fn default() -> Self {
         Self {
+            txid: Vec::new(),
             inputs: Vec::new(),
             outputs: Vec::new(),
             proof: AssetTypeAndAmountProof::NoProof,

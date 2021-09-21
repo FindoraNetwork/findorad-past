@@ -10,6 +10,7 @@ pub struct Input {
 
 #[derive(Debug)]
 pub struct UtxoTransacrion {
+    pub txid: Vec<u8>,
     pub inputs: Vec<Input>,
     pub outputs: Vec<BlindAssetRecord>,
     pub proof: AssetTypeAndAmountProof,
@@ -18,6 +19,7 @@ pub struct UtxoTransacrion {
 impl Default for UtxoTransacrion {
     fn default() -> Self {
         UtxoTransacrion {
+            txid: Vec::new(),
             inputs: Vec::new(),
             outputs: Vec::new(),
             proof: AssetTypeAndAmountProof::NoProof,
@@ -39,6 +41,7 @@ impl From<&Transaction> for UtxoTransacrion {
         let outputs = tx.outputs.iter().map(|o| o.core.clone()).collect();
 
         Self {
+            txid: tx.txid.clone(),
             inputs,
             outputs,
             proof: tx.proof.clone(),
