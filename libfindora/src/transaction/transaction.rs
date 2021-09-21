@@ -29,6 +29,7 @@ impl abcf::module::FromBytes for Transaction {
     where
         Self: Sized,
     {
+        // TODO: Deserialize and check signature.
         Ok(serde_json::from_slice(bytes)?)
     }
 }

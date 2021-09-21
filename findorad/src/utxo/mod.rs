@@ -1,22 +1,19 @@
 use std::convert::TryInto;
 
 use abcf::{
-    bs3::{
-        model::{Map, Value},
-        MapStore,
-    },
+    bs3::{model::Map, MapStore},
     manager::TContext,
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
-    Application, Event, StatefulBatch, StatelessBatch,
+    Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
-use libfindora::{utxo::{OutputId, UtxoTransacrion, ValidateTransaction}};
+use libfindora::utxo::{
+    GetOwnedUtxoReq, GetOwnedUtxoResp, OutputId, UtxoTransacrion, ValidateTransaction,
+};
 use rand_chacha::ChaChaRng;
-use serde::{Deserialize, Serialize};
-use zei::{setup::PublicParams, xfr::{structs::BlindAssetRecord}};
-
-/// Module's Event
-#[derive(Clone, Debug, Deserialize, Serialize, Event)]
-pub struct Event1 {}
+use zei::{
+    setup::PublicParams,
+    xfr::{sig::XfrPublicKey, structs::BlindAssetRecord},
+};
 
 #[abcf::module(name = "utxo", version = 1, impl_version = "0.1.1", target_height = 0)]
 pub struct UtxoModule {
@@ -25,11 +22,32 @@ pub struct UtxoModule {
     #[stateful]
     pub output_set: Map<OutputId, BlindAssetRecord>,
     #[stateless]
-    pub sl_value: Value<u32>,
+    pub owned_outputs: Map<XfrPublicKey, Vec<BlindAssetRecord>>,
 }
 
 #[abcf::rpcs]
-impl UtxoModule {}
+impl UtxoModule {
+    pub async fn get_owned_outputs(
+        &mut self,
+        context: &mut abcf::manager::RContext<'_, abcf::Stateless<Self>, abcf::Stateful<Self>>,
+        request: GetOwnedUtxoReq,
+    ) -> RPCResponse<GetOwnedUtxoResp> {
+        let outputs = match context.stateless.owned_outputs.get(&request.owner) {
+            Err(e) => {
+                let error: abcf::Error = e.into();
+                return error.into();
+            }
+            Ok(v) => match v {
+                Some(s) => s.clone(),
+                None => Vec::new(),
+            },
+        };
+
+        let resp = GetOwnedUtxoResp { outputs };
+
+        RPCResponse::new(resp)
+    }
+}
 
 /// Module's block logic.
 #[abcf::application]
@@ -63,7 +81,10 @@ impl Application for UtxoModule {
             if let Some(r) = record {
                 validate_tx.inputs.push(r.clone());
             } else {
-                return Err(abcf::Error::ABCIApplicationError(90001, String::from("Output doesn't exists.")));
+                return Err(abcf::Error::ABCIApplicationError(
+                    90001,
+                    String::from("Output doesn't exists."),
+                ));
             }
         }
 
@@ -71,12 +92,11 @@ impl Application for UtxoModule {
 
         match result {
             Ok(_) => {
-                // TODO: May panic when access store.
                 for input in &tx.inputs {
                     context.stateful.output_set.remove(input)?;
                 }
-                for i in 0 .. tx.outputs.len() {
-                    let output = &tx.outputs[i];
+                for i in 0..tx.outputs.len() {
+                    let output: &BlindAssetRecord = &tx.outputs[i];
 
                     let output_id = OutputId {
                         txid: tx.txid.clone(),
@@ -85,11 +105,24 @@ impl Application for UtxoModule {
                         })?,
                     };
 
-                    context.stateful.output_set.insert(output_id, output.clone())?;
+                    context
+                        .stateful
+                        .output_set
+                        .insert(output_id, output.clone())?;
+
+                    let owner = output.public_key;
+                    match context.stateless.owned_outputs.get_mut(owner)? {
+                        Some(v) => {
+                            v.push(output.clone());
+                        }
+                        None => {
+                            context.stateless.owned_outputs.insert(owner, Vec::new())?;
+                        }
+                    }
                 }
             }
             Err(e) => {
-                abcf::Error::ABCIApplicationError(90002, format!("{}", e));
+                return Err(abcf::Error::ABCIApplicationError(90002, format!("{}", e)));
             }
         }
         Ok(Default::default())
