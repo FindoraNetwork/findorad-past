@@ -1,7 +1,5 @@
 @0x9edb1e9495ce4d5a;
 
-using Rust = import "rust.capnp";
-
 struct Input {
     txid @0 : Data;
     n @1: UInt32;

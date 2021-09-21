@@ -1,5 +1,8 @@
+use capnp::{message::ReaderOptions, serialize::read_message, serialize_packed};
 use serde::{Deserialize, Serialize};
 use zei::xfr::structs::AssetTypeAndAmountProof;
+
+use crate::transaction_capnp;
 
 use super::{Input, Output};
 
@@ -29,7 +32,15 @@ impl abcf::module::FromBytes for Transaction {
     where
         Self: Sized,
     {
-        // TODO: Deserialize and check signature.
-        Ok(serde_json::from_slice(bytes)?)
+        let reader = read_message(bytes, ReaderOptions::new())
+            .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
+
+        let root = reader
+            .get_root::<transaction_capnp::transaction::Reader>()
+            .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
+
+        let txid = root.get_txid();
+
+        Ok(Self::default())
     }
 }

@@ -5,7 +5,7 @@ use abcf::{
     },
     manager::TContext,
     module::types::{RequestDeliverTx, ResponseDeliverTx},
-    Application, StatefulBatch, StatelessBatch, RPCResponse
+    Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
 use libfindora::coinbase::{CoinbaseTransacrion, GetAssetOwnerReq, GetAssetOwnerResp};
 use zei::xfr::{
@@ -43,9 +43,7 @@ impl CoinbaseModule {
             Ok(v) => v.map(|i| i.clone()),
         };
 
-        let resp = GetAssetOwnerResp {
-            owner
-        };
+        let resp = GetAssetOwnerResp { owner };
 
         RPCResponse::new(resp)
     }
