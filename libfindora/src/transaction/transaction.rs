@@ -1,17 +1,15 @@
 use std::convert::TryInto;
 
 use capnp::{message::ReaderOptions, serialize::read_message};
+use ruc::RucError;
 use serde::{Deserialize, Serialize};
-use zei::{
-    ristretto::CompressedRistretto,
-    xfr::{
+use zei::{chaum_pedersen::{ChaumPedersenProof, ChaumPedersenProofX}, ristretto::{CompressedRistretto, RistrettoPoint, RistrettoScalar}, serialization::ZeiFromToBytes, xfr::{
         sig::XfrSignature,
         structs::{
             AssetType, AssetTypeAndAmountProof, BlindAssetRecord, XfrAmount, XfrAssetType,
-            ASSET_TYPE_LENGTH,
+            XfrRangeProof, ASSET_TYPE_LENGTH,
         },
-    },
-};
+    }};
 
 use crate::transaction_capnp;
 
@@ -44,6 +42,55 @@ fn convert_capnp_error(e: capnp::Error) -> abcf::Error {
 
 fn convert_capnp_noinschema(e: capnp::NotInSchema) -> abcf::Error {
     abcf::Error::ABCIApplicationError(90001, format!("{:?}", e))
+}
+
+fn convert_ruc_error(e: Box<dyn RucError>) -> abcf::Error {
+    abcf::Error::ABCIApplicationError(90004, format!("{:?}", e))
+}
+
+fn parse_range_proof(
+    reader: transaction_capnp::range_proof::Reader,
+) -> abcf::Result<XfrRangeProof> {
+    let range_proof = bulletproofs::RangeProof::zei_from_bytes(
+        reader.get_range_proof().map_err(convert_capnp_error)?,
+    )
+    .map_err(convert_ruc_error)?;
+
+    let xfr_diff_commitment_low = CompressedRistretto::zei_from_bytes(
+        reader
+            .get_diff_commitment_low()
+            .map_err(convert_capnp_error)?,
+    )
+    .map_err(convert_ruc_error)?;
+
+    let xfr_diff_commitment_high = CompressedRistretto::zei_from_bytes(
+        reader
+            .get_diff_commitment_high()
+            .map_err(convert_capnp_error)?,
+    )
+    .map_err(convert_ruc_error)?;
+
+    Ok(XfrRangeProof {
+        range_proof,
+        xfr_diff_commitment_low,
+        xfr_diff_commitment_high,
+    })
+}
+
+fn parse_chaum_pederson_proof(
+    reader: transaction_capnp::chaum_pedersen_proof::Reader,
+) -> abcf::Result<ChaumPedersenProof> {
+    let c3 = RistrettoPoint::zei_from_bytes(reader.get_c3().map_err(convert_capnp_error)?)
+        .map_err(convert_ruc_error)?;
+    let c4 = RistrettoPoint::zei_from_bytes(reader.get_c4().map_err(convert_capnp_error)?)
+        .map_err(convert_ruc_error)?;
+    let z1 = RistrettoScalar::zei_from_bytes(reader.get_z1().map_err(convert_capnp_error)?)
+        .map_err(convert_ruc_error)?;
+    let z2 = RistrettoScalar::zei_from_bytes(reader.get_z2().map_err(convert_capnp_error)?)
+        .map_err(convert_ruc_error)?;
+    let z3 = RistrettoScalar::zei_from_bytes(reader.get_z3().map_err(convert_capnp_error)?)
+        .map_err(convert_ruc_error)?;
+    Ok(ChaumPedersenProof { c3, c4, z1, z2, z3 })
 }
 
 impl abcf::module::FromBytes for Transaction {
@@ -107,18 +154,16 @@ impl abcf::module::FromBytes for Transaction {
             {
                 transaction_capnp::output::amount::Which::Confidential(a) => {
                     let reader = a.map_err(convert_capnp_error)?;
-                    let point0_bytes = reader.get_point0().map_err(convert_capnp_error)?;
-                    let point1_bytes = reader.get_point1().map_err(convert_capnp_error)?;
+                    let point0 = CompressedRistretto::zei_from_bytes(
+                        reader.get_point0().map_err(convert_capnp_error)?,
+                    )
+                    .map_err(convert_ruc_error)?;
+                    let point1 = CompressedRistretto::zei_from_bytes(
+                        reader.get_point1().map_err(convert_capnp_error)?,
+                    )
+                    .map_err(convert_ruc_error)?;
 
-                    let point0 =
-                        curve25519_dalek::ristretto::CompressedRistretto::from_slice(point0_bytes);
-                    let point1 =
-                        curve25519_dalek::ristretto::CompressedRistretto::from_slice(point1_bytes);
-
-                    XfrAmount::Confidential((
-                        CompressedRistretto(point0),
-                        CompressedRistretto(point1),
-                    ))
+                    XfrAmount::Confidential((point0, point1))
                 }
                 transaction_capnp::output::amount::Which::NonConfidential(a) => {
                     XfrAmount::NonConfidential(a)
@@ -131,11 +176,11 @@ impl abcf::module::FromBytes for Transaction {
                 .map_err(convert_capnp_noinschema)?
             {
                 transaction_capnp::output::asset::Which::NonConfidential(a) => {
-                    let point = curve25519_dalek::ristretto::CompressedRistretto::from_slice(
-                        a.map_err(convert_capnp_error)?,
-                    );
+                    let point =
+                        CompressedRistretto::zei_from_bytes(a.map_err(convert_capnp_error)?)
+                            .map_err(convert_ruc_error)?;
 
-                    XfrAssetType::Confidential(CompressedRistretto(point))
+                    XfrAssetType::Confidential(point)
                 }
                 transaction_capnp::output::asset::Which::Confidential(a) => {
                     let bytes: [u8; ASSET_TYPE_LENGTH] =
@@ -157,6 +202,88 @@ impl abcf::module::FromBytes for Transaction {
             outputs.push(Output { core, operation })
         }
 
-        Ok(Self::default())
+        let proof = {
+            match root.get_proof().which().map_err(convert_capnp_noinschema)? {
+                transaction_capnp::transaction::proof::Which::AssetMix(bytes) => {
+                    let r1cs = bulletproofs::r1cs::R1CSProof::zei_from_bytes(
+                        bytes.map_err(convert_capnp_error)?,
+                    )
+                    .map_err(convert_ruc_error)?;
+
+                    AssetTypeAndAmountProof::AssetMix(r1cs.into())
+                }
+                transaction_capnp::transaction::proof::Which::ConfidentialAmount(e) => {
+                    let reader = e.map_err(convert_capnp_error)?;
+
+                    AssetTypeAndAmountProof::ConfAmount(parse_range_proof(reader)?)
+                }
+                transaction_capnp::transaction::proof::Which::ConfidentialAsset(e) => {
+                    let reader = e.map_err(convert_capnp_error)?;
+
+                    let proof = if reader.len() == 1 {
+                        let proof0 = parse_chaum_pederson_proof(reader.get(0))?;
+
+                        ChaumPedersenProofX {
+                            c1_eq_c2: proof0,
+                            zero: None,
+                        }
+                    } else if reader.len() == 2 {
+                        let proof0 = parse_chaum_pederson_proof(reader.get(0))?;
+                        let proof1 = parse_chaum_pederson_proof(reader.get(1))?;
+                        ChaumPedersenProofX {
+                            c1_eq_c2: proof0,
+                            zero: Some(proof1),
+                        }
+                    } else {
+                        return Err(abcf::Error::ABCIApplicationError(90005, String::from("parse error, chaum_pedersen_proof_x must have 1 or 2 proof.")))
+                    };
+
+                    AssetTypeAndAmountProof::ConfAsset(Box::new(proof))
+                }
+                transaction_capnp::transaction::proof::Which::ConfidentialAll(e) => {
+                    let reader = e.map_err(convert_capnp_error)?;
+
+                    let range_proof_reader = reader.get_amount().map_err(convert_capnp_error)?;
+
+                    let range_proof = parse_range_proof(range_proof_reader)?;
+
+                    let cpc_reader = reader.get_asset().map_err(convert_capnp_error)?;
+
+                    let cpc_proof = if cpc_reader.len() == 1 {
+                        let proof0 = parse_chaum_pederson_proof(cpc_reader.get(0))?;
+
+                        ChaumPedersenProofX {
+                            c1_eq_c2: proof0,
+                            zero: None,
+                        }
+                    } else if cpc_reader.len() == 2 {
+                        let proof0 = parse_chaum_pederson_proof(cpc_reader.get(0))?;
+                        let proof1 = parse_chaum_pederson_proof(cpc_reader.get(1))?;
+                        ChaumPedersenProofX {
+                            c1_eq_c2: proof0,
+                            zero: Some(proof1),
+                        }
+                    } else {
+                        return Err(abcf::Error::ABCIApplicationError(90005, String::from("parse error, chaum_pedersen_proof_x must have 1 or 2 proof.")))
+                    };
+
+                    AssetTypeAndAmountProof::ConfAll(Box::new((range_proof, cpc_proof)))
+                }
+                transaction_capnp::transaction::proof::Which::NoProof(_) => {
+                    AssetTypeAndAmountProof::NoProof
+                }
+            }
+        };
+
+        let tx = Transaction {
+            txid: txid.to_vec(),
+            inputs,
+            outputs,
+            proof,
+        };
+
+        // validate tx.
+
+        Ok(tx)
     }
 }

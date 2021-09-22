@@ -66,6 +66,7 @@ struct Transaction {
         confidentialAmount @4: RangeProof;
         confidentialAsset @5: List(ChaumPedersenProof);
         confidentialAll @6: ConfidentialAll;
+        noProof @7: Void;
     }
 }
 
