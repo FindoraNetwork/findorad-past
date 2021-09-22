@@ -61,8 +61,8 @@ impl Application for CoinbaseModule {
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
         for output in &req.tx.outputs {
-            let owner: XfrPublicKey = output.public_key;
-            let asset_type = match output.asset_type {
+            let owner: XfrPublicKey = output.1.public_key;
+            let asset_type = match output.1.asset_type {
                 XfrAssetType::Confidential(_) => {
                     return Err(abcf::Error::ABCIApplicationError(
                         90001,
@@ -89,7 +89,13 @@ impl Application for CoinbaseModule {
                 }
             }
 
-            // insert to utxo.
+        // TODO: this code used to module call, modify in next version of abcf.
+            let call_arg = crate::utxo::calls::ArgAddUtxo {
+                txid: req.tx.txid.clone(),
+                n: output.0,
+                output: output.1.clone(),
+            };
+            context.calls.push_module_call("utxo", call_arg.to_call_entry());
         }
 
         Ok(Default::default())

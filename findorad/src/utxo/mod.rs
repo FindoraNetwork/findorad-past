@@ -15,6 +15,8 @@ use zei::{
     xfr::{sig::XfrPublicKey, structs::BlindAssetRecord},
 };
 
+pub mod calls;
+
 #[abcf::module(name = "utxo", version = 1, impl_version = "0.1.1", target_height = 0)]
 pub struct UtxoModule {
     params: PublicParams,
@@ -68,6 +70,32 @@ impl Application for UtxoModule {
         context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
+        // TODO: this code used to module call, modify in next version of abcf.
+        if let Some(calls) = context.calls.pop_module_calls("utxo") {
+            for entry in calls {
+                match entry.method.as_str() {
+                    "add_utxo" => {
+                        let args = entry.args.downcast::<calls::ArgAddUtxo>();
+
+                        if args.is_ok() {
+                            let args = *args.unwrap();
+                            let output_id = OutputId {
+                                txid: args.txid,
+                                n: args.n,
+                            };
+                            let output = args.output;
+                        context
+                            .stateful
+                            .output_set
+                            .insert(output_id, output)?;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+
         let tx = &req.tx;
 
         let mut validate_tx = ValidateTransaction {

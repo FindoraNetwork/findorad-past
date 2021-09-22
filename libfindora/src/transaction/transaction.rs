@@ -3,13 +3,18 @@ use std::convert::TryInto;
 use capnp::{message::ReaderOptions, serialize::read_message};
 use ruc::RucError;
 use serde::{Deserialize, Serialize};
-use zei::{chaum_pedersen::{ChaumPedersenProof, ChaumPedersenProofX}, ristretto::{CompressedRistretto, RistrettoPoint, RistrettoScalar}, serialization::ZeiFromToBytes, xfr::{
+use zei::{
+    chaum_pedersen::{ChaumPedersenProof, ChaumPedersenProofX},
+    ristretto::{CompressedRistretto, RistrettoPoint, RistrettoScalar},
+    serialization::ZeiFromToBytes,
+    xfr::{
         sig::XfrSignature,
         structs::{
             AssetType, AssetTypeAndAmountProof, BlindAssetRecord, XfrAmount, XfrAssetType,
             XfrRangeProof, ASSET_TYPE_LENGTH,
         },
-    }};
+    },
+};
 
 use crate::transaction_capnp;
 
@@ -235,7 +240,12 @@ impl abcf::module::FromBytes for Transaction {
                             zero: Some(proof1),
                         }
                     } else {
-                        return Err(abcf::Error::ABCIApplicationError(90005, String::from("parse error, chaum_pedersen_proof_x must have 1 or 2 proof.")))
+                        return Err(abcf::Error::ABCIApplicationError(
+                            90005,
+                            String::from(
+                                "parse error, chaum_pedersen_proof_x must have 1 or 2 proof.",
+                            ),
+                        ));
                     };
 
                     AssetTypeAndAmountProof::ConfAsset(Box::new(proof))
@@ -264,7 +274,12 @@ impl abcf::module::FromBytes for Transaction {
                             zero: Some(proof1),
                         }
                     } else {
-                        return Err(abcf::Error::ABCIApplicationError(90005, String::from("parse error, chaum_pedersen_proof_x must have 1 or 2 proof.")))
+                        return Err(abcf::Error::ABCIApplicationError(
+                            90005,
+                            String::from(
+                                "parse error, chaum_pedersen_proof_x must have 1 or 2 proof.",
+                            ),
+                        ));
                     };
 
                     AssetTypeAndAmountProof::ConfAll(Box::new((range_proof, cpc_proof)))
