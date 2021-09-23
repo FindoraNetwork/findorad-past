@@ -5,4 +5,4 @@ mod validate;
 pub use validate::ValidateTransaction;
 
 mod rpc;
-pub use rpc::{GetOwnedUtxoReq, GetOwnedUtxoResp};
+pub use rpc::{GetOwnedUtxoReq, GetOwnedUtxoResp, OwnedOutput};
