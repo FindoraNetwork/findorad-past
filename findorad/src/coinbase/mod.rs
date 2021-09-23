@@ -89,13 +89,15 @@ impl Application for CoinbaseModule {
                 }
             }
 
-        // TODO: this code used to module call, modify in next version of abcf.
+            // TODO: this code used to module call, modify in next version of abcf.
             let call_arg = crate::utxo::calls::ArgAddUtxo {
                 txid: req.tx.txid.clone(),
                 n: output.0,
                 output: output.1.clone(),
             };
-            context.calls.push_module_call("utxo", call_arg.to_call_entry());
+            context
+                .calls
+                .push_module_call("utxo", call_arg.to_call_entry());
         }
 
         Ok(Default::default())

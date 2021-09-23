@@ -85,17 +85,13 @@ impl Application for UtxoModule {
                             };
                             let output = args.output;
 
-                        context
-                            .stateful
-                            .output_set
-                            .insert(output_id, output)?;
+                            context.stateful.output_set.insert(output_id, output)?;
                         }
                     }
                     _ => {}
                 }
             }
         }
-
 
         let tx = &req.tx;
 
@@ -140,7 +136,7 @@ impl Application for UtxoModule {
                         .insert(output_id, output.clone())?;
 
                     let owner = output.public_key;
-                    match context.stateless.owned_outputs.get_mut(owner)? {
+                    match context.stateless.owned_outputs.get_mut(&owner)? {
                         Some(v) => {
                             v.push(output.clone());
                         }
