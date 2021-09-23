@@ -84,6 +84,7 @@ impl Application for UtxoModule {
                                 n: args.n,
                             };
                             let output = args.output;
+
                         context
                             .stateful
                             .output_set

@@ -118,9 +118,7 @@ impl abcf::module::FromBytes for Transaction {
             let n = input.get_n();
             let signature_bytes = input.get_signature().map_err(convert_capnp_error)?;
 
-            let signature: ed25519_dalek::Signature = signature_bytes
-                .try_into()
-                .map_err(|e| abcf::Error::ABCIApplicationError(90002, format!("{:?}", e)))?;
+            let signature = XfrSignature::zei_from_bytes(signature_bytes).map_err(convert_ruc_error)?;
 
             let operation = match input.get_operation().map_err(convert_capnp_noinschema)? {
                 transaction_capnp::input::Operation::IssueAsset => InputOperation::IssueAsset,
@@ -131,7 +129,7 @@ impl abcf::module::FromBytes for Transaction {
                 txid,
                 n,
                 operation,
-                signature: XfrSignature(signature),
+                signature,
             };
 
             inputs.push(i);
