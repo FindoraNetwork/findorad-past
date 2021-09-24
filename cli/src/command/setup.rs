@@ -15,17 +15,6 @@ pub struct Command {
     /// Get findorad rpc address.
     get_server_address: bool,
 
-    #[clap(short, long, group = "account")]
-    /// Add account by mnemonic.
-    add_mnemonic: Option<String>,
-
-    #[clap(short, long, group = "account")]
-    /// List account.
-    list_account: bool,
-
-    #[clap(short, long, group = "account")]
-    /// List account.
-    delete_account: Option<usize>,
 }
 
 impl Command {

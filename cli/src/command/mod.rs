@@ -10,6 +10,7 @@ mod execute;
 mod issue;
 mod setup;
 mod transfer;
+mod wallet;
 
 #[derive(Clap, Debug)]
 #[clap(author, about, version)]
@@ -32,6 +33,7 @@ impl Opts {
             SubCommand::Execute(c) => c.execute(config)?,
             SubCommand::Transfer(c) => c.execute(config)?,
             SubCommand::Issue(c) => c.execute(config)?,
+            SubCommand::Wallet(c) => c.execute(config)?,
         }
 
         Ok(())
@@ -50,4 +52,6 @@ enum SubCommand {
     Transfer(transfer::Command),
     #[clap(version, author, about)]
     Issue(issue::Command),
+    #[clap(version, author, about = "Manage wallet")]
+    Wallet(wallet::Command),
 }
