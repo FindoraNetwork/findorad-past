@@ -26,8 +26,6 @@ impl Opts {
     pub fn execute(&self) -> Result<()> {
         let config = Config::load(&self.home, &self.config)?;
 
-        println!("{:?}", config);
-
         match &self.subcmd {
             SubCommand::Setup(c) => c.execute(config)?,
             SubCommand::Batch(c) => c.execute(config)?,
