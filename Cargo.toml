@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "findorad",
-    "libfindora"
+    "libfindora",
+    "finutils",
 ]

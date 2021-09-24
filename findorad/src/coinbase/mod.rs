@@ -4,7 +4,10 @@ use abcf::{
         MapStore,
     },
     manager::TContext,
-    module::types::{RequestDeliverTx, ResponseDeliverTx},
+    module::{
+        types::{RequestDeliverTx, ResponseDeliverTx},
+        StorageTransaction,
+    },
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
 use libfindora::coinbase::{CoinbaseTransacrion, GetAssetOwnerReq, GetAssetOwnerResp};

@@ -1,5 +1,4 @@
 use std::convert::TryInto;
-
 use capnp::{message::ReaderOptions, serialize::read_message};
 use ruc::RucError;
 use serde::{Deserialize, Serialize};
@@ -22,7 +21,7 @@ use super::{Input, InputOperation, Output, OutputOperation};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Transaction {
-    pub txid: Vec<u8>,
+    pub txid: Option<Vec<u8>>,
     pub inputs: Vec<Input>,
     pub outputs: Vec<Output>,
     pub proof: AssetTypeAndAmountProof,
@@ -33,7 +32,7 @@ impl abcf::Transaction for Transaction {}
 impl Default for Transaction {
     fn default() -> Self {
         Self {
-            txid: Vec::new(),
+            txid: None,
             inputs: Vec::new(),
             outputs: Vec::new(),
             proof: AssetTypeAndAmountProof::NoProof,
@@ -130,7 +129,7 @@ impl abcf::module::FromBytes for Transaction {
                 txid,
                 n,
                 operation,
-                signature,
+                signature:Some(signature),
             };
 
             inputs.push(i);
@@ -290,7 +289,7 @@ impl abcf::module::FromBytes for Transaction {
         };
 
         let tx = Transaction {
-            txid: txid.to_vec(),
+            txid: Some(txid.to_vec()),
             inputs,
             outputs,
             proof,
@@ -300,4 +299,6 @@ impl abcf::module::FromBytes for Transaction {
 
         Ok(tx)
     }
+
+
 }

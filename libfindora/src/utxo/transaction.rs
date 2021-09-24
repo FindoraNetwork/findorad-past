@@ -41,7 +41,7 @@ impl From<&Transaction> for UtxoTransacrion {
         let outputs = tx.outputs.iter().map(|o| o.core.clone()).collect();
 
         Self {
-            txid: tx.txid.clone(),
+            txid: tx.txid.clone().unwrap(),
             inputs,
             outputs,
             proof: tx.proof.clone(),

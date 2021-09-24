@@ -12,5 +12,5 @@ pub struct Input {
     pub txid: Vec<u8>,
     pub n: u32,
     pub operation: Operation,
-    pub signature: XfrSignature,
+    pub signature: Option<XfrSignature>,
 }

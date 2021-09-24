@@ -11,6 +11,7 @@ use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use sha3::Sha3_512;
 use zei::setup::PublicParams;
+use abcf::module::FromBytes;
 
 #[abcf::manager(
     name = "findorad",

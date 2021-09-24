@@ -3,7 +3,10 @@ use std::convert::TryInto;
 use abcf::{
     bs3::{model::Map, MapStore},
     manager::TContext,
-    module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
+    module::{
+        types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
+        StorageTransaction,
+    },
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
 use libfindora::utxo::{GetOwnedUtxoReq, GetOwnedUtxoResp, OutputId, OwnedOutput, UtxoTransacrion, ValidateTransaction};
@@ -13,6 +16,10 @@ use zei::{
     xfr::{sig::XfrPublicKey, structs::BlindAssetRecord},
     serialization::ZeiFromToBytes,
 };
+
+pub mod utxo_module_rpc {
+    include!(concat!(env!("OUT_DIR"),"/utxomodule.rs"));
+}
 
 pub mod calls;
 

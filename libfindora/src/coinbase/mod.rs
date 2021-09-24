@@ -26,7 +26,7 @@ impl From<&Transaction> for CoinbaseTransacrion {
         }
 
         Self {
-            txid: tx.txid.clone(),
+            txid: tx.txid.clone().unwrap(),
             outputs,
         }
     }
