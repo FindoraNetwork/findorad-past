@@ -10,3 +10,9 @@ pub struct Command {
     /// Mnemonic path
     mnemonic_path: String,
 }
+
+impl Command {
+    pub fn execute(&self) {
+
+    }
+}

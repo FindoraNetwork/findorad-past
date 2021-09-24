@@ -6,3 +6,9 @@ pub struct Command {
     /// Batch id
     id: String,
 }
+
+impl Command {
+    pub fn execute(&self) {
+
+    }
+}

@@ -8,11 +8,25 @@ mod issue;
 
 #[derive(Clap, Debug)]
 #[clap(author, about, version)]
-pub struct Fn {
+pub struct Opts {
     #[clap(short, long, env = "FN_HOME", default_value = "~/.findora/fn")]
     pub home: String,
     #[clap(subcommand)]
     subcmd: SubCommand,
+}
+
+impl Opts {
+    pub fn execute(&self) {
+        // Load config.
+
+        match &self.subcmd {
+            SubCommand::Setup(c) => c.execute(),
+            SubCommand::Batch(c) => c.execute(),
+            SubCommand::Execute(c) => c.execute(),
+            SubCommand::Transfer(c) => c.execute(),
+            SubCommand::Issue(c) => c.execute(),
+        }
+    }
 }
 
 #[derive(Clap, Debug)]

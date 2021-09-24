@@ -7,3 +7,8 @@ pub struct Command {
     id: String,
 }
 
+impl Command {
+    pub fn execute(&self) {
+
+    }
+}
