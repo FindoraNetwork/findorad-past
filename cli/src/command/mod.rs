@@ -40,7 +40,7 @@ impl Opts {
 
 #[derive(Clap, Debug)]
 enum SubCommand {
-    #[clap(version, author, about)]
+    #[clap(version, author, about = "Setup configuration entry.")]
     Setup(setup::Command),
     #[clap(version, author, about)]
     Batch(batch::Command),
