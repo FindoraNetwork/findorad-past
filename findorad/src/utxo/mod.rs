@@ -93,11 +93,6 @@ impl Application for UtxoModule {
                             };
                             let output = args.output;
 
-//                             context.stateless.owned_outputs.insert(output.public_key.clone(), OwnedOutput {
-                                // txid: output_id.txid.clone(),
-                                // n: output_id.n,
-                                // core: output.clone(),
-//                             });
                             let owner = output.public_key;
                             let owned_output = OwnedOutput {
                                         core: output.clone(),
