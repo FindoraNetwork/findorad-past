@@ -1,18 +1,16 @@
 use clap::Clap;
+use ruc::*;
 
 #[derive(Clap, Debug)]
 pub struct Command {
-    #[clap(short)]
+    #[clap(short, long, default_value = "http://localhost:25567")]
     /// Findorad rpc address.
     server_address: String,
-
-    #[clap(short, long)]
-    /// Mnemonic path
-    mnemonic_path: String,
 }
 
 impl Command {
-    pub fn execute(&self) {
-
+    pub fn execute(&self) -> Result<()> {
+        // Ok(())
+        Err(eg!())
     }
 }

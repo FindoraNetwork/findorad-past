@@ -1,4 +1,5 @@
 use clap::Clap;
+use ruc::*;
 
 #[derive(Clap, Debug)]
 pub struct Command {
@@ -8,7 +9,7 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn execute(&self) {
-
+    pub fn execute(&self) -> Result<()> {
+        Ok(())
     }
 }

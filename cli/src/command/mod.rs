@@ -1,31 +1,42 @@
-use clap::Clap;
+use std::path::PathBuf;
 
-mod setup;
+use clap::{Clap, ValueHint};
+use ruc::*;
+
+use crate::config::Config;
+
 mod batch;
 mod execute;
-mod transfer;
 mod issue;
+mod setup;
+mod transfer;
 
 #[derive(Clap, Debug)]
 #[clap(author, about, version)]
 pub struct Opts {
-    #[clap(short, long, env = "FN_HOME", default_value = "~/.findora/fn")]
-    pub home: String,
+    #[clap(short, long, env = "FN_HOME", default_value = concat!(env!("HOME"), "/.findora/fn"), value_hint = ValueHint::DirPath)]
+    pub home: PathBuf,
+    #[clap(short, long, env = "FN_CONFIG", default_value = concat!(env!("HOME"), "/.findora/fn/config.toml"), value_hint = ValueHint::FilePath)]
+    pub config: PathBuf,
     #[clap(subcommand)]
     subcmd: SubCommand,
 }
 
 impl Opts {
-    pub fn execute(&self) {
-        // Load config.
+    pub fn execute(&self) -> Result<()> {
+        let config = Config::load(&self.home, &self.config)?;
 
-        match &self.subcmd {
-            SubCommand::Setup(c) => c.execute(),
-            SubCommand::Batch(c) => c.execute(),
-            SubCommand::Execute(c) => c.execute(),
-            SubCommand::Transfer(c) => c.execute(),
-            SubCommand::Issue(c) => c.execute(),
-        }
+        println!("{:?}", config);
+
+        //         match &self.subcmd {
+        // SubCommand::Setup(c) => c.execute(config)?,
+        // SubCommand::Batch(c) => c.execute(config)?,
+        // SubCommand::Execute(c) => c.execute(config)?,
+        // SubCommand::Transfer(c) => c.execute(config)?,
+        // SubCommand::Issue(c) => c.execute(config)?,
+        //         }
+
+        Ok(())
     }
 }
 
@@ -42,4 +53,3 @@ enum SubCommand {
     #[clap(version, author, about)]
     Issue(issue::Command),
 }
-

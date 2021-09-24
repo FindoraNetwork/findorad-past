@@ -1,9 +1,20 @@
-use clap::Clap;
+use clap::{Clap, IntoApp};
 
 pub mod command;
+pub mod config;
 
 fn main() {
     let opts = command::Opts::parse();
-    opts.execute();
-    println!("{:?}", opts);
+
+    match opts.execute() {
+        Ok(_) => {}
+        Err(e) => {
+            e.print(None);
+
+            let mut app = command::Opts::into_app();
+            app.print_help().unwrap();
+
+            panic!();
+        }
+    }
 }

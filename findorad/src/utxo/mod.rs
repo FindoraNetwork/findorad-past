@@ -6,12 +6,14 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
-use libfindora::utxo::{GetOwnedUtxoReq, GetOwnedUtxoResp, OutputId, OwnedOutput, UtxoTransacrion, ValidateTransaction};
+use libfindora::utxo::{
+    GetOwnedUtxoReq, GetOwnedUtxoResp, OutputId, OwnedOutput, UtxoTransacrion, ValidateTransaction,
+};
 use rand_chacha::ChaChaRng;
 use zei::{
+    serialization::ZeiFromToBytes,
     setup::PublicParams,
     xfr::{sig::XfrPublicKey, structs::BlindAssetRecord},
-    serialization::ZeiFromToBytes,
 };
 
 pub mod calls;
@@ -34,7 +36,6 @@ impl UtxoModule {
         request: GetOwnedUtxoReq,
     ) -> RPCResponse<GetOwnedUtxoResp> {
         match XfrPublicKey::zei_from_bytes(request.owner.as_ref()) {
-
             Err(e) => {
                 let error = abcf::Error::RPCApplicationError(90001, format!("{:?}", e));
                 error.into()
@@ -95,10 +96,10 @@ impl Application for UtxoModule {
 
                             let owner = output.public_key;
                             let owned_output = OwnedOutput {
-                                        core: output.clone(),
-                                        txid: output_id.txid.clone(),
-                                        n: output_id.n,
-                                    };
+                                core: output.clone(),
+                                txid: output_id.txid.clone(),
+                                n: output_id.n,
+                            };
                             match context.stateless.owned_outputs.get_mut(&owner)? {
                                 Some(v) => {
                                     v.push(owned_output);
@@ -147,9 +148,9 @@ impl Application for UtxoModule {
                 for i in 0..tx.outputs.len() {
                     let output: &BlindAssetRecord = &tx.outputs[i];
                     let txid = &tx.txid;
-                    let n = i.try_into().map_err(|e| {
-                            abcf::Error::ABCIApplicationError(90003, format!("{}", e))
-                        })?;
+                    let n = i
+                        .try_into()
+                        .map_err(|e| abcf::Error::ABCIApplicationError(90003, format!("{}", e)))?;
 
                     let output_id = OutputId {
                         txid: txid.clone(),
@@ -167,7 +168,7 @@ impl Application for UtxoModule {
                             v.push(OwnedOutput {
                                 core: output.clone(),
                                 txid: txid.clone(),
-                                n
+                                n,
                             });
                         }
                         None => {
@@ -175,7 +176,7 @@ impl Application for UtxoModule {
                             v.push(OwnedOutput {
                                 core: output.clone(),
                                 txid: txid.clone(),
-                                n
+                                n,
                             });
                             context.stateless.owned_outputs.insert(owner, v)?;
                         }
