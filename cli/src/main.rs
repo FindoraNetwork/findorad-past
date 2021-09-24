@@ -4,6 +4,7 @@ pub mod command;
 pub mod config;
 
 fn main() {
+    env_logger::init();
     let opts = command::Opts::parse();
 
     match opts.execute() {

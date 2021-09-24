@@ -26,12 +26,14 @@ impl Config {
         };
 
         let mut config = if c_path.exists() {
+            log::debug!("config file find at {:?}", c_path);
             let config_str = read_to_string(&c_path).c(d!())?;
             let mut config: Config = toml::from_str(&config_str).c(d!())?;
 
             config.node.home = home_path.to_path_buf();
             config
         } else {
+            log::debug!("no config file create at {:?}", c_path);
             let config = Config::default();
             create_dir_all(home_path).c(d!())?;
             let data = toml::to_string_pretty(&config).c(d!())?;

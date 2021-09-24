@@ -28,13 +28,13 @@ impl Opts {
 
         println!("{:?}", config);
 
-        //         match &self.subcmd {
-        // SubCommand::Setup(c) => c.execute(config)?,
-        // SubCommand::Batch(c) => c.execute(config)?,
-        // SubCommand::Execute(c) => c.execute(config)?,
-        // SubCommand::Transfer(c) => c.execute(config)?,
-        // SubCommand::Issue(c) => c.execute(config)?,
-        //         }
+        match &self.subcmd {
+            SubCommand::Setup(c) => c.execute(config)?,
+            SubCommand::Batch(c) => c.execute(config)?,
+            SubCommand::Execute(c) => c.execute(config)?,
+            SubCommand::Transfer(c) => c.execute(config)?,
+            SubCommand::Issue(c) => c.execute(config)?,
+        }
 
         Ok(())
     }

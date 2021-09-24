@@ -1,6 +1,8 @@
 use clap::Clap;
 use ruc::*;
 
+use crate::config::Config;
+
 #[derive(Clap, Debug)]
 pub struct Command {
     #[clap(short, long, default_value = "http://localhost:25567")]
@@ -9,8 +11,7 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn execute(&self) -> Result<()> {
-        // Ok(())
-        Err(eg!())
+    pub fn execute(&self, _config: Config) -> Result<()> {
+        Ok(())
     }
 }

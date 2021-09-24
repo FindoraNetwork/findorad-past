@@ -9,6 +9,8 @@ description = "Findora Network command line tool."
 
 [dependencies]
 clap = "3.0.0-beta.4"
+env_logger = "0.9.0"
+log = "0.4.14"
 ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
 serde = "1.0.130"
 toml = "0.5.8"
