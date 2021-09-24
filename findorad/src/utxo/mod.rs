@@ -98,6 +98,22 @@ impl Application for UtxoModule {
                                 // n: output_id.n,
                                 // core: output.clone(),
 //                             });
+                            let owner = output.public_key;
+                            let owned_output = OwnedOutput {
+                                        core: output.clone(),
+                                        txid: output_id.txid.clone(),
+                                        n: output_id.n,
+                                    };
+                            match context.stateless.owned_outputs.get_mut(&owner)? {
+                                Some(v) => {
+                                    v.push(owned_output);
+                                }
+                                None => {
+                                    let mut v = Vec::new();
+                                    v.push(owned_output);
+                                    context.stateless.owned_outputs.insert(owner, v)?;
+                                }
+                            }
                             context.stateful.output_set.insert(output_id, output)?;
                         }
                     }
