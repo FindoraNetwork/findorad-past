@@ -5,9 +5,9 @@ use crate::config::Config;
 
 #[derive(Clap, Debug)]
 pub struct Command {
-    #[clap(short, long, default_value = "")]
-    /// Batch id
-    id: String,
+    #[clap(short, long)]
+    /// Special a batch name.
+    batch: Option<String>,
 }
 
 impl Command {

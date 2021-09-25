@@ -5,7 +5,6 @@ use ruc::*;
 
 use crate::config::Config;
 
-mod batch;
 mod execute;
 mod issue;
 mod setup;
@@ -29,7 +28,6 @@ impl Opts {
 
         match &self.subcmd {
             SubCommand::Setup(c) => c.execute(config)?,
-            SubCommand::Batch(c) => c.execute(config)?,
             SubCommand::Execute(c) => c.execute(config)?,
             SubCommand::Transfer(c) => c.execute(config)?,
             SubCommand::Issue(c) => c.execute(config)?,
@@ -44,8 +42,6 @@ impl Opts {
 enum SubCommand {
     #[clap(version, author, about = "Setup configuration entry.")]
     Setup(setup::Command),
-    #[clap(version, author, about)]
-    Batch(batch::Command),
     #[clap(version, author, about)]
     Execute(execute::Command),
     #[clap(version, author, about)]

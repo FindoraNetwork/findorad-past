@@ -5,9 +5,8 @@ use crate::config::Config;
 
 #[derive(Clap, Debug)]
 pub struct Command {
-    #[clap(short, long)]
-    /// Findorad rpc address.
-    id: String,
+    /// Name of batch.
+    batch_name: String
 }
 
 impl Command {
