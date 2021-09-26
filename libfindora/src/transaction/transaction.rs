@@ -405,7 +405,8 @@ impl Transaction {
             match &self.proof {
                 AssetTypeAndAmountProof::NoProof => { proof.reborrow().set_no_proof(()) },
                 AssetTypeAndAmountProof::AssetMix(a) => {
-                    // let value = a.
+                    let value = a.into_r1cs().zei_to_bytes();
+                    proof.reborrow().set_asset_mix(value);
                 }
             }
         }
