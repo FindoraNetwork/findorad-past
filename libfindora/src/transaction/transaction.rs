@@ -1,16 +1,14 @@
 use std::convert::TryInto;
 
 use capnp::{message::ReaderOptions, serialize::read_message};
-use digest::Digest;
 use ruc::*;
 use serde::{Deserialize, Serialize};
-use sha3::Sha3_512;
 use zei::{
     chaum_pedersen::{ChaumPedersenProof, ChaumPedersenProofX},
     ristretto::{CompressedRistretto, RistrettoPoint, RistrettoScalar},
     serialization::ZeiFromToBytes,
     xfr::{
-        sig::{XfrKeyPair, XfrSignature},
+        sig::XfrSignature,
         structs::{
             AssetType, AssetTypeAndAmountProof, BlindAssetRecord, XfrAmount, XfrAssetType,
             XfrRangeProof, ASSET_TYPE_LENGTH,
@@ -107,6 +105,7 @@ impl abcf::module::FromBytes for Transaction {
     where
         Self: Sized,
     {
+        let hex = String::from_utf8(bytes.to_vec());
         let reader = read_message(bytes, ReaderOptions::new()).map_err(convert_capnp_error)?;
         let root = reader
             .get_root::<transaction_capnp::transaction::Reader>()
@@ -125,7 +124,11 @@ impl abcf::module::FromBytes for Transaction {
                 transaction_capnp::input::Operation::TransferAsset => InputOperation::TransferAsset,
             };
 
-            let i = Input { txid, n, operation };
+            let i = Input {
+                txid,
+                n,
+                operation,
+            };
 
             inputs.push(i);
         }
@@ -173,14 +176,14 @@ impl abcf::module::FromBytes for Transaction {
                 .which()
                 .map_err(convert_capnp_noinschema)?
             {
-                transaction_capnp::output::asset::Which::Confidential(a) => {
+                transaction_capnp::output::asset::Which::NonConfidential(a) => {
                     let point =
                         CompressedRistretto::zei_from_bytes(a.map_err(convert_capnp_error)?)
                             .map_err(convert_ruc_error)?;
 
                     XfrAssetType::Confidential(point)
                 }
-                transaction_capnp::output::asset::Which::NonConfidential(a) => {
+                transaction_capnp::output::asset::Which::Confidential(a) => {
                     let bytes: [u8; ASSET_TYPE_LENGTH] =
                         a.map_err(convert_capnp_error)?.try_into().map_err(|e| {
                             abcf::Error::ABCIApplicationError(90004, format!("{:?}", e))
@@ -197,11 +200,7 @@ impl abcf::module::FromBytes for Transaction {
                 public_key: public_key.into(),
             };
 
-            outputs.push(Output {
-                core,
-                operation,
-                owner_memo: None,
-            })
+            outputs.push(Output { core, operation })
         }
 
         let proof = {
@@ -299,7 +298,7 @@ impl abcf::module::FromBytes for Transaction {
             inputs,
             outputs,
             proof,
-            signatures,
+            signatures
         };
 
         // validate tx.
@@ -309,38 +308,6 @@ impl abcf::module::FromBytes for Transaction {
 }
 
 impl Transaction {
-    pub fn signature(&mut self, keypairs: Vec<XfrKeyPair>) -> Result<()> {
-        if self.signatures.len() != 0 {
-            return Err(eg!("this tx is signed."));
-        }
-
-        println!(
-            "inputs len: {}, keypairs len: {}",
-            self.inputs.len(),
-            keypairs.len()
-        );
-
-        if self.inputs.len() != keypairs.len() {
-            return Err(eg!("please give right keypair for inputs."));
-        }
-
-        let bytes = self.to_bytes()?;
-
-        for i in 0..keypairs.len() {
-            let keypair = &keypairs[i];
-
-            let signature = keypair.sign(&bytes);
-
-            self.signatures.push(signature);
-        }
-
-        let bytes = self.to_bytes()?;
-
-        self.txid = Sha3_512::digest(&bytes).to_vec();
-
-        Ok(())
-    }
-
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
         let mut result = Vec::new();
 
@@ -352,14 +319,10 @@ impl Transaction {
             transaction.set_txid(&self.txid);
 
             // inputs
-            let inputs_num: u32 = self
-                .inputs
-                .len()
-                .try_into()
-                .map_err(|e| eg!(format!("{}", e)))?;
+            let inputs_num: u32 = self.inputs.len().try_into().map_err(|e| eg!(format!("{}", e)))?;
             let mut inputs = transaction.reborrow().init_inputs(inputs_num);
 
-            for i in 0..self.inputs.len() {
+            for i in 0 .. self.inputs.len() {
                 let ori_input = &self.inputs[i];
 
                 let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
@@ -369,24 +332,16 @@ impl Transaction {
                 input.set_txid(&ori_input.txid);
                 input.set_n(ori_input.n);
                 match ori_input.operation {
-                    InputOperation::IssueAsset => {
-                        input.set_operation(transaction_capnp::input::Operation::IssueAsset)
-                    }
-                    InputOperation::TransferAsset => {
-                        input.set_operation(transaction_capnp::input::Operation::TransferAsset)
-                    }
+                    InputOperation::IssueAsset => input.set_operation(transaction_capnp::input::Operation::IssueAsset),
+                    InputOperation::TransferAsset => input.set_operation(transaction_capnp::input::Operation::TransferAsset),
                 }
             }
 
             // outputs
-            let outputs_num: u32 = self
-                .outputs
-                .len()
-                .try_into()
-                .map_err(|e| eg!(format!("{}", e)))?;
+            let outputs_num: u32 = self.outputs.len().try_into().map_err(|e| eg!(format!("{}", e)))?;
             let mut outputs = transaction.reborrow().init_outputs(outputs_num);
 
-            for i in 0..self.outputs.len() {
+            for i in 0 .. self.outputs.len() {
                 let ori_output = &self.outputs[i];
 
                 let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
@@ -398,12 +353,8 @@ impl Transaction {
                 output.set_public_key(&public_key);
 
                 match ori_output.operation {
-                    OutputOperation::IssueAsset => {
-                        output.set_operation(transaction_capnp::output::Operation::IssueAsset)
-                    }
-                    OutputOperation::TransferAsset => {
-                        output.set_operation(transaction_capnp::output::Operation::TransferAsset)
-                    }
+                    OutputOperation::IssueAsset => output.set_operation(transaction_capnp::output::Operation::IssueAsset),
+                    OutputOperation::TransferAsset => output.set_operation(transaction_capnp::output::Operation::TransferAsset),
                 }
 
                 let mut amount = output.reborrow().get_amount();
@@ -417,8 +368,9 @@ impl Transaction {
 
                         c.set_point0(&point0);
                         c.set_point1(&point1);
+
                     }
-                    XfrAmount::NonConfidential(e) => amount.set_non_confidential(e),
+                    XfrAmount::NonConfidential(e) => {amount.set_non_confidential(e)}
                 }
 
                 let mut asset_type = output.reborrow().get_asset();
@@ -427,7 +379,7 @@ impl Transaction {
                     XfrAssetType::NonConfidential(e) => {
                         let value = e.zei_to_bytes();
                         asset_type.set_non_confidential(&value);
-                    }
+                    },
                     XfrAssetType::Confidential(e) => {
                         let value = e.zei_to_bytes();
                         asset_type.set_confidential(&value);
@@ -435,35 +387,33 @@ impl Transaction {
                 }
             }
 
-            let signature_len: u32 = self
-                .signatures
-                .len()
-                .try_into()
-                .map_err(|e| eg!(format!("{}", e)))?;
+            let signature_len: u32 = self.signatures.len().try_into().map_err(|e| eg!(format!("{}", e)))?;
             let mut signatures = transaction.reborrow().init_signature(signature_len);
 
-            for i in 0..self.inputs.len() {
-                if let Some(signature) = self.signatures.get(i) {
-                    let ori_sign = signature;
+            for i in 0 .. self.inputs.len() {
+                let ori_sign = &self.signatures[i];
 
-                    let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
+                let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
 
-                    let value = ori_sign.zei_to_bytes();
+                let value = ori_sign.zei_to_bytes();
 
-                    signatures.set(index, &value)
-                }
+                signatures.set(index, &value)
             }
 
             let mut proof = transaction.init_proof();
 
             match &self.proof {
-                AssetTypeAndAmountProof::NoProof => proof.reborrow().set_no_proof(()),
+                AssetTypeAndAmountProof::NoProof => { proof.reborrow().set_no_proof(()) },
                 AssetTypeAndAmountProof::AssetMix(a) => {
                     let value = a.into_r1cs().zei_to_bytes();
                     proof.reborrow().set_asset_mix(&value);
                 }
                 AssetTypeAndAmountProof::ConfAsset(a) => {
-                    let len = if a.zero.is_some() { 2 } else { 1 };
+                    let len = if a.zero.is_some() {
+                        2
+                    } else {
+                        1
+                    };
 
                     let mut ca = proof.reborrow().init_confidential_asset(len);
 
@@ -526,7 +476,11 @@ impl Transaction {
                     {
                         let p = &a.1;
 
-                        let len = if p.zero.is_some() { 2 } else { 1 };
+                        let len = if p.zero.is_some() {
+                            2
+                        } else {
+                            1
+                        };
 
                         let mut ca = proof.init_asset(len);
                         {
@@ -570,3 +524,4 @@ impl Transaction {
         Ok(result)
     }
 }
+

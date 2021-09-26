@@ -1,20 +1,8 @@
 use clap::Clap;
-use rand_chacha::ChaChaRng;
-use rand_core::{RngCore, SeedableRng};
 use ruc::*;
-use zei::{
-    serialization::ZeiFromToBytes,
-    xfr::{
-        sig::XfrSecretKey,
-        structs::{AssetType, ASSET_TYPE_LENGTH},
-    },
-};
 
-use crate::{
-    config::Config,
-    entry::{build_transaction, Entry, IssueEntry},
-    utils::send_tx,
-};
+use crate::config::Config;
+use crate::utils::issue_asset;
 
 #[derive(Clap, Debug)]
 pub struct Command {
@@ -25,41 +13,26 @@ pub struct Command {
     #[clap(short, long)]
     secret_key: String,
 
-    #[clap(short = 'a', long)]
+    #[clap(short, long)]
     amount: u64,
 
-    #[clap(short = 'A', long)]
-    confidential_amount: bool,
+    #[clap(short, long)]
+    asset_type: u8,
 }
 
 impl Command {
     pub fn execute(&self, _config: Config) -> Result<()> {
-        let mut prng = ChaChaRng::from_entropy();
 
-        let mut asset_type = [0u8; ASSET_TYPE_LENGTH];
-        prng.fill_bytes(&mut asset_type);
+        let mut batch_file = None;
 
-        println!("Asset Type is {}", base64::encode(&asset_type));
-
-        let sk_bytes = base64::decode(&self.secret_key).c(d!())?;
-        let sk = XfrSecretKey::zei_from_bytes(&sk_bytes)?;
-        let keypair = sk.into_keypair();
-
-        let entry = Entry::Issue(IssueEntry {
-            amount: self.amount,
-            asset_type: AssetType(asset_type),
-            confidential_amount: self.confidential_amount,
-            keypair,
-        });
-
-        if let Some(_e) = &self.batch {
-        } else {
-            let tx = build_transaction(&mut prng, vec![entry])?;
-
-            // println!("{:?}", tx);
-
-            send_tx(&tx)?;
+        if let Some(batch) = self.batch.clone() {
+            let path = "~/__tx_issue_batch/";
+            let file = path.to_string() + &*batch;
+            std::fs::create_dir_all(path).c(d!())?;
+            batch_file = Some(file);
         }
+
+        issue_asset(self.secret_key.clone(),self.amount,self.asset_type,batch_file).c(d!())?;
 
         Ok(())
     }
