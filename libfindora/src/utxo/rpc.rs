@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use zei::xfr::{structs::BlindAssetRecord};
+use zei::xfr::structs::BlindAssetRecord;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetOwnedUtxoReq {
