@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 
 use capnp::{message::ReaderOptions, serialize::read_message};
-use ruc::RucError;
+use ruc::*;
 use serde::{Deserialize, Serialize};
 use zei::{
     chaum_pedersen::{ChaumPedersenProof, ChaumPedersenProofX},
@@ -38,6 +38,7 @@ impl Default for Transaction {
             inputs: Vec::new(),
             outputs: Vec::new(),
             proof: AssetTypeAndAmountProof::NoProof,
+            signatures: Vec::new(),
         }
     }
 }
@@ -285,7 +286,7 @@ impl abcf::module::FromBytes for Transaction {
             }
         };
 
-        let signatures = Vec::new();
+        let mut signatures = Vec::new();
 
         for signature in root.get_signature().map_err(convert_capnp_error)?.iter() {
             let bytes = signature.map_err(convert_capnp_error)?;
@@ -305,3 +306,113 @@ impl abcf::module::FromBytes for Transaction {
         Ok(tx)
     }
 }
+
+impl Transaction {
+    pub fn to_bytes(&self) -> Result<Vec<u8>> {
+        let mut result = Vec::new();
+
+        let mut message = capnp::message::Builder::new_default();
+
+        {
+            let mut transaction = message.init_root::<transaction_capnp::transaction::Builder>();
+
+            transaction.set_txid(&self.txid);
+
+            // inputs
+            let inputs_num: u32 = self.inputs.len().try_into().map_err(|e| eg!(format!("{}", e)))?;
+            let mut inputs = transaction.reborrow().init_inputs(inputs_num);
+
+            for i in 0 .. self.inputs.len() {
+                let ori_input = &self.inputs[i];
+
+                let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
+
+                let mut input = inputs.reborrow().get(index);
+
+                input.set_txid(&ori_input.txid);
+                input.set_n(ori_input.n);
+                match ori_input.operation {
+                    InputOperation::IssueAsset => input.set_operation(transaction_capnp::input::Operation::IssueAsset),
+                    InputOperation::TransferAsset => input.set_operation(transaction_capnp::input::Operation::TransferAsset),
+                }
+            }
+
+            // outputs
+            let outputs_num: u32 = self.outputs.len().try_into().map_err(|e| eg!(format!("{}", e)))?;
+            let mut outputs = transaction.reborrow().init_outputs(outputs_num);
+
+            for i in 0 .. self.outputs.len() {
+                let ori_output = &self.outputs[i];
+
+                let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
+
+                let mut output = outputs.reborrow().get(index);
+
+                let public_key = ori_output.core.public_key.zei_to_bytes();
+
+                output.set_public_key(&public_key);
+
+                match ori_output.operation {
+                    OutputOperation::IssueAsset => output.set_operation(transaction_capnp::output::Operation::IssueAsset),
+                    OutputOperation::TransferAsset => output.set_operation(transaction_capnp::output::Operation::TransferAsset),
+                }
+
+                let mut amount = output.reborrow().get_amount();
+
+                match ori_output.core.amount {
+                    XfrAmount::Confidential(e) => {
+                        let point0 = e.0.zei_to_bytes();
+                        let point1 = e.1.zei_to_bytes();
+
+                        let mut c = amount.reborrow().init_confidential();
+
+                        c.set_point0(&point0);
+                        c.set_point1(&point1);
+
+                    }
+                    XfrAmount::NonConfidential(e) => {amount.set_non_confidential(e)}
+                }
+
+                let mut asset_type = output.reborrow().get_asset();
+
+                match ori_output.core.asset_type {
+                    XfrAssetType::NonConfidential(e) => {
+                        let value = e.zei_to_bytes();
+                        asset_type.set_non_confidential(&value);
+                    },
+                    XfrAssetType::Confidential(e) => {
+                        let value = e.zei_to_bytes();
+                        asset_type.set_confidential(&value);
+                    }
+                }
+            }
+
+            let signature_len: u32 = self.signatures.len().try_into().map_err(|e| eg!(format!("{}", e)))?;
+            let mut signatures = transaction.reborrow().init_signature(signature_len);
+
+            for i in 0 .. self.outputs.len() {
+                let ori_sign = &self.signatures[i];
+
+                let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
+
+                let value = ori_sign.zei_to_bytes();
+
+                signatures.set(index, &value)
+            }
+
+            let mut proof = transaction.init_proof();
+
+            match &self.proof {
+                AssetTypeAndAmountProof::NoProof => { proof.reborrow().set_no_proof(()) },
+                AssetTypeAndAmountProof::AssetMix(a) => {
+                    // let value = a.
+                }
+            }
+        }
+
+        capnp::serialize_packed::write_message(&mut result, &message).c(d!())?;
+
+        Ok(result)
+    }
+}
+
