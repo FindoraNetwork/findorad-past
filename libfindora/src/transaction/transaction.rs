@@ -26,6 +26,7 @@ pub struct Transaction {
     pub inputs: Vec<Input>,
     pub outputs: Vec<Output>,
     pub proof: AssetTypeAndAmountProof,
+    pub signatures: Vec<XfrSignature>,
 }
 
 impl abcf::Transaction for Transaction {}
@@ -116,10 +117,6 @@ impl abcf::module::FromBytes for Transaction {
         for input in root.get_inputs().map_err(convert_capnp_error)?.iter() {
             let txid = input.get_txid().map_err(convert_capnp_error)?.to_vec();
             let n = input.get_n();
-            let signature_bytes = input.get_signature().map_err(convert_capnp_error)?;
-
-            let signature =
-                XfrSignature::zei_from_bytes(signature_bytes).map_err(convert_ruc_error)?;
 
             let operation = match input.get_operation().map_err(convert_capnp_noinschema)? {
                 transaction_capnp::input::Operation::IssueAsset => InputOperation::IssueAsset,
@@ -130,7 +127,6 @@ impl abcf::module::FromBytes for Transaction {
                 txid,
                 n,
                 operation,
-                signature,
             };
 
             inputs.push(i);
@@ -289,11 +285,19 @@ impl abcf::module::FromBytes for Transaction {
             }
         };
 
+        let signatures = Vec::new();
+
+        for signature in root.get_signature().map_err(convert_capnp_error)?.iter() {
+            let bytes = signature.map_err(convert_capnp_error)?;
+            signatures.push(XfrSignature::zei_from_bytes(bytes).map_err(convert_ruc_error)?);
+        }
+
         let tx = Transaction {
             txid: txid.to_vec(),
             inputs,
             outputs,
             proof,
+            signatures
         };
 
         // validate tx.

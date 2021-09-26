@@ -4,7 +4,6 @@ struct Input {
     txid @0 : Data;
     n @1: UInt32;
     operation @2: Operation;
-    signature @3: Data;
 
     enum Operation {
         transferAsset @0;
@@ -61,12 +60,13 @@ struct Transaction {
     txid @0: Data;
     inputs @1: List(Input);
     outputs @2: List(Output);
+    signature @3: List(Data);
     proof :union {
-        assetMix @3: Data;
-        confidentialAmount @4: RangeProof;
-        confidentialAsset @5: List(ChaumPedersenProof);
-        confidentialAll @6: ConfidentialAll;
-        noProof @7: Void;
+        assetMix @4: Data;
+        confidentialAmount @5: RangeProof;
+        confidentialAsset @6: List(ChaumPedersenProof);
+        confidentialAll @7: ConfidentialAll;
+        noProof @8: Void;
     }
 }
 
