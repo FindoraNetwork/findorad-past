@@ -19,3 +19,9 @@ libfindora = { path = "../libfindora" }
 zei = { git = "ssh://git@github.com/FindoraNetwork/zei", branch = "feat-refactor" }
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 rand_chacha = "0.2.2"
+abcf-sdk = { git = "ssh://git@github.com/FindoraNetwork/abcf", features = ["http"] }
+
+
+[lib]
+name = "findorad_lib"
+path = "src/lib.rs"

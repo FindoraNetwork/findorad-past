@@ -16,6 +16,10 @@ use zei::{
     xfr::{sig::XfrPublicKey, structs::BlindAssetRecord},
 };
 
+pub mod utxo_module_rpc {
+    include!(concat!(env!("OUT_DIR"),"/utxomodule.rs"));
+}
+
 pub mod calls;
 
 #[abcf::module(name = "utxo", version = 1, impl_version = "0.1.1", target_height = 0)]

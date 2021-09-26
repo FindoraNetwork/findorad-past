@@ -2,6 +2,7 @@ use clap::{Clap, IntoApp};
 
 pub mod command;
 pub mod config;
+pub mod utils;
 
 fn main() {
     env_logger::init();

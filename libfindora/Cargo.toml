@@ -18,6 +18,8 @@ ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 capnp = "0.14"
 bulletproofs = { package = "bulletproofs", git = "ssh://git@github.com/FindoraNetwork/bulletproofs", branch = "batch_verification", features = ["yoloproofs"] }
+log = "0.4.14"
+hex = "0.4.3"
 
 [build-dependencies]
 capnpc = "0.14"

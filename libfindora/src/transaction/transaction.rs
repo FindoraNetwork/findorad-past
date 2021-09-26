@@ -105,8 +105,8 @@ impl abcf::module::FromBytes for Transaction {
     where
         Self: Sized,
     {
+        let hex = String::from_utf8(bytes.to_vec());
         let reader = read_message(bytes, ReaderOptions::new()).map_err(convert_capnp_error)?;
-
         let root = reader
             .get_root::<transaction_capnp::transaction::Reader>()
             .map_err(convert_capnp_error)?;
@@ -390,7 +390,7 @@ impl Transaction {
             let signature_len: u32 = self.signatures.len().try_into().map_err(|e| eg!(format!("{}", e)))?;
             let mut signatures = transaction.reborrow().init_signature(signature_len);
 
-            for i in 0 .. self.outputs.len() {
+            for i in 0 .. self.inputs.len() {
                 let ori_sign = &self.signatures[i];
 
                 let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
@@ -519,7 +519,7 @@ impl Transaction {
             }
         }
 
-        capnp::serialize_packed::write_message(&mut result, &message).c(d!())?;
+        capnp::serialize::write_message(&mut result, &message).c(d!())?;
 
         Ok(result)
     }
