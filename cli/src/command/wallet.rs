@@ -1,4 +1,4 @@
-use clap::{Clap, ArgGroup};
+use clap::{ArgGroup, Clap};
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use ruc::*;
