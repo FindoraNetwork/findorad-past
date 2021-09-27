@@ -199,7 +199,7 @@ impl abcf::module::FromBytes for Transaction {
                 public_key: public_key.into(),
             };
 
-            outputs.push(Output { core, operation })
+            outputs.push(Output { core, operation, owner_memo: None })
         }
 
         let proof = {
