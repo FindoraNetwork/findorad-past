@@ -17,10 +17,9 @@ use crate::entry::{IssueBatchEntry, TransferBatchEntry, BalanceEntry};
 use std::collections::HashMap;
 
 pub fn secret_key_to_keypair(secret_key: String) -> Result<XfrKeyPair> {
-    let str = &format!("\"{}\"", secret_key);
-    serde_json::from_str::<XfrSecretKey>(str)
-        .map(|sk| sk.into_keypair())
-        .c(d!("Invalid secret key"))
+    let sk_bytes = base64::decode(&secret_key).c(d!())?;
+    let sk = XfrSecretKey::zei_from_bytes(&sk_bytes).c(d!())?;
+    Ok(sk.into_keypair())
 }
 
 pub fn public_key_from_base64(pk: String) -> Result<XfrPublicKey> {
@@ -52,7 +51,12 @@ pub fn issue_tx(batch_vec:Vec<IssueBatchEntry>) -> Result<Transaction> {
     let txid = hasher.finalize();
     tx.txid = txid.as_slice().to_vec();
 
-    Ok(tx)
+    if is_batch(batch_file,&tx)? {
+        return Ok(());
+    }
+
+    send_tx(&tx).c(d!())?;
+    Ok(())
 }
 
 pub fn transfer_tx (batch_map:HashMap<XfrPublicKey,Vec<TransferBatchEntry>>) -> Result<Transaction> {
@@ -211,6 +215,7 @@ pub fn send_tx(tx: &Transaction) -> Result<()>{
     println!("tx hex:{:?}",tx_hex);
 
     let rt = Runtime::new().unwrap();
+
     rt.block_on(async {
         let provider = abcf_sdk::providers::HttpGetProvider{};
         let r = utxo_module_rpc::send_tx(tx_hex,"broadcast_tx_async",provider).await;

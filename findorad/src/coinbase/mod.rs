@@ -60,6 +60,7 @@ impl Application for CoinbaseModule {
         context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
+        println!("{:?}", req.tx);
         for output in &req.tx.outputs {
             let owner: XfrPublicKey = output.1.public_key;
             let asset_type = match output.1.asset_type {

@@ -5,7 +5,6 @@ use crate::config::Config;
 
 #[derive(Clap, Debug)]
 #[clap(group = ArgGroup::new("server_address"))]
-#[clap(group = ArgGroup::new("account"))]
 pub struct Command {
     #[clap(short = 's', long, group = "server_address")]
     /// Set findorad rpc address.
