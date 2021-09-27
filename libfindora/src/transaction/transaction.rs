@@ -105,7 +105,6 @@ impl abcf::module::FromBytes for Transaction {
     where
         Self: Sized,
     {
-        let hex = String::from_utf8(bytes.to_vec());
         let reader = read_message(bytes, ReaderOptions::new()).map_err(convert_capnp_error)?;
         let root = reader
             .get_root::<transaction_capnp::transaction::Reader>()
@@ -176,14 +175,14 @@ impl abcf::module::FromBytes for Transaction {
                 .which()
                 .map_err(convert_capnp_noinschema)?
             {
-                transaction_capnp::output::asset::Which::NonConfidential(a) => {
+                transaction_capnp::output::asset::Which::Confidential(a) => {
                     let point =
                         CompressedRistretto::zei_from_bytes(a.map_err(convert_capnp_error)?)
                             .map_err(convert_ruc_error)?;
 
                     XfrAssetType::Confidential(point)
                 }
-                transaction_capnp::output::asset::Which::Confidential(a) => {
+                transaction_capnp::output::asset::Which::NonConfidential(a) => {
                     let bytes: [u8; ASSET_TYPE_LENGTH] =
                         a.map_err(convert_capnp_error)?.try_into().map_err(|e| {
                             abcf::Error::ABCIApplicationError(90004, format!("{:?}", e))

@@ -23,11 +23,19 @@ pub struct Command {
     #[clap(short, long)]
     secret_key: Option<String>,
 
+<<<<<<< HEAD
     #[clap(short, long)]
     amount: Option<u64>,
 
     #[clap(short, long)]
     asset_type: Option<String>,
+=======
+    #[clap(short = 'a', long)]
+    amount: u64,
+
+    #[clap(short = 't', long)]
+    asset_type: u8,
+>>>>>>> 52d86d1 (pass issue)
 }
 
 impl Command {
