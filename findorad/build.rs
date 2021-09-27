@@ -6,5 +6,4 @@ fn main() {
 
     std::fs::File::create(rpc_module).unwrap();
     std::fs::File::create(coinbase_module).unwrap();
-
 }

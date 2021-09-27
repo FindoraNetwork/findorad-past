@@ -123,11 +123,7 @@ impl abcf::module::FromBytes for Transaction {
                 transaction_capnp::input::Operation::TransferAsset => InputOperation::TransferAsset,
             };
 
-            let i = Input {
-                txid,
-                n,
-                operation,
-            };
+            let i = Input { txid, n, operation };
 
             inputs.push(i);
         }
@@ -199,7 +195,11 @@ impl abcf::module::FromBytes for Transaction {
                 public_key: public_key.into(),
             };
 
-            outputs.push(Output { core, operation, owner_memo: None })
+            outputs.push(Output {
+                core,
+                operation,
+                owner_memo: None,
+            })
         }
 
         let proof = {
@@ -297,7 +297,7 @@ impl abcf::module::FromBytes for Transaction {
             inputs,
             outputs,
             proof,
-            signatures
+            signatures,
         };
 
         // validate tx.
@@ -318,10 +318,14 @@ impl Transaction {
             transaction.set_txid(&self.txid);
 
             // inputs
-            let inputs_num: u32 = self.inputs.len().try_into().map_err(|e| eg!(format!("{}", e)))?;
+            let inputs_num: u32 = self
+                .inputs
+                .len()
+                .try_into()
+                .map_err(|e| eg!(format!("{}", e)))?;
             let mut inputs = transaction.reborrow().init_inputs(inputs_num);
 
-            for i in 0 .. self.inputs.len() {
+            for i in 0..self.inputs.len() {
                 let ori_input = &self.inputs[i];
 
                 let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
@@ -331,16 +335,24 @@ impl Transaction {
                 input.set_txid(&ori_input.txid);
                 input.set_n(ori_input.n);
                 match ori_input.operation {
-                    InputOperation::IssueAsset => input.set_operation(transaction_capnp::input::Operation::IssueAsset),
-                    InputOperation::TransferAsset => input.set_operation(transaction_capnp::input::Operation::TransferAsset),
+                    InputOperation::IssueAsset => {
+                        input.set_operation(transaction_capnp::input::Operation::IssueAsset)
+                    }
+                    InputOperation::TransferAsset => {
+                        input.set_operation(transaction_capnp::input::Operation::TransferAsset)
+                    }
                 }
             }
 
             // outputs
-            let outputs_num: u32 = self.outputs.len().try_into().map_err(|e| eg!(format!("{}", e)))?;
+            let outputs_num: u32 = self
+                .outputs
+                .len()
+                .try_into()
+                .map_err(|e| eg!(format!("{}", e)))?;
             let mut outputs = transaction.reborrow().init_outputs(outputs_num);
 
-            for i in 0 .. self.outputs.len() {
+            for i in 0..self.outputs.len() {
                 let ori_output = &self.outputs[i];
 
                 let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
@@ -352,8 +364,12 @@ impl Transaction {
                 output.set_public_key(&public_key);
 
                 match ori_output.operation {
-                    OutputOperation::IssueAsset => output.set_operation(transaction_capnp::output::Operation::IssueAsset),
-                    OutputOperation::TransferAsset => output.set_operation(transaction_capnp::output::Operation::TransferAsset),
+                    OutputOperation::IssueAsset => {
+                        output.set_operation(transaction_capnp::output::Operation::IssueAsset)
+                    }
+                    OutputOperation::TransferAsset => {
+                        output.set_operation(transaction_capnp::output::Operation::TransferAsset)
+                    }
                 }
 
                 let mut amount = output.reborrow().get_amount();
@@ -367,9 +383,8 @@ impl Transaction {
 
                         c.set_point0(&point0);
                         c.set_point1(&point1);
-
                     }
-                    XfrAmount::NonConfidential(e) => {amount.set_non_confidential(e)}
+                    XfrAmount::NonConfidential(e) => amount.set_non_confidential(e),
                 }
 
                 let mut asset_type = output.reborrow().get_asset();
@@ -378,7 +393,7 @@ impl Transaction {
                     XfrAssetType::NonConfidential(e) => {
                         let value = e.zei_to_bytes();
                         asset_type.set_non_confidential(&value);
-                    },
+                    }
                     XfrAssetType::Confidential(e) => {
                         let value = e.zei_to_bytes();
                         asset_type.set_confidential(&value);
@@ -386,10 +401,14 @@ impl Transaction {
                 }
             }
 
-            let signature_len: u32 = self.signatures.len().try_into().map_err(|e| eg!(format!("{}", e)))?;
+            let signature_len: u32 = self
+                .signatures
+                .len()
+                .try_into()
+                .map_err(|e| eg!(format!("{}", e)))?;
             let mut signatures = transaction.reborrow().init_signature(signature_len);
 
-            for i in 0 .. self.inputs.len() {
+            for i in 0..self.inputs.len() {
                 let ori_sign = &self.signatures[i];
 
                 let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
@@ -402,17 +421,13 @@ impl Transaction {
             let mut proof = transaction.init_proof();
 
             match &self.proof {
-                AssetTypeAndAmountProof::NoProof => { proof.reborrow().set_no_proof(()) },
+                AssetTypeAndAmountProof::NoProof => proof.reborrow().set_no_proof(()),
                 AssetTypeAndAmountProof::AssetMix(a) => {
                     let value = a.into_r1cs().zei_to_bytes();
                     proof.reborrow().set_asset_mix(&value);
                 }
                 AssetTypeAndAmountProof::ConfAsset(a) => {
-                    let len = if a.zero.is_some() {
-                        2
-                    } else {
-                        1
-                    };
+                    let len = if a.zero.is_some() { 2 } else { 1 };
 
                     let mut ca = proof.reborrow().init_confidential_asset(len);
 
@@ -475,11 +490,7 @@ impl Transaction {
                     {
                         let p = &a.1;
 
-                        let len = if p.zero.is_some() {
-                            2
-                        } else {
-                            1
-                        };
+                        let len = if p.zero.is_some() { 2 } else { 1 };
 
                         let mut ca = proof.init_asset(len);
                         {
@@ -523,4 +534,3 @@ impl Transaction {
         Ok(result)
     }
 }
-

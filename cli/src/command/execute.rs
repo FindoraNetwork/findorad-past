@@ -6,7 +6,7 @@ use crate::config::Config;
 #[derive(Clap, Debug)]
 pub struct Command {
     /// Name of batch.
-    batch_name: String
+    batch_name: String,
 }
 
 impl Command {

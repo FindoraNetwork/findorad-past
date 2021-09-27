@@ -2,7 +2,7 @@ use clap::{Clap, IntoApp};
 
 pub mod command;
 pub mod config;
-// pub mod utils;
+pub mod utils;
 pub mod entry;
 
 fn main() {

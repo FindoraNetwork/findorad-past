@@ -17,7 +17,7 @@ use zei::{
 };
 
 pub mod utxo_module_rpc {
-    include!(concat!(env!("OUT_DIR"),"/utxomodule.rs"));
+    include!(concat!(env!("OUT_DIR"), "/utxomodule.rs"));
 }
 
 pub mod calls;

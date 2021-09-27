@@ -1,7 +1,10 @@
 use clap::Clap;
+use rand_core::{RngCore, SeedableRng};
+use rand_chacha::ChaChaRng;
 use ruc::*;
+use zei::{serialization::ZeiFromToBytes, xfr::{sig::XfrSecretKey, structs::{ASSET_TYPE_LENGTH, AssetType}}};
 
-use crate::config::Config;
+use crate::{config::Config, entry::{Entry, IssueEntry, build_transaction}, utils::send_tx};
 
 #[derive(Clap, Debug)]
 pub struct Command {
@@ -10,81 +13,41 @@ pub struct Command {
     batch: Option<String>,
 
     #[clap(short, long)]
-    secret_key: Option<String>,
+    secret_key: String,
 
     #[clap(short = 'a', long)]
     amount: u64,
-
-    #[clap(short = 't', long)]
-    asset_type: u8,
 
     #[clap(short = 'A', long)]
     confidential_amount: bool,
 }
 
 impl Command {
-    pub fn execute(&self, config: Config) -> Result<()> {
+    pub fn execute(&self, _config: Config) -> Result<()> {
+        let mut prng = ChaChaRng::from_entropy();
 
-   //      if let Some(batch) = self.batch.clone() {
-        //
-        //     let mut path = config.node.home;
-        //     path.push("issue");
-        //
-        //     if !batch.eq("execute") {
-        //
-        //         let ibe = self.check().c(d!())?;
-        //
-        //         path.push(batch);
-        //
-        //         save_issue_to_batch(&path, ibe).c(d!())?;
-        //
-        //     } else {
-        //         let dir = std::fs::read_dir(path.as_path()).c(d!())?;
-        //         let mut batch_vec = vec![];
-        //         for entry in dir {
-        //             let e = entry.c(d!())?;
-        //             let file_path = e.path();
-        //             let mut v = read_issue_from_batch(&file_path).c(d!())?;
-        //             batch_vec.append(&mut v);
-        //         }
-        //
-        //         let tx = issue_tx(batch_vec).c(d!())?;
-        //         send_tx(&tx).c(d!())?;
-        //
-        //     }
-        //     return Ok(());
-        // }
-        //
-        // let ibe = self.check().c(d!())?;
-        //
-        // let tx = issue_tx(vec![ibe]).c(d!())?;
-        // send_tx(&tx).c(d!())?;
-//
+        let mut asset_type = [0u8; ASSET_TYPE_LENGTH];
+        prng.fill_bytes(&mut asset_type);
+
+        let sk_bytes = base64::decode(&self.secret_key).c(d!())?;
+        let sk = XfrSecretKey::zei_from_bytes(&sk_bytes)?;
+        let keypair = sk.into_keypair();
+
+        let entry = Entry::Issue(IssueEntry {
+                amount: self.amount,
+                asset_type: AssetType(asset_type),
+                confidential_amount: self.confidential_amount,
+                keypair,
+        });
+
+        if let Some(_e) = &self.batch {
+
+        } else {
+            let tx = build_transaction(&mut prng, vec![entry])?;
+
+            send_tx(&tx);
+        }
+
         Ok(())
     }
-
-//     fn check(&self) -> Result<IssueBatchEntry> {
-        // let secret_key = self.secret_key.clone().ok_or(d!("secret key must set"))?;
-        // let keypair = secret_key_to_keypair(secret_key)?;
-        // let amount = self.amount.clone().ok_or(d!("amount must set"))?;
-        //
-        // let asset_type = self.asset_type;
-        //
-        //
-        // if asset_type.len() > 32 {
-        //     return Err(Box::from(d!("asset type must be less than or equal to 32 bits")));
-        // }
-        //
-        // let mut at = [0_u8;32];
-        // for (index,n) in asset_type.iter().enumerate() {
-        //     at[index] = *n;
-        // }
-        //
-        // let ibe = IssueBatchEntry{
-        //     keypair,
-        //     amount,
-        //     asset_type: XfrAssetType::NonConfidential(AssetType{ 0:at }),
-        // };
-        // Ok(ibe)
-//     }
 }

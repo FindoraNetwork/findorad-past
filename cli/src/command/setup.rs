@@ -1,4 +1,4 @@
-use clap::{Clap, ArgGroup};
+use clap::{ArgGroup, Clap};
 use ruc::*;
 
 use crate::config::Config;
@@ -13,7 +13,6 @@ pub struct Command {
     #[clap(short = 'S', long, group = "server_address")]
     /// Get findorad rpc address.
     get_server_address: bool,
-
 }
 
 impl Command {
@@ -27,7 +26,7 @@ impl Command {
         if let Some(addr) = &self.set_server_address {
             config.node.address = addr.clone();
             config.save()?;
-        } 
+        }
 
         Ok(())
     }
