@@ -1,8 +1,6 @@
 use ruc::*;
 use zei::{
-    setup::PublicParams,
     xfr::{
-        asset_record::AssetRecordType,
         sig::{XfrKeyPair, XfrPublicKey, XfrSecretKey},
         structs::{BlindAssetRecord, XfrAmount, XfrAssetType, AssetType},
     },
@@ -13,10 +11,10 @@ use findorad_lib::utxo_module_rpc;
 use libfindora::utxo::{GetOwnedUtxoReq, GetOwnedUtxoResp};
 use tokio::runtime::Runtime;
 use serde_json::Value;
-use hex_literal::hex;
 use sha3::{Digest, Sha3_256};
-use std::fs;
-use serde_json::json;
+use std::path::PathBuf;
+use crate::entry::{IssueBatchEntry, TransferBatchEntry, BalanceEntry};
+use std::collections::HashMap;
 
 pub fn secret_key_to_keypair(secret_key: String) -> Result<XfrKeyPair> {
     let str = &format!("\"{}\"", secret_key);
@@ -31,26 +29,21 @@ pub fn public_key_from_base64(pk: String) -> Result<XfrPublicKey> {
         .and_then(|bytes| XfrPublicKey::zei_from_bytes(&bytes).c(d!()))
 }
 
-pub fn issue_asset(
-    secret_key: String,
-    amount: u64,
-    asset_type: u8,
-    batch_file: Option<String>,
-) -> Result<()>{
-
-    let kp = secret_key_to_keypair(secret_key)?;
-
-    let mut outputs = Vec::new();
+pub fn issue_tx(batch_vec:Vec<IssueBatchEntry>) -> Result<Transaction> {
     let mut tx = Transaction::default();
-    let bar = BlindAssetRecord{
-        amount: XfrAmount::NonConfidential(amount),
-        asset_type: XfrAssetType::NonConfidential(AssetType::from_identical_byte(asset_type)),
-        public_key: kp.pub_key,
-    };
-    let output = Output{ core: bar, operation: OutputOperation::IssueAsset};
-    outputs.push(output);
 
-    tx.outputs = outputs;
+    for entry in batch_vec.iter() {
+
+        let bar = BlindAssetRecord{
+            amount: XfrAmount::NonConfidential(entry.amount),
+            asset_type: entry.asset_type.clone(),
+            public_key: entry.keypair.pub_key,
+        };
+
+        let output = Output{ core: bar, operation: OutputOperation::IssueAsset};
+        tx.outputs.push(output);
+
+    }
 
     let tx_msg = serde_json::to_vec(&tx).c(d!())?;
     let mut hasher = Sha3_256::new();
@@ -59,86 +52,110 @@ pub fn issue_asset(
     let txid = hasher.finalize();
     tx.txid = txid.as_slice().to_vec();
 
-    if is_batch(batch_file,&tx)? {
-        return Ok(());
-    }
-
-    send_tx(&tx);
-    Ok(())
+    Ok(tx)
 }
 
-pub fn transfer(
-    from: String,
-    to: String,
-    amount: u64,
-    asset_type: u8,
-    batch_file: Option<String>,
-) -> Result<()>{
-
-    let from_kp = secret_key_to_keypair(from)?;
-    let to_pk = public_key_from_base64(to)?;
-
-    let provider = abcf_sdk::providers::HttpProvider{};
-    let param = GetOwnedUtxoReq{ owner: from_kp.pub_key.zei_to_bytes() };
-    let rt = Runtime::new().unwrap();
-    let mut value:Option<Value> = None;
-    rt.block_on(async {
-        let result = utxo_module_rpc::get_owned_outputs(param, provider).await.unwrap();
-        value = result;
-    });
-
-    if value.is_none() {
-        return Err(Box::from(d!("Insufficient balance")))
-    }
-
-    let gour = serde_json::from_value::<GetOwnedUtxoResp>(value.unwrap()).c(d!())?;
+pub fn transfer_tx (batch_map:HashMap<XfrPublicKey,Vec<TransferBatchEntry>>) -> Result<Transaction> {
     let mut tx = Transaction::default();
-    let mut inputs = vec![];
-    let mut outputs = vec![];
-    let mut sum = 0;
 
-    for oop in gour.outputs {
-        if sum >= amount {
-            break;
+    for (pub_key,vec) in batch_map.iter() {
+        let provider = abcf_sdk::providers::HttpPostProvider{};
+        let param = GetOwnedUtxoReq{ owner: pub_key.zei_to_bytes() };
+        let rt = Runtime::new().unwrap();
+        let mut value:Option<Value> = None;
+        rt.block_on(async {
+            let result = utxo_module_rpc::get_owned_outputs(param, provider).await.unwrap();
+            value = result;
+        });
+
+        if value.is_none() {
+            return Err(Box::from(d!("Insufficient balance")))
         }
-        sum += oop.core.amount.get_amount().unwrap();
 
-        let mut input = Input{
-            txid: oop.txid,
-            n: oop.n,
-            operation: InputOperation::TransferAsset,
-        };
+        let gour = serde_json::from_value::<GetOwnedUtxoResp>(value.unwrap()).c(d!())?;
 
-        // TODO : Calculated signatures eg. tx.signatures.push(sig)
-        inputs.push(input);
+        // ty ---> amount map
+        let mut balance_total_map:HashMap<AssetType,BalanceEntry> = HashMap::new();
+
+        vec.iter().for_each(|entry|{
+
+            let ty = entry.asset_type.clone();
+
+            if !ty.is_confidential() {
+                // safe unsafe
+                let at = ty.get_asset_type().unwrap();
+                if let Some(be) = balance_total_map.get_mut(&at) {
+                    be.amount += entry.amount;
+                } else {
+                    let be = BalanceEntry {
+                        amount: entry.amount,
+                        balance: 0,
+                    };
+
+                    balance_total_map.insert(at.clone(),be);
+                }
+
+                // transfer output
+                let bar_to_target = BlindAssetRecord{
+                    amount: XfrAmount::NonConfidential(entry.amount),
+                    asset_type: entry.asset_type.clone(),
+                    public_key: entry.to
+                };
+
+                let output_to_target = Output{ core: bar_to_target, operation: OutputOperation::TransferAsset };
+                tx.outputs.push(output_to_target);
+            }
+
+        });
+
+        for oop in gour.outputs {
+
+            if !oop.core.asset_type.is_confidential() {
+                let oop_am = oop.core.amount.get_amount().unwrap();
+                // safe unwrap
+                let at = oop.core.asset_type.get_asset_type().unwrap();
+                if let Some(be) = balance_total_map.get_mut(&at) {
+                    if be.amount == 0 {
+                        continue;
+                    }
+
+                    if oop_am >= be.amount {
+                        be.amount = 0;
+                        be.balance = oop_am - be.amount;
+                    } else {
+                        be.amount = be.amount - oop_am;
+                    }
+
+                    let input = Input{
+                        txid: oop.txid,
+                        n: oop.n,
+                        operation: InputOperation::TransferAsset,
+                    };
+
+                    tx.inputs.push(input)
+                }
+            }
+
+        }
+
+        // balance and determine
+        for (ty,be) in balance_total_map.iter() {
+
+            // Determine if there is enough money for the transfer
+            if be.amount > 0 {
+                return Err(Box::from(d!("Insufficient balance")));
+            }
+
+            // balance outputs
+            let bar_to_balance = BlindAssetRecord{
+                amount: XfrAmount::NonConfidential(be.balance),
+                asset_type: XfrAssetType::NonConfidential(*ty),
+                public_key: pub_key.clone()
+            };
+            let output_to_balance = Output{ core: bar_to_balance, operation: OutputOperation::TransferAsset };
+            tx.outputs.push(output_to_balance);
+        }
     }
-
-    if sum < amount {
-        return Err(Box::from(d!("Insufficient balance")))
-    }
-
-    let bar_to_target = BlindAssetRecord{
-        amount: XfrAmount::NonConfidential(amount),
-        asset_type: XfrAssetType::NonConfidential(AssetType::from_identical_byte(asset_type)),
-        public_key: to_pk
-    };
-    let output_to_target = Output{ core: bar_to_target, operation: OutputOperation::TransferAsset };
-    outputs.push(output_to_target);
-
-    // create balance outputs
-    if sum > amount {
-        let bar_to_balance = BlindAssetRecord{
-            amount: XfrAmount::NonConfidential(sum - amount),
-            asset_type: XfrAssetType::NonConfidential(AssetType::from_identical_byte(asset_type)),
-            public_key: from_kp.pub_key
-        };
-        let output_to_balance = Output{ core: bar_to_balance, operation: OutputOperation::TransferAsset };
-        outputs.push(output_to_balance);
-    }
-
-
-    tx.inputs = inputs;
-    tx.outputs = outputs;
 
     let tx_msg = serde_json::to_vec(&tx).c(d!())?;
     let mut hasher = Sha3_256::new();
@@ -147,87 +164,56 @@ pub fn transfer(
     let txid = hasher.finalize();
     tx.txid = txid.as_slice().to_vec();
 
-    if is_batch(batch_file,&tx)? {
-        return Ok(());
-    }
+    Ok(tx)
+}
 
-    send_tx(&tx);
+pub fn save_issue_to_batch(path: &PathBuf, json: IssueBatchEntry) -> Result<()> {
+    let mut data_vec = read_issue_from_batch(path).c(d!())?;
+    data_vec.push(json);
+    let data_bytes = serde_json::to_vec(&data_vec).c(d!())?;
+    std::fs::write(path.as_path(),data_bytes).c(d!())?;
     Ok(())
 }
 
-fn is_batch(batch_file:Option<String>,tx:&Transaction) -> Result<bool> {
-    if let Some(file) = batch_file {
-        let data_bytes = fs::read(&file).c(d!())?;
-        let mut data_vec = serde_json::from_slice::<Vec<Value>>(&*data_bytes).c(d!())?;
-        let tx_json = serde_json::to_value(tx).c(d!())?;
-        data_vec.push(tx_json);
-        let data_bytes = serde_json::to_vec(&data_vec).c(d!())?;
-        fs::write(&file, data_bytes).c(d!())?;
+pub fn read_issue_from_batch(path: &PathBuf) -> Result<Vec<IssueBatchEntry>> {
+    let data = std::fs::read(path.as_path()).c(d!())?;
+    let data_vec = serde_json::from_slice::<Vec<IssueBatchEntry>>(&*data).c(d!())?;
+    Ok(data_vec)
+}
 
-        return Ok(true);
+pub fn save_transfer_to_batch(path: &PathBuf, json:TransferBatchEntry) -> Result<()>{
+    let mut data_map = read_transfer_from_batch(path).c(d!())?;
+    if let Some(pubkey_entry_vec) = data_map.get_mut(&json.from.pub_key) {
+        pubkey_entry_vec.push(json);
+    } else {
+        let pub_key = json.from.pub_key.clone();
+        let v = vec![json];
+        data_map.insert(pub_key, v);
     }
 
-    return Ok(false);
+    let data_bytes = serde_json::to_vec(&data_map).c(d!())?;
+    std::fs::write(path.as_path(),data_bytes).c(d!())?;
+    Ok(())
+}
+
+pub fn read_transfer_from_batch(path: &PathBuf) -> Result<HashMap<XfrPublicKey,Vec<TransferBatchEntry>>> {
+    let data = std::fs::read(path.as_path()).c(d!())?;
+    let data_map
+        = serde_json::from_slice::<HashMap<XfrPublicKey,Vec<TransferBatchEntry>>>(&*data).c(d!())?;
+    Ok(data_map)
 }
 
 pub fn send_tx(tx: &Transaction) -> Result<()>{
-    let url = "http://127.0.0.1:26657/broadcast_tx_async";
-    println!("tx:{:?}",tx);
 
     let tx_capnp = tx.to_bytes()?;
-    // let tx_json = json!({
-    //     "tx":tx_capnp
-    // });
-
-    // let tx_json_vec = serde_json::to_vec(&tx_json).c(d!())?;
 
     let tx_hex = hex::encode(&tx_capnp);
     println!("tx hex:{:?}",tx_hex);
 
-    let tx_base64 = base64::encode_config(&tx_hex, base64::URL_SAFE);
-    println!("tx base64:{:?}",tx_base64);
-
-    let json_rpc = json!({
-        "jsonrpc":"2.0",
-        "id":"anything",
-        "method":"broadcast_tx_sync",
-        "params":{
-            "tx":tx_hex
-        }
-    });
-
-    println!("jsonrpc:{}",json_rpc);
-
-    // let r = attohttpc::post(url)
-    //     .header(attohttpc::header::CONTENT_TYPE, "application/json")
-    //     .text(json_rpc)
-    //     .send()
-    //     .c(d!())?;
-
     let rt = Runtime::new().unwrap();
     rt.block_on(async {
-        // let mut r = reqwest::Client::new()
-        //     .post(url)
-        //     .body(json_rpc.to_string())
-        //     .send()
-        //     .await
-        //     .unwrap()
-        //     .json::<Value>()
-        //     .await
-        //     .unwrap();
-        //
-        // println!("resp: {:?}",r);
-
-        let mut r = reqwest::Client::new()
-            .get(url)
-            .query(&[("tx","0x".to_string() + tx_hex.as_str())])
-            .send()
-            .await
-            .unwrap()
-            .json::<Value>()
-            .await
-            .unwrap();
-
+        let provider = abcf_sdk::providers::HttpGetProvider{};
+        let r = utxo_module_rpc::send_tx(tx_hex,"broadcast_tx_async",provider).await;
         println!("resp: {:?}",r);
     });
 
@@ -239,7 +225,7 @@ pub fn send_tx(tx: &Transaction) -> Result<()>{
 #[test]
 fn test_issue_asset() -> Result<()>{
 
-    let mut from = fs::read_to_string("/root/serkey6").c(d!())?;
+    let mut from = std::fs::read_to_string("/root/serkey6").c(d!())?;
     from = from.replace("\n", "");
     let asset_type = 0_u8;
     let amount = 100_u64;
@@ -247,7 +233,7 @@ fn test_issue_asset() -> Result<()>{
     issue_asset(from.clone(),amount,asset_type,None).c(d!())?;
 
     let from_kp = secret_key_to_keypair(from)?;
-    let provider = abcf_sdk::providers::HttpProvider{};
+    let provider = abcf_sdk::providers::HttpPostProvider{};
     let param = GetOwnedUtxoReq{ owner: from_kp.pub_key.zei_to_bytes() };
     let rt = Runtime::new().unwrap();
     rt.block_on(async {
@@ -261,7 +247,7 @@ fn test_issue_asset() -> Result<()>{
 #[test]
 fn test_transfer() -> Result<()>{
 
-    let mut from = fs::read_to_string("/root/serkey6").c(d!())?;
+    let mut from = std::fs::read_to_string("/root/serkey6").c(d!())?;
     from = from.replace("\n", "");
     let asset_type = 0_u8;
     let amount = 10_u64;
@@ -270,7 +256,7 @@ fn test_transfer() -> Result<()>{
     transfer(from.clone(), to.to_string(), amount, asset_type, None).c(d!())?;
 
     let from_kp = secret_key_to_keypair(from)?;
-    let provider = abcf_sdk::providers::HttpProvider{};
+    let provider = abcf_sdk::providers::HttpPostProvider{};
     let param = GetOwnedUtxoReq{ owner: from_kp.pub_key.zei_to_bytes() };
     let rt = Runtime::new().unwrap();
     rt.block_on(async {
