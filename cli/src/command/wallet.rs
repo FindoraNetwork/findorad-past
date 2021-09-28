@@ -1,8 +1,14 @@
+use abcf_sdk::providers::{HttpGetProvider};
 use clap::{ArgGroup, Clap};
+use findorad_lib::utxo_module_rpc::get_owned_outputs;
+use libfindora::utxo::{GetOwnedUtxoReq};
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use ruc::*;
-use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrKeyPair};
+use zei::{
+    serialization::ZeiFromToBytes,
+    xfr::sig::{XfrKeyPair, XfrSecretKey},
+};
 
 use crate::config::Config;
 
@@ -24,10 +30,16 @@ pub struct Command {
     #[clap(short, long, group = "account")]
     /// List account.
     generate: bool,
+
+    #[clap(short, long, group = "account")]
+    /// Show account info.
+    show: bool,
+
+    wallet: Option<String>,
 }
 
 impl Command {
-    pub fn execute(&self, _config: Config) -> Result<()> {
+    pub async fn execute(&self, _config: Config) -> Result<()> {
         if self.generate {
             let mut prng = ChaChaRng::from_entropy();
             let keypair = XfrKeyPair::generate(&mut prng);
@@ -42,6 +54,42 @@ impl Command {
 
             println!("Secret key is: {}", sk_bytes_64);
         }
+
+        if self.show {
+            let wallets = if let Some(w) = &self.wallet {
+                let sk_bytes = base64::decode(&w).c(d!())?;
+                let sk = XfrSecretKey::zei_from_bytes(&sk_bytes)?;
+
+                let keypair = sk.into_keypair();
+                vec![keypair]
+            } else {
+                // TODO: Read wallet from home.
+                Vec::new()
+            };
+
+            let params = GetOwnedUtxoReq {
+                owners: wallets.iter().map(|kp| kp.get_pk()).collect(),
+            };
+
+            let provider = HttpGetProvider {};
+
+            let result = get_owned_outputs(provider, params).await.unwrap();
+
+            for output in result.data.c(d!())?.outputs {
+
+            }
+
+            // println!("{:?}", result);
+
+            //             if let Some(v) = result {
+            //     let resp: GetOwnedUtxoResp = serde_json::from_value(v).c(d!())?;
+            //
+            //     println!("{:?}", &resp);
+            // } else {
+            //     println!("error !");
+            //             }
+        }
+
         Ok(())
     }
 }

@@ -16,7 +16,7 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn execute(&self, config: Config) -> Result<()> {
+    pub async fn execute(&self, config: Config) -> Result<()> {
         let mut config = config;
 
         if self.get_server_address {
