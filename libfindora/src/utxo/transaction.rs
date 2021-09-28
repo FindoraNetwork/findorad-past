@@ -29,14 +29,21 @@ impl Default for UtxoTransacrion {
 
 impl From<&Transaction> for UtxoTransacrion {
     fn from(tx: &Transaction) -> Self {
-        let inputs = tx
-            .inputs
-            .iter()
-            .map(|i| Input {
-                txid: i.txid.clone(),
-                n: i.n,
-            })
-            .collect();
+        let mut inputs = Vec::new();
+
+        for input in &tx.inputs {
+            if input.txid == Vec::<u8>::new() {
+                inputs.push(Input {
+                    txid: tx.txid.clone(),
+                    n: input.n,
+                })
+            } else {
+                inputs.push(Input {
+                    txid: input.txid.clone(),
+                    n: input.n
+                })
+            }
+        }
 
         let outputs = tx.outputs.iter().map(|o| o.core.clone()).collect();
 

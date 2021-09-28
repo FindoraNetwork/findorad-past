@@ -1,7 +1,7 @@
 use clap::Clap;
 use ruc::*;
 
-use crate::{config::Config};
+use crate::config::Config;
 
 #[derive(Clap, Debug)]
 pub struct Command {

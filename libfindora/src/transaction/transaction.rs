@@ -1,14 +1,16 @@
 use std::convert::TryInto;
 
 use capnp::{message::ReaderOptions, serialize::read_message};
+use digest::Digest;
 use ruc::*;
 use serde::{Deserialize, Serialize};
+use sha3::Sha3_512;
 use zei::{
     chaum_pedersen::{ChaumPedersenProof, ChaumPedersenProofX},
     ristretto::{CompressedRistretto, RistrettoPoint, RistrettoScalar},
     serialization::ZeiFromToBytes,
     xfr::{
-        sig::XfrSignature,
+        sig::{XfrKeyPair, XfrSignature},
         structs::{
             AssetType, AssetTypeAndAmountProof, BlindAssetRecord, XfrAmount, XfrAssetType,
             XfrRangeProof, ASSET_TYPE_LENGTH,
@@ -307,6 +309,38 @@ impl abcf::module::FromBytes for Transaction {
 }
 
 impl Transaction {
+    pub fn signature(&mut self, keypairs: Vec<XfrKeyPair>) -> Result<()> {
+        if self.signatures.len() != 0 {
+            return Err(eg!("this tx is signed."));
+        }
+
+        println!(
+            "inputs len: {}, keypairs len: {}",
+            self.inputs.len(),
+            keypairs.len()
+        );
+
+        if self.inputs.len() != keypairs.len() {
+            return Err(eg!("please give right keypair for inputs."));
+        }
+
+        let bytes = self.to_bytes()?;
+
+        for i in 0..keypairs.len() {
+            let keypair = &keypairs[i];
+
+            let signature = keypair.sign(&bytes);
+
+            self.signatures.push(signature);
+        }
+
+        let bytes = self.to_bytes()?;
+
+        self.txid = Sha3_512::digest(&bytes).to_vec();
+
+        Ok(())
+    }
+
     pub fn to_bytes(&self) -> Result<Vec<u8>> {
         let mut result = Vec::new();
 
@@ -409,13 +443,15 @@ impl Transaction {
             let mut signatures = transaction.reborrow().init_signature(signature_len);
 
             for i in 0..self.inputs.len() {
-                let ori_sign = &self.signatures[i];
+                if let Some(signature) = self.signatures.get(i) {
+                    let ori_sign = signature;
 
-                let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
+                    let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
 
-                let value = ori_sign.zei_to_bytes();
+                    let value = ori_sign.zei_to_bytes();
 
-                signatures.set(index, &value)
+                    signatures.set(index, &value)
+                }
             }
 
             let mut proof = transaction.init_proof();
