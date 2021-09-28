@@ -9,7 +9,7 @@ edition = "2018"
 zei = { git = "ssh://git@github.com/FindoraNetwork/zei", branch = "feat-refactor" }
 ed25519-dalek = "1"
 curve25519-dalek = { version =  "3" }
-abcf = { git = "ssh://git@github.com/FindoraNetwork/abcf" }
+abcf = { git = "ssh://git@github.com/FindoraNetwork/abcf" , branch = "modify-rpc-macro"}
 serde = { version = "1.0", features = ["derive", "alloc"], default-features = false }
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 digest = "0.9"
@@ -18,6 +18,8 @@ ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 capnp = "0.14"
 bulletproofs = { package = "bulletproofs", git = "ssh://git@github.com/FindoraNetwork/bulletproofs", branch = "batch_verification", features = ["yoloproofs"] }
+log = "0.4.14"
+hex = "0.4.3"
 
 [build-dependencies]
 capnpc = "0.14"
