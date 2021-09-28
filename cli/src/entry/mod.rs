@@ -64,10 +64,12 @@ pub fn build_transaction<R: CryptoRng + RngCore>(
     let mut inputs = Vec::new();
     let mut output_ids = Vec::new();
     let mut outputs = Vec::new();
+    let mut keypairs = Vec::new();
 
     for entry in entries {
         match entry {
             Entry::Issue(e) => {
+                keypairs.push(e.keypair.clone());
                 let output = e.to_output_asset_record(prng)?;
                 input_ids.push((Vec::new(), 0, InputOperation::IssueAsset));
                 output_ids.push(OutputOperation::IssueAsset);
@@ -78,7 +80,7 @@ pub fn build_transaction<R: CryptoRng + RngCore>(
         };
     }
 
-    let mut zei_body = gen_xfr_body(&mut prng, &inputs, &outputs)?;
+    let mut zei_body = gen_xfr_body(prng, &inputs, &outputs)?;
 
     let mut tx_inputs = Vec::new();
     let mut tx_outputs = Vec::new();
@@ -102,11 +104,15 @@ pub fn build_transaction<R: CryptoRng + RngCore>(
         });
     }
 
-    Ok(Transaction {
+    let mut tx = Transaction {
         txid: Vec::new(),
         inputs: tx_inputs,
         outputs: tx_outputs,
         proof: zei_body.proofs.asset_type_and_amount_proof,
         signatures: Vec::new(),
-    })
+    };
+
+    tx.signature(keypairs)?;
+
+    Ok(tx)
 }
