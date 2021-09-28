@@ -1,14 +1,13 @@
-use abcf_sdk::providers::{HttpGetProvider};
+use std::collections::BTreeMap;
+
+use abcf_sdk::providers::HttpGetProvider;
 use clap::{ArgGroup, Clap};
 use findorad_lib::utxo_module_rpc::get_owned_outputs;
-use libfindora::utxo::{GetOwnedUtxoReq};
+use libfindora::utxo::GetOwnedUtxoReq;
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use ruc::*;
-use zei::{
-    serialization::ZeiFromToBytes,
-    xfr::sig::{XfrKeyPair, XfrSecretKey},
-};
+use zei::{serialization::ZeiFromToBytes, xfr::{asset_record::open_blind_asset_record, sig::{XfrKeyPair, XfrSecretKey}}};
 
 use crate::config::Config;
 
@@ -75,9 +74,26 @@ impl Command {
 
             let result = get_owned_outputs(provider, params).await.unwrap();
 
-            for output in result.data.c(d!())?.outputs {
+            let mut value_map = BTreeMap::new();
 
+            for oai in result.data.c(d!())?.outputs {
+                let keypair = &wallets[oai.0];
+                let output = oai.1.output;
+                let open_asset_record = open_blind_asset_record(&output.core, &output.owner_memo, keypair)?;
+
+                log::debug!("Open Asset Recore is:{:?}", open_asset_record);
+
+                let amount = open_asset_record.amount;
+                let asset_type = open_asset_record.asset_type;
+
+                if let Some(am) = value_map.get_mut(&asset_type) {
+                    *am += amount
+                } else {
+                    value_map.insert(asset_type, amount);
+                }
             }
+
+            println!("{:?}", value_map);
 
             // println!("{:?}", result);
 

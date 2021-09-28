@@ -1,4 +1,4 @@
-use std::{convert::TryInto};
+use std::convert::TryInto;
 
 use abcf::ToBytes;
 use capnp::{message::ReaderOptions, serialize::read_message};
@@ -314,12 +314,6 @@ impl Transaction {
         if self.signatures.len() != 0 {
             return Err(eg!("this tx is signed."));
         }
-
-        println!(
-            "inputs len: {}, keypairs len: {}",
-            self.inputs.len(),
-            keypairs.len()
-        );
 
         if self.inputs.len() != keypairs.len() {
             return Err(eg!("please give right keypair for inputs."));

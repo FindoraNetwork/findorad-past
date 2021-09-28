@@ -7,12 +7,13 @@ use abcf::{
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
 use libfindora::utxo::{
-    GetOwnedUtxoReq, GetOwnedUtxoResp, OutputId, OwnedOutput, UtxoTransacrion, ValidateTransaction,
+    GetOwnedUtxoReq, GetOwnedUtxoResp, Output, OutputId, OwnedOutput, UtxoTransacrion,
+    ValidateTransaction,
 };
 use rand_chacha::ChaChaRng;
 use zei::{
     setup::PublicParams,
-    xfr::{sig::XfrPublicKey, structs::BlindAssetRecord},
+    xfr::{sig::XfrPublicKey},
 };
 
 pub mod calls;
@@ -22,9 +23,9 @@ pub struct UtxoModule {
     params: PublicParams,
     prng: ChaChaRng,
     #[stateful]
-    pub output_set: Map<OutputId, BlindAssetRecord>,
+    pub output_set: Map<OutputId, Output>,
     #[stateless]
-    pub owned_outputs: Map<XfrPublicKey, Vec<OwnedOutput>>,
+    pub owned_outputs: Map<XfrPublicKey, Vec<OutputId>>,
 }
 
 #[abcf::rpcs]
@@ -36,14 +37,25 @@ impl UtxoModule {
     ) -> RPCResponse<GetOwnedUtxoResp> {
         let mut outputs = Vec::new();
 
-        for owner in request.owners {
+        for owner_id in 0 .. request.owners.len() {
+            let owner = &request.owners[owner_id];
             match context.stateless.owned_outputs.get(&owner) {
                 Err(e) => {
                     let error: abcf::Error = e.into();
                     return error.into();
                 }
                 Ok(v) => match v {
-                    Some(s) => outputs.append(&mut s.clone()),
+                    Some(s) => {
+                        let output_ids = s.as_ref();
+                        for output_id in output_ids {
+                            if let Ok(Some(output)) = context.stateful.output_set.get(&output_id) {
+                                outputs.push((owner_id, OwnedOutput {
+                                    output_id: output_id.clone(),
+                                    output: output.clone(),
+                                }))
+                            }
+                        }
+                    }
                     None => {}
                 },
             };
@@ -87,19 +99,16 @@ impl Application for UtxoModule {
                             };
                             let output = args.output;
 
-                            let owner = output.public_key;
-                            let owned_output = OwnedOutput {
-                                core: output.clone(),
-                                txid: output_id.txid.clone(),
-                                n: output_id.n,
-                            };
+                            let owner = output.core.public_key;
                             match context.stateless.owned_outputs.get_mut(&owner)? {
                                 Some(v) => {
-                                    v.push(owned_output);
+                                    println!("Got a haved value {:?}", v);
+                                    v.push(output_id.clone());
                                 }
                                 None => {
+                                    println!("Got a unhaved");
                                     let mut v = Vec::new();
-                                    v.push(owned_output);
+                                    v.push(output_id.clone());
                                     context.stateless.owned_outputs.insert(owner, v)?;
                                 }
                             }
@@ -122,9 +131,16 @@ impl Application for UtxoModule {
         for input in &tx.inputs {
             let record = context.stateful.output_set.remove(input)?;
             if let Some(r) = record {
-                validate_tx.inputs.push(r.clone());
-                if let Some(owned_outputs) = context.stateless.owned_outputs.get_mut(&r.public_key)? {
-                    if let Some(index) = owned_outputs.iter().position(|x| x.txid == input.txid && x.n == input.n) {
+                validate_tx.inputs.push(r.core.clone());
+                if let Some(owned_outputs) = context
+                    .stateless
+                    .owned_outputs
+                    .get_mut(&r.core.public_key)?
+                {
+                    if let Some(index) = owned_outputs
+                        .iter()
+                        .position(|x| x.txid == input.txid && x.n == input.n)
+                    {
                         owned_outputs.remove(index);
                     }
                 }
@@ -141,7 +157,7 @@ impl Application for UtxoModule {
         match result {
             Ok(_) => {
                 for i in 0..tx.outputs.len() {
-                    let output: &BlindAssetRecord = &tx.outputs[i];
+                    let output = &tx.outputs[i];
                     let txid = &tx.txid;
                     let n = i
                         .try_into()
@@ -155,25 +171,17 @@ impl Application for UtxoModule {
                     context
                         .stateful
                         .output_set
-                        .insert(output_id, output.clone())?;
+                        .insert(output_id.clone(), output.clone())?;
 
-                    let owner = output.public_key;
+                    let owner = output.core.public_key;
                     match context.stateless.owned_outputs.get_mut(&owner)? {
                         Some(v) => {
-                            v.push(OwnedOutput {
-                                core: output.clone(),
-                                txid: txid.clone(),
-                                n,
-                            });
+                            v.push(output_id);
                             log::debug!("Current list is: {:?}", v);
                         }
                         None => {
                             let mut v = Vec::new();
-                            v.push(OwnedOutput {
-                                core: output.clone(),
-                                txid: txid.clone(),
-                                n,
-                            });
+                            v.push(output_id);
                             context.stateless.owned_outputs.insert(owner, v)?;
                         }
                     }

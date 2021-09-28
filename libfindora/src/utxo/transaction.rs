@@ -1,6 +1,6 @@
 use crate::transaction::Transaction;
 use serde::{Deserialize, Serialize};
-use zei::xfr::structs::{AssetTypeAndAmountProof, BlindAssetRecord};
+use zei::xfr::structs::{AssetTypeAndAmountProof, BlindAssetRecord, OwnerMemo};
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Input {
@@ -8,11 +8,17 @@ pub struct Input {
     pub n: u32,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct Output {
+    pub core: BlindAssetRecord,
+    pub owner_memo: Option<OwnerMemo>,
+}
+
 #[derive(Debug)]
 pub struct UtxoTransacrion {
     pub txid: Vec<u8>,
     pub inputs: Vec<Input>,
-    pub outputs: Vec<BlindAssetRecord>,
+    pub outputs: Vec<Output>,
     pub proof: AssetTypeAndAmountProof,
 }
 
@@ -45,7 +51,14 @@ impl From<&Transaction> for UtxoTransacrion {
             }
         }
 
-        let outputs = tx.outputs.iter().map(|o| o.core.clone()).collect();
+        let mut outputs = Vec::new();
+
+        for output in &tx.outputs {
+            outputs.push(Output {
+                core: output.core.clone(),
+                owner_memo: output.owner_memo.clone(),
+            });
+        }
 
         Self {
             txid: tx.txid.clone(),
