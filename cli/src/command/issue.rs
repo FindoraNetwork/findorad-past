@@ -55,6 +55,7 @@ impl Command {
         if let Some(_e) = &self.batch {
         } else {
             let tx = build_transaction(&mut prng, vec![entry])?;
+            log::debug!("Result tx is: {:?}", tx);
 
             send_tx(&tx).await?;
         }

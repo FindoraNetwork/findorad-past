@@ -20,6 +20,8 @@ impl ValidateTransaction {
         prng: &mut C,
         params: &mut PublicParams,
     ) -> Result<()> {
+        println!("inputs :{:?}", self.inputs);
+        println!("outputs :{:?}", self.outputs);
         verify_bare_transaction(
             prng,
             params,

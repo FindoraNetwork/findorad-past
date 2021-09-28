@@ -102,11 +102,9 @@ impl Application for UtxoModule {
                             let owner = output.core.public_key;
                             match context.stateless.owned_outputs.get_mut(&owner)? {
                                 Some(v) => {
-                                    println!("Got a haved value {:?}", v);
                                     v.push(output_id.clone());
                                 }
                                 None => {
-                                    println!("Got a unhaved");
                                     let mut v = Vec::new();
                                     v.push(output_id.clone());
                                     context.stateless.owned_outputs.insert(owner, v)?;
@@ -150,6 +148,10 @@ impl Application for UtxoModule {
                     String::from("Output doesn't exists."),
                 ));
             }
+        }
+
+        for output in &tx.outputs {
+            validate_tx.outputs.push(output.core.clone());
         }
 
         let result = validate_tx.verify(&mut self.prng, &mut self.params);

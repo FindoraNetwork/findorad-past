@@ -79,6 +79,9 @@ impl Command {
             for oai in result.data.c(d!())?.outputs {
                 let keypair = &wallets[oai.0];
                 let output = oai.1.output;
+
+                log::debug!("{:?}", output);
+
                 let open_asset_record = open_blind_asset_record(&output.core, &output.owner_memo, keypair)?;
 
                 log::debug!("Open Asset Recore is:{:?}", open_asset_record);
