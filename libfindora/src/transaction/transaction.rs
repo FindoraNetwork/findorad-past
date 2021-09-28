@@ -1,5 +1,6 @@
-use std::convert::TryInto;
+use std::{convert::TryInto};
 
+use abcf::ToBytes;
 use capnp::{message::ReaderOptions, serialize::read_message};
 use digest::Digest;
 use ruc::*;
@@ -324,7 +325,7 @@ impl Transaction {
             return Err(eg!("please give right keypair for inputs."));
         }
 
-        let bytes = self.to_bytes()?;
+        let bytes = self.to_bytes().map_err(|e| eg!(format!("{:?}", e)))?;
 
         for i in 0..keypairs.len() {
             let keypair = &keypairs[i];
@@ -334,14 +335,16 @@ impl Transaction {
             self.signatures.push(signature);
         }
 
-        let bytes = self.to_bytes()?;
+        let bytes = self.to_bytes().map_err(|e| eg!(format!("{:?}", e)))?;
 
         self.txid = Sha3_512::digest(&bytes).to_vec();
 
         Ok(())
     }
+}
 
-    pub fn to_bytes(&self) -> Result<Vec<u8>> {
+impl ToBytes for Transaction {
+    fn to_bytes(&self) -> abcf::Result<Vec<u8>> {
         let mut result = Vec::new();
 
         let mut message = capnp::message::Builder::new_default();
@@ -356,13 +359,15 @@ impl Transaction {
                 .inputs
                 .len()
                 .try_into()
-                .map_err(|e| eg!(format!("{}", e)))?;
+                .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
             let mut inputs = transaction.reborrow().init_inputs(inputs_num);
 
             for i in 0..self.inputs.len() {
                 let ori_input = &self.inputs[i];
 
-                let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
+                let index: u32 = i
+                    .try_into()
+                    .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
 
                 let mut input = inputs.reborrow().get(index);
 
@@ -383,13 +388,15 @@ impl Transaction {
                 .outputs
                 .len()
                 .try_into()
-                .map_err(|e| eg!(format!("{}", e)))?;
+                .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
             let mut outputs = transaction.reborrow().init_outputs(outputs_num);
 
             for i in 0..self.outputs.len() {
                 let ori_output = &self.outputs[i];
 
-                let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
+                let index: u32 = i
+                    .try_into()
+                    .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
 
                 let mut output = outputs.reborrow().get(index);
 
@@ -439,14 +446,16 @@ impl Transaction {
                 .signatures
                 .len()
                 .try_into()
-                .map_err(|e| eg!(format!("{}", e)))?;
+                .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
             let mut signatures = transaction.reborrow().init_signature(signature_len);
 
             for i in 0..self.inputs.len() {
                 if let Some(signature) = self.signatures.get(i) {
                     let ori_sign = signature;
 
-                    let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
+                    let index: u32 = i.try_into().map_err(|e| {
+                        abcf::Error::ABCIApplicationError(90001, format!("{:?}", e))
+                    })?;
 
                     let value = ori_sign.zei_to_bytes();
 
@@ -565,7 +574,8 @@ impl Transaction {
             }
         }
 
-        capnp::serialize::write_message(&mut result, &message).c(d!())?;
+        capnp::serialize::write_message(&mut result, &message)
+            .map_err(|e| abcf::Error::ABCIApplicationError(90002, format!("{:?}", e)))?;
 
         Ok(result)
     }

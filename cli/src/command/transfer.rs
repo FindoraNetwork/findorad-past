@@ -23,7 +23,7 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn execute(&self, _config: Config) -> Result<()> {
+    pub async fn execute(&self, _config: Config) -> Result<()> {
         //     let mut path = config.node.home;
         //     path.push("transfer");
         //

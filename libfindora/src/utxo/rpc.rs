@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
-use zei::xfr::structs::BlindAssetRecord;
+use zei::xfr::{sig::XfrPublicKey, structs::BlindAssetRecord};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetOwnedUtxoReq {
-    pub owner: Vec<u8>,
+    pub owners: Vec<XfrPublicKey>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

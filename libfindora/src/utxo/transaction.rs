@@ -40,7 +40,7 @@ impl From<&Transaction> for UtxoTransacrion {
             } else {
                 inputs.push(Input {
                     txid: input.txid.clone(),
-                    n: input.n
+                    n: input.n,
                 })
             }
         }

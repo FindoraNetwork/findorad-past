@@ -11,14 +11,9 @@ use libfindora::utxo::{
 };
 use rand_chacha::ChaChaRng;
 use zei::{
-    serialization::ZeiFromToBytes,
     setup::PublicParams,
     xfr::{sig::XfrPublicKey, structs::BlindAssetRecord},
 };
-
-pub mod utxo_module_rpc {
-    include!(concat!(env!("OUT_DIR"), "/utxomodule.rs"));
-}
 
 pub mod calls;
 
@@ -39,28 +34,22 @@ impl UtxoModule {
         context: &mut abcf::manager::RContext<'_, abcf::Stateless<Self>, abcf::Stateful<Self>>,
         request: GetOwnedUtxoReq,
     ) -> RPCResponse<GetOwnedUtxoResp> {
-        match XfrPublicKey::zei_from_bytes(request.owner.as_ref()) {
-            Err(e) => {
-                let error = abcf::Error::RPCApplicationError(90001, format!("{:?}", e));
-                error.into()
-            }
-            Ok(owner) => {
-                let outputs = match context.stateless.owned_outputs.get(&owner) {
-                    Err(e) => {
-                        let error: abcf::Error = e.into();
-                        return error.into();
-                    }
-                    Ok(v) => match v {
-                        Some(s) => s.clone(),
-                        None => Vec::new(),
-                    },
-                };
+        let mut outputs = Vec::new();
 
-                let resp = GetOwnedUtxoResp { outputs };
-
-                RPCResponse::new(resp)
-            }
+        for owner in request.owners {
+            match context.stateless.owned_outputs.get(&owner) {
+                Err(e) => {
+                    let error: abcf::Error = e.into();
+                    return error.into();
+                }
+                Ok(v) => match v {
+                    Some(s) => outputs.append(&mut s.clone()),
+                    None => {}
+                },
+            };
         }
+        let resp = GetOwnedUtxoResp { outputs };
+        RPCResponse::new(resp)
     }
 }
 
@@ -122,7 +111,7 @@ impl Application for UtxoModule {
             }
         }
 
-        let tx = &req.tx;
+        let tx: &UtxoTransacrion = &req.tx;
 
         let mut validate_tx = ValidateTransaction {
             inputs: Vec::new(),
@@ -131,9 +120,14 @@ impl Application for UtxoModule {
         };
 
         for input in &tx.inputs {
-            let record = context.stateful.output_set.get(input)?;
+            let record = context.stateful.output_set.remove(input)?;
             if let Some(r) = record {
                 validate_tx.inputs.push(r.clone());
+                if let Some(owned_outputs) = context.stateless.owned_outputs.get_mut(&r.public_key)? {
+                    if let Some(index) = owned_outputs.iter().position(|x| x.txid == input.txid && x.n == input.n) {
+                        owned_outputs.remove(index);
+                    }
+                }
             } else {
                 return Err(abcf::Error::ABCIApplicationError(
                     90001,
@@ -146,9 +140,6 @@ impl Application for UtxoModule {
 
         match result {
             Ok(_) => {
-                for input in &tx.inputs {
-                    context.stateful.output_set.remove(input)?;
-                }
                 for i in 0..tx.outputs.len() {
                     let output: &BlindAssetRecord = &tx.outputs[i];
                     let txid = &tx.txid;
@@ -174,6 +165,7 @@ impl Application for UtxoModule {
                                 txid: txid.clone(),
                                 n,
                             });
+                            log::debug!("Current list is: {:?}", v);
                         }
                         None => {
                             let mut v = Vec::new();
@@ -198,3 +190,7 @@ impl Application for UtxoModule {
 /// Module's methods.
 #[abcf::methods]
 impl UtxoModule {}
+
+pub mod utxo_module_rpc {
+    include!(concat!(env!("OUT_DIR"), "/utxomodule.rs"));
+}

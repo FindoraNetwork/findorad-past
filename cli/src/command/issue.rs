@@ -33,7 +33,7 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn execute(&self, _config: Config) -> Result<()> {
+    pub async fn execute(&self, _config: Config) -> Result<()> {
         let mut prng = ChaChaRng::from_entropy();
 
         let mut asset_type = [0u8; ASSET_TYPE_LENGTH];
@@ -56,9 +56,7 @@ impl Command {
         } else {
             let tx = build_transaction(&mut prng, vec![entry])?;
 
-            // println!("{:?}", tx);
-
-            send_tx(&tx)?;
+            send_tx(&tx).await?;
         }
 
         Ok(())
