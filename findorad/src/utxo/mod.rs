@@ -11,10 +11,7 @@ use libfindora::utxo::{
     ValidateTransaction,
 };
 use rand_chacha::ChaChaRng;
-use zei::{
-    setup::PublicParams,
-    xfr::{sig::XfrPublicKey},
-};
+use zei::{setup::PublicParams, xfr::sig::XfrPublicKey};
 
 pub mod calls;
 
@@ -37,9 +34,9 @@ impl UtxoModule {
     ) -> RPCResponse<GetOwnedUtxoResp> {
         let mut outputs = Vec::new();
 
-        for owner_id in 0 .. request.owners.len() {
+        for owner_id in 0..request.owners.len() {
             let owner = &request.owners[owner_id];
-            match context.stateless.owned_outputs.get(&owner) {
+            match context.stateless.owned_outputs.get(owner) {
                 Err(e) => {
                     let error: abcf::Error = e.into();
                     return error.into();
@@ -49,10 +46,13 @@ impl UtxoModule {
                         let output_ids = s.as_ref();
                         for output_id in output_ids {
                             if let Ok(Some(output)) = context.stateful.output_set.get(&output_id) {
-                                outputs.push((owner_id, OwnedOutput {
-                                    output_id: output_id.clone(),
-                                    output: output.clone(),
-                                }))
+                                outputs.push((
+                                    owner_id,
+                                    OwnedOutput {
+                                        output_id: output_id.clone(),
+                                        output: output.clone(),
+                                    },
+                                ))
                             }
                         }
                     }

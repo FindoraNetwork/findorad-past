@@ -7,7 +7,13 @@ use libfindora::utxo::GetOwnedUtxoReq;
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use ruc::*;
-use zei::{serialization::ZeiFromToBytes, xfr::{asset_record::open_blind_asset_record, sig::{XfrKeyPair, XfrSecretKey}}};
+use zei::{
+    serialization::ZeiFromToBytes,
+    xfr::{
+        asset_record::open_blind_asset_record,
+        sig::{XfrKeyPair, XfrSecretKey},
+    },
+};
 
 use crate::config::Config;
 
@@ -82,7 +88,8 @@ impl Command {
 
                 log::debug!("{:?}", output);
 
-                let open_asset_record = open_blind_asset_record(&output.core, &output.owner_memo, keypair)?;
+                let open_asset_record =
+                    open_blind_asset_record(&output.core, &output.owner_memo, keypair)?;
 
                 log::debug!("Open Asset Recore is:{:?}", open_asset_record);
 

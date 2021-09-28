@@ -14,7 +14,7 @@ log = "0.4.14"
 ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
 serde = "1.0.130"
 toml = "0.5.8"
-zei = { git = "ssh://git@github.com/FindoraNetwork/zei", branch = "feat-refactor" }
+zei = { git = "ssh://git@github.com/tiannian/zei", branch = "feat-refactor" }
 libfindora = { path = "../libfindora" }
 findorad = { path = "../findorad" }
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }

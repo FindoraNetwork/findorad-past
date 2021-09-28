@@ -16,6 +16,12 @@ struct ConfidentialAmount {
     point1 @1: Data;
 }
 
+struct OwnerMemo {
+    blindShare @0: Data;
+    ctext @1: Data;
+    ephemeralPublicKey @2: Data;
+}
+
 struct Output {
     publicKey @0: Data;
 
@@ -34,6 +40,11 @@ struct Output {
     asset :union {
         confidential @4: Data;
         nonConfidential @5: Data;
+    }
+
+    ownerMemo :union {
+        none @6: Void;
+        some @7: OwnerMemo;
     }
 }
 
