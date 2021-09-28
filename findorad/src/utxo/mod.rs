@@ -194,7 +194,3 @@ impl Application for UtxoModule {
 /// Module's methods.
 #[abcf::methods]
 impl UtxoModule {}
-
-pub mod utxo_module_rpc {
-    include!(concat!(env!("OUT_DIR"), "/utxomodule.rs"));
-}
