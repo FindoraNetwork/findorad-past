@@ -1,8 +1,9 @@
 use std::convert::TryInto;
 
-use zei::xfr::structs::BlindAssetRecord;
-
-use crate::transaction::{OutputOperation, Transaction};
+use crate::{
+    transaction::{OutputOperation, Transaction},
+    utxo::Output,
+};
 
 mod rpc;
 pub use rpc::{GetAssetOwnerReq, GetAssetOwnerResp};
@@ -10,7 +11,7 @@ pub use rpc::{GetAssetOwnerReq, GetAssetOwnerResp};
 #[derive(Debug, Default)]
 pub struct CoinbaseTransacrion {
     pub txid: Vec<u8>,
-    pub outputs: Vec<(u32, BlindAssetRecord)>,
+    pub outputs: Vec<(u32, Output)>,
 }
 
 impl From<&Transaction> for CoinbaseTransacrion {
@@ -21,7 +22,13 @@ impl From<&Transaction> for CoinbaseTransacrion {
             let output = &tx.outputs[i];
             if let OutputOperation::IssueAsset = output.operation {
                 // safety unwrap
-                outputs.push((i.try_into().unwrap(), output.core.clone()))
+                outputs.push((
+                    i.try_into().unwrap(),
+                    Output {
+                        core: output.core.clone(),
+                        owner_memo: output.owner_memo.clone(),
+                    },
+                ))
             }
         }
 

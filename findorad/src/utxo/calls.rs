@@ -1,10 +1,10 @@
 use abcf::manager::CallEntry;
-use zei::xfr::structs::BlindAssetRecord;
+use libfindora::utxo::Output;
 
 pub struct ArgAddUtxo {
     pub txid: Vec<u8>,
     pub n: u32,
-    pub output: BlindAssetRecord,
+    pub output: Output,
 }
 
 impl ArgAddUtxo {

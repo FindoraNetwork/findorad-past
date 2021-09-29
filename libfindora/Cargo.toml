@@ -6,7 +6,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-zei = { git = "ssh://git@github.com/FindoraNetwork/zei", branch = "feat-refactor" }
+zei = { git = "ssh://git@github.com/tiannian/zei", branch = "feat-refactor" }
 ed25519-dalek = "1"
 curve25519-dalek = { version =  "3" }
 abcf = { git = "ssh://git@github.com/FindoraNetwork/abcf" , branch = "modify-rpc-macro"}

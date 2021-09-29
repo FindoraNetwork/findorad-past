@@ -1,5 +1,5 @@
 mod transaction;
-pub use transaction::{Input, Input as OutputId, UtxoTransacrion};
+pub use transaction::{Input, Input as OutputId, Output, UtxoTransacrion};
 
 mod validate;
 pub use validate::ValidateTransaction;

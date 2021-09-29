@@ -23,15 +23,15 @@ pub struct Opts {
 }
 
 impl Opts {
-    pub fn execute(&self) -> Result<()> {
+    pub async fn execute(&self) -> Result<()> {
         let config = Config::load(&self.home, &self.config)?;
 
         match &self.subcmd {
-            SubCommand::Setup(c) => c.execute(config)?,
-            SubCommand::Execute(c) => c.execute(config)?,
-            SubCommand::Transfer(c) => c.execute(config)?,
-            SubCommand::Issue(c) => c.execute(config)?,
-            SubCommand::Wallet(c) => c.execute(config)?,
+            SubCommand::Setup(c) => c.execute(config).await?,
+            SubCommand::Execute(c) => c.execute(config).await?,
+            SubCommand::Transfer(c) => c.execute(config).await?,
+            SubCommand::Issue(c) => c.execute(config).await?,
+            SubCommand::Wallet(c) => c.execute(config).await?,
         }
 
         Ok(())

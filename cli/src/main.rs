@@ -1,22 +1,21 @@
-use clap::{Clap, IntoApp};
+use clap::Clap;
 
 pub mod command;
 pub mod config;
 pub mod entry;
 pub mod utils;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     env_logger::init();
     let opts = command::Opts::parse();
 
-    match opts.execute() {
+    match opts.execute().await {
         Ok(_) => {}
         Err(e) => {
             e.print(None);
-
-            let mut app = command::Opts::into_app();
-            app.print_help().unwrap();
-
+            //             let mut app = command::Opts::into_app();
+            //             app.print_help().unwrap();
             panic!();
         }
     }

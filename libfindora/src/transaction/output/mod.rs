@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
 use zei::xfr::structs::{BlindAssetRecord, OwnerMemo};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Operation {
     TransferAsset,
     IssueAsset,
+    // Fee,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

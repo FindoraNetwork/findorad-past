@@ -1,5 +1,6 @@
 use std::convert::TryInto;
 
+use abcf::ToBytes;
 use capnp::{message::ReaderOptions, serialize::read_message};
 use digest::Digest;
 use ruc::*;
@@ -7,13 +8,14 @@ use serde::{Deserialize, Serialize};
 use sha3::Sha3_512;
 use zei::{
     chaum_pedersen::{ChaumPedersenProof, ChaumPedersenProofX},
-    ristretto::{CompressedRistretto, RistrettoPoint, RistrettoScalar},
+    hybrid_encryption::{XPublicKey, ZeiHybridCipher},
+    ristretto::{CompressedEdwardsY, CompressedRistretto, RistrettoPoint, RistrettoScalar},
     serialization::ZeiFromToBytes,
     xfr::{
         sig::{XfrKeyPair, XfrSignature},
         structs::{
-            AssetType, AssetTypeAndAmountProof, BlindAssetRecord, XfrAmount, XfrAssetType,
-            XfrRangeProof, ASSET_TYPE_LENGTH,
+            AssetType, AssetTypeAndAmountProof, BlindAssetRecord, OwnerMemo, XfrAmount,
+            XfrAssetType, XfrRangeProof, ASSET_TYPE_LENGTH,
         },
     },
 };
@@ -197,10 +199,47 @@ impl abcf::module::FromBytes for Transaction {
                 public_key: public_key.into(),
             };
 
+            let owner_memo = match output
+                .get_owner_memo()
+                .which()
+                .map_err(convert_capnp_noinschema)?
+            {
+                transaction_capnp::output::owner_memo::None(_) => None,
+                transaction_capnp::output::owner_memo::Some(a) => {
+                    // None
+                    let reader = a.map_err(convert_capnp_error)?;
+
+                    let ctext = zei::hybrid_encryption::Ctext::zei_from_bytes(
+                        reader.get_ctext().map_err(convert_capnp_error)?,
+                    )
+                    .map_err(convert_ruc_error)?;
+                    let ephemeral_public_key = XPublicKey::zei_from_bytes(
+                        reader
+                            .get_ephemeral_public_key()
+                            .map_err(convert_capnp_error)?,
+                    )
+                    .map_err(convert_ruc_error)?;
+                    let cipher = ZeiHybridCipher {
+                        ciphertext: ctext,
+                        ephemeral_public_key,
+                    };
+
+                    let blind_share = CompressedEdwardsY::zei_from_bytes(
+                        reader.get_blind_share().map_err(convert_capnp_error)?,
+                    )
+                    .map_err(convert_ruc_error)?;
+
+                    Some(OwnerMemo {
+                        blind_share,
+                        lock: cipher,
+                    })
+                }
+            };
+
             outputs.push(Output {
                 core,
                 operation,
-                owner_memo: None,
+                owner_memo: owner_memo,
             })
         }
 
@@ -314,17 +353,12 @@ impl Transaction {
             return Err(eg!("this tx is signed."));
         }
 
-        println!(
-            "inputs len: {}, keypairs len: {}",
-            self.inputs.len(),
-            keypairs.len()
-        );
 
         if self.inputs.len() != keypairs.len() {
             return Err(eg!("please give right keypair for inputs."));
         }
 
-        let bytes = self.to_bytes()?;
+        let bytes = self.to_bytes().map_err(|e| eg!(format!("{:?}", e)))?;
 
         for i in 0..keypairs.len() {
             let keypair = &keypairs[i];
@@ -334,14 +368,17 @@ impl Transaction {
             self.signatures.push(signature);
         }
 
-        let bytes = self.to_bytes()?;
+        let bytes = self.to_bytes().map_err(|e| eg!(format!("{:?}", e)))?;
 
         self.txid = Sha3_512::digest(&bytes).to_vec();
 
         Ok(())
     }
+}
 
-    pub fn to_bytes(&self) -> Result<Vec<u8>> {
+impl ToBytes for Transaction {
+    fn to_bytes(&self) -> abcf::Result<Vec<u8>> {
+
         let mut result = Vec::new();
 
         let mut message = capnp::message::Builder::new_default();
@@ -356,13 +393,16 @@ impl Transaction {
                 .inputs
                 .len()
                 .try_into()
-                .map_err(|e| eg!(format!("{}", e)))?;
+                .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
+
             let mut inputs = transaction.reborrow().init_inputs(inputs_num);
 
             for i in 0..self.inputs.len() {
                 let ori_input = &self.inputs[i];
 
-                let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
+                let index: u32 = i
+                    .try_into()
+                    .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
 
                 let mut input = inputs.reborrow().get(index);
 
@@ -383,13 +423,16 @@ impl Transaction {
                 .outputs
                 .len()
                 .try_into()
-                .map_err(|e| eg!(format!("{}", e)))?;
+                .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
+
             let mut outputs = transaction.reborrow().init_outputs(outputs_num);
 
             for i in 0..self.outputs.len() {
                 let ori_output = &self.outputs[i];
 
-                let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
+                let index: u32 = i
+                    .try_into()
+                    .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
 
                 let mut output = outputs.reborrow().get(index);
 
@@ -433,20 +476,35 @@ impl Transaction {
                         asset_type.set_confidential(&value);
                     }
                 }
+
+                let mut owner_memo = output.reborrow().get_owner_memo();
+
+                match &ori_output.owner_memo {
+                    Some(om) => {
+                        let mut omb = owner_memo.init_some();
+                        omb.set_blind_share(&om.blind_share.zei_to_bytes());
+                        omb.set_ctext(&om.lock.ciphertext.zei_to_bytes());
+                        omb.set_ephemeral_public_key(&om.lock.ephemeral_public_key.zei_to_bytes());
+                    }
+                    None => owner_memo.set_none(()),
+                }
             }
 
             let signature_len: u32 = self
                 .signatures
                 .len()
                 .try_into()
-                .map_err(|e| eg!(format!("{}", e)))?;
+                .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
+
             let mut signatures = transaction.reborrow().init_signature(signature_len);
 
             for i in 0..self.inputs.len() {
                 if let Some(signature) = self.signatures.get(i) {
                     let ori_sign = signature;
 
-                    let index: u32 = i.try_into().map_err(|e| eg!(format!("{}", e)))?;
+                    let index: u32 = i.try_into().map_err(|e| {
+                        abcf::Error::ABCIApplicationError(90001, format!("{:?}", e))
+                    })?;
 
                     let value = ori_sign.zei_to_bytes();
 
@@ -565,8 +623,8 @@ impl Transaction {
             }
         }
 
-        capnp::serialize::write_message(&mut result, &message).c(d!())?;
-
+        capnp::serialize::write_message(&mut result, &message)
+            .map_err(|e| abcf::Error::ABCIApplicationError(90002, format!("{:?}", e)))?;
         Ok(result)
     }
 }

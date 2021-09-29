@@ -1,19 +1,20 @@
 use serde::{Deserialize, Serialize};
-use zei::xfr::structs::BlindAssetRecord;
+use zei::xfr::sig::XfrPublicKey;
+
+use super::{transaction::Output, OutputId};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetOwnedUtxoReq {
-    pub owner: Vec<u8>,
+    pub owners: Vec<XfrPublicKey>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct OwnedOutput {
-    pub txid: Vec<u8>,
-    pub n: u32,
-    pub core: BlindAssetRecord,
+    pub output_id: OutputId,
+    pub output: Output,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetOwnedUtxoResp {
-    pub outputs: Vec<OwnedOutput>,
+    pub outputs: Vec<(usize, OwnedOutput)>,
 }
