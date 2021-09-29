@@ -154,8 +154,6 @@ impl Application for UtxoModule {
             validate_tx.outputs.push(output.core.clone());
         }
 
-        println!("{:?}", validate_tx);
-
         let result = validate_tx.verify(&mut self.prng, &mut self.params);
 
         match result {
