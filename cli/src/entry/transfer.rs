@@ -137,13 +137,21 @@ pub async fn build_input_asset_record_and_id<R: CryptoRng + RngCore>(
                 outputs.push(asset_record);
 
                 for (keypair, output_id, open_asset_record) in &open_input {
-                    if open_asset_record.asset_type == k.1 && open_asset_record.blind_asset_record.public_key == k.0 {
-                        let asset_record = AssetRecord::from_open_asset_record_no_asset_tracing(open_asset_record.clone());
+                    if open_asset_record.asset_type == k.1
+                        && open_asset_record.blind_asset_record.public_key == k.0
+                    {
+                        let asset_record = AssetRecord::from_open_asset_record_no_asset_tracing(
+                            open_asset_record.clone(),
+                        );
 
-                        inputs.push((keypair.clone(), output_id.txid.clone(), output_id.n, asset_record));
+                        inputs.push((
+                            keypair.clone(),
+                            output_id.txid.clone(),
+                            output_id.n,
+                            asset_record,
+                        ));
                     }
                 }
-
             }
         } else {
             return Err(eg!("no this asset for this user"));

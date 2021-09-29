@@ -4,7 +4,7 @@ use abcf::{
         MapStore,
     },
     manager::TContext,
-    module::types::{RequestDeliverTx, ResponseDeliverTx},
+    module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
 use libfindora::coinbase::{CoinbaseTransacrion, GetAssetOwnerReq, GetAssetOwnerResp};
@@ -53,6 +53,14 @@ impl CoinbaseModule {
 #[abcf::application]
 impl Application for CoinbaseModule {
     type Transaction = CoinbaseTransacrion;
+
+    async fn check_tx(
+        &mut self,
+        _context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        _req: &RequestCheckTx<Self::Transaction>,
+    ) -> abcf::Result<ResponseCheckTx> {
+        Ok(Default::default())
+    }
 
     /// Execute transaction on state.
     async fn deliver_tx(

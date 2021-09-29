@@ -13,7 +13,7 @@ use zei::{
 use crate::{
     config::Config,
     entry::{build_transaction, Entry, IssueEntry},
-    utils::send_tx,
+    utils::{send_tx, write_list},
 };
 
 #[derive(Clap, Debug)]
@@ -33,7 +33,7 @@ pub struct Command {
 }
 
 impl Command {
-    pub async fn execute(&self, _config: Config) -> Result<()> {
+    pub async fn execute(&self, config: Config) -> Result<()> {
         let mut prng = ChaChaRng::from_entropy();
 
         let mut asset_type = [0u8; ASSET_TYPE_LENGTH];
@@ -52,7 +52,8 @@ impl Command {
             keypair,
         });
 
-        if let Some(_e) = &self.batch {
+        if let Some(b) = &self.batch {
+            write_list(&config, b, vec![entry]).await?;
         } else {
             let tx = build_transaction(&mut prng, vec![entry]).await?;
             log::debug!("Result tx is: {:?}", tx);

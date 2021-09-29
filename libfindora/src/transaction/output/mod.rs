@@ -5,6 +5,7 @@ use zei::xfr::structs::{BlindAssetRecord, OwnerMemo};
 pub enum Operation {
     TransferAsset,
     IssueAsset,
+    // Fee,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
