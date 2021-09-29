@@ -353,6 +353,7 @@ impl Transaction {
             return Err(eg!("this tx is signed."));
         }
 
+
         if self.inputs.len() != keypairs.len() {
             return Err(eg!("please give right keypair for inputs."));
         }
@@ -377,6 +378,7 @@ impl Transaction {
 
 impl ToBytes for Transaction {
     fn to_bytes(&self) -> abcf::Result<Vec<u8>> {
+
         let mut result = Vec::new();
 
         let mut message = capnp::message::Builder::new_default();
@@ -392,6 +394,7 @@ impl ToBytes for Transaction {
                 .len()
                 .try_into()
                 .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
+
             let mut inputs = transaction.reborrow().init_inputs(inputs_num);
 
             for i in 0..self.inputs.len() {
@@ -421,6 +424,7 @@ impl ToBytes for Transaction {
                 .len()
                 .try_into()
                 .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
+
             let mut outputs = transaction.reborrow().init_outputs(outputs_num);
 
             for i in 0..self.outputs.len() {
@@ -491,6 +495,7 @@ impl ToBytes for Transaction {
                 .len()
                 .try_into()
                 .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?;
+
             let mut signatures = transaction.reborrow().init_signature(signature_len);
 
             for i in 0..self.inputs.len() {
@@ -620,7 +625,6 @@ impl ToBytes for Transaction {
 
         capnp::serialize::write_message(&mut result, &message)
             .map_err(|e| abcf::Error::ABCIApplicationError(90002, format!("{:?}", e)))?;
-
         Ok(result)
     }
 }

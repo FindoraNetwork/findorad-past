@@ -23,7 +23,6 @@ pub struct Command {
     #[clap(short, long)]
     /// Special a batch name.
     batch: Option<String>,
-
     #[clap(short = 'f', long)]
     /// From secret key.
     from_secret_key: String,
@@ -81,4 +80,40 @@ impl Command {
 
         Ok(())
     }
+
+    //  fn check(&self) -> Result<TransferBatchEntry> {
+    // let secret_key = self.secret_key.clone().ok_or(d!("secret key must set"))?;
+    // let from = secret_key_to_keypair(secret_key).c(d!())?;
+    // let amount = self.amount.clone().ok_or(d!("amount must set"))?;
+    // let target = self.target.clone().ok_or(d!("target must set"))?;
+    // let to = public_key_from_base64(target).c(d!())?;
+    //
+    // let asset_type = self.asset_type.clone().unwrap_or({
+    //     let mut rng = thread_rng();
+    //     let chars: String = iter::repeat(())
+    //         .map(|()| rng.sample(Alphanumeric))
+    //         .map(char::from)
+    //         .take(32)
+    //         .collect();
+    //     chars
+    // }).as_bytes().to_vec();
+    //
+    // if asset_type.len() > 32 {
+    //     return Err(Box::from(d!("asset type must be less than or equal to 32 bits")));
+    // }
+    //
+    // let mut at = [0_u8;32];
+    // for (index,n) in asset_type.iter().enumerate() {
+    //     at[index] = *n;
+    // }
+    //
+    // let tbe = TransferBatchEntry{
+    //     from,
+    //     to,
+    //     amount,
+    //     asset_type: XfrAssetType::NonConfidential(AssetType{ 0:at }),
+    // };
+    //
+    // Ok(tbe)
+    //  }
 }

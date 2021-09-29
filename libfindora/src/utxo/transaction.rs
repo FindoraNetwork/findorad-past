@@ -46,6 +46,7 @@ impl From<&Transaction> for UtxoTransacrion {
             } else {
                 inputs.push(Input {
                     txid: input.txid.clone(),
+
                     n: input.n,
                 })
             }
@@ -59,6 +60,7 @@ impl From<&Transaction> for UtxoTransacrion {
                 owner_memo: output.owner_memo.clone(),
             });
         }
+
 
         Self {
             txid: tx.txid.clone(),

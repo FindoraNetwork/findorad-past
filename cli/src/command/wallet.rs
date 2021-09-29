@@ -51,7 +51,6 @@ impl Command {
 
             println!("Secret key is: {}", sk_bytes_64);
         }
-
         if self.show {
             let wallets = if let Some(w) = &self.wallet {
                 let sk_bytes = base64::decode(&w).c(d!())?;
