@@ -84,3 +84,14 @@ pub async fn write_list(config: &Config, batch: &str, list: Vec<Entry>) -> Resul
     tokio::fs::write(path, content).await.c(d!())?;
     Ok(())
 }
+
+pub async fn clean_list(config: &Config, batch: &str) -> Result<()> {
+    let p = if batch == "" { "default" } else { batch };
+
+    let path = config.node.home.clone().join("batch").join(p);
+
+    tokio::fs::remove_file(path).await.c(d!())?;
+
+    Ok(())
+}
+

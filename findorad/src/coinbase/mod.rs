@@ -69,6 +69,7 @@ impl Application for CoinbaseModule {
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
         for output in &req.tx.outputs {
+            log::debug!("Receive coinbase tx: {:?}", &output);
             let owner: XfrPublicKey = output.1.core.public_key;
             let asset_type = match output.1.core.asset_type {
                 XfrAssetType::Confidential(_) => {

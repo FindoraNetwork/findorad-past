@@ -32,12 +32,14 @@ pub async fn build_transaction<R: CryptoRng + RngCore>(
 
     let mut transfer_entry = Vec::new();
 
+    let mut index = 0;
+
     for entry in entries {
         match entry {
             Entry::Issue(e) => {
                 keypairs.push(e.keypair.clone());
                 let output = e.to_output_asset_record(prng)?;
-                input_ids.push((Vec::new(), 0, InputOperation::IssueAsset));
+                input_ids.push((Vec::new(), index, InputOperation::IssueAsset));
                 output_ids.push(OutputOperation::IssueAsset);
                 inputs.push(output.clone());
                 outputs.push(output);
@@ -46,6 +48,7 @@ pub async fn build_transaction<R: CryptoRng + RngCore>(
                 transfer_entry.push(e);
             }
         };
+        index += 1;
     }
 
     let ios = build_input_asset_record_and_id(prng, transfer_entry).await?;

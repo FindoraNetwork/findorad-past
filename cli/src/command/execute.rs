@@ -3,12 +3,12 @@ use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use ruc::*;
 
-use crate::{config::Config, entry::build_transaction, utils::read_list};
+use crate::{config::Config, entry::build_transaction, utils::{clean_list, read_list, send_tx}};
 
 #[derive(Clap, Debug)]
 pub struct Command {
 
-    #[clap(short = 'a', long)]
+    #[clap(short, long)]
     dump_transaction: bool,
 
     /// Name of batch.
@@ -30,6 +30,8 @@ impl Command {
             log::debug!("Result tx is: {:?}", tx);
 
             send_tx(&tx).await?;
+
+            clean_list(&config, &self.batch_name).await?;
         }
 
         Ok(())
