@@ -2,53 +2,17 @@ use libfindora::transaction::{Input, InputOperation, Output, OutputOperation, Tr
 use rand_core::{CryptoRng, RngCore};
 use ruc::*;
 use serde::{Deserialize, Serialize};
-use zei::xfr::asset_record::AssetRecordType;
 use zei::xfr::lib::gen_xfr_body;
-use zei::xfr::structs::{AssetType, XfrAssetType};
-use zei::xfr::{
-    sig::{XfrKeyPair, XfrPublicKey},
-    structs::{AssetRecord, AssetRecordTemplate},
-};
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct IssueEntry {
-    pub keypair: XfrKeyPair,
-    pub amount: u64,
-    pub asset_type: AssetType,
-    pub confidential_amount: bool,
-}
+mod issue;
+pub use issue::IssueEntry;
 
-impl IssueEntry {
-    pub fn to_output_asset_record<R: CryptoRng + RngCore>(
-        self,
-        prng: &mut R,
-    ) -> Result<AssetRecord> {
-        let asset_record_type = if self.confidential_amount {
-            AssetRecordType::ConfidentialAmount_NonConfidentialAssetType
-        } else {
-            AssetRecordType::NonConfidentialAmount_NonConfidentialAssetType
-        };
+mod transfer;
+pub use transfer::TransferEntry;
 
-        let template = AssetRecordTemplate::with_no_asset_tracing(
-            self.amount,
-            self.asset_type,
-            asset_record_type,
-            self.keypair.get_pk(),
-        );
+use self::transfer::build_input_asset_record_and_id;
 
-        AssetRecord::from_template_no_identity_tracing(prng, &template)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct TransferEntry {
-    pub from: XfrKeyPair,
-    pub to: XfrPublicKey,
-    pub amount: u64,
-    pub asset_type: XfrAssetType,
-    pub confidential_amount: bool,
-    pub confidential_asset: bool,
-}
+mod utils;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Entry {
@@ -56,7 +20,7 @@ pub enum Entry {
     Transfer(TransferEntry),
 }
 
-pub fn build_transaction<R: CryptoRng + RngCore>(
+pub async fn build_transaction<R: CryptoRng + RngCore>(
     prng: &mut R,
     entries: Vec<Entry>,
 ) -> Result<Transaction> {
@@ -65,6 +29,8 @@ pub fn build_transaction<R: CryptoRng + RngCore>(
     let mut output_ids = Vec::new();
     let mut outputs = Vec::new();
     let mut keypairs = Vec::new();
+
+    let mut transfer_entry = Vec::new();
 
     for entry in entries {
         match entry {
@@ -76,11 +42,29 @@ pub fn build_transaction<R: CryptoRng + RngCore>(
                 inputs.push(output.clone());
                 outputs.push(output);
             }
-            Entry::Transfer(_e) => {}
+            Entry::Transfer(e) => {
+                transfer_entry.push(e);
+            }
         };
     }
 
-    let mut zei_body = gen_xfr_body(prng, &inputs, &outputs)?;
+    let ios = build_input_asset_record_and_id(prng, transfer_entry).await?;
+
+    for input in ios.0 {
+        keypairs.push(input.0);
+        input_ids.push((input.1, input.2, InputOperation::TransferAsset));
+        inputs.push(input.3);
+    }
+
+    for output in ios.1 {
+        output_ids.push(OutputOperation::TransferAsset);
+        outputs.push(output);
+    }
+
+    log::debug!("Inputs is : {:?}", inputs);
+    log::debug!("Outputs is : {:?}", outputs);
+
+    let zei_body = gen_xfr_body(prng, &inputs, &outputs)?;
 
     let mut tx_inputs = Vec::new();
     let mut tx_outputs = Vec::new();
@@ -93,14 +77,14 @@ pub fn build_transaction<R: CryptoRng + RngCore>(
         });
     }
 
-    for _ in 0..zei_body.outputs.len() {
-        let operation = output_ids.pop().c(d!())?;
-        let owner_memo = zei_body.owners_memos.pop().c(d!())?;
-        let core = zei_body.outputs.pop().c(d!())?;
+    for i in 0..zei_body.outputs.len() {
+        let operation = &output_ids[i];
+        let owner_memo = &zei_body.owners_memos[i];
+        let core = &zei_body.outputs[i];
         tx_outputs.push(Output {
-            core,
-            operation,
-            owner_memo,
+            core: core.clone(),
+            operation: operation.clone(),
+            owner_memo: owner_memo.clone(),
         });
     }
 
@@ -111,6 +95,8 @@ pub fn build_transaction<R: CryptoRng + RngCore>(
         proof: zei_body.proofs.asset_type_and_amount_proof,
         signatures: Vec::new(),
     };
+
+    log::debug!("Result tx is: {:?}", tx);
 
     tx.signature(keypairs)?;
 

@@ -1,21 +1,13 @@
-use std::collections::BTreeMap;
-
-use abcf_sdk::providers::HttpGetProvider;
 use clap::{ArgGroup, Clap};
-use findorad_lib::utxo_module_rpc::get_owned_outputs;
-use libfindora::utxo::GetOwnedUtxoReq;
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use ruc::*;
 use zei::{
     serialization::ZeiFromToBytes,
-    xfr::{
-        asset_record::open_blind_asset_record,
-        sig::{XfrKeyPair, XfrSecretKey},
-    },
+    xfr::sig::{XfrKeyPair, XfrSecretKey},
 };
 
-use crate::config::Config;
+use crate::{config::Config, utils::get_value_map};
 
 #[derive(Clap, Debug)]
 #[clap(group = ArgGroup::new("account"))]
@@ -72,48 +64,13 @@ impl Command {
                 Vec::new()
             };
 
-            let params = GetOwnedUtxoReq {
-                owners: wallets.iter().map(|kp| kp.get_pk()).collect(),
-            };
+            let value_map = get_value_map(wallets).await?;
 
-            let provider = HttpGetProvider {};
+            for (k, amount) in value_map.iter() {
+                let asset_type = base64::encode(&k.zei_to_bytes());
 
-            let result = get_owned_outputs(provider, params).await.unwrap();
-
-            let mut value_map = BTreeMap::new();
-
-            for oai in result.data.c(d!())?.outputs {
-                let keypair = &wallets[oai.0];
-                let output = oai.1.output;
-
-                log::debug!("{:?}", output);
-
-                let open_asset_record =
-                    open_blind_asset_record(&output.core, &output.owner_memo, keypair)?;
-
-                log::debug!("Open Asset Recore is:{:?}", open_asset_record);
-
-                let amount = open_asset_record.amount;
-                let asset_type = open_asset_record.asset_type;
-
-                if let Some(am) = value_map.get_mut(&asset_type) {
-                    *am += amount
-                } else {
-                    value_map.insert(asset_type, amount);
-                }
+                println!("Asset type: {}, amount: {}", asset_type, amount);
             }
-
-            println!("{:?}", value_map);
-
-            // println!("{:?}", result);
-
-            //             if let Some(v) = result {
-            //     let resp: GetOwnedUtxoResp = serde_json::from_value(v).c(d!())?;
-            //
-            //     println!("{:?}", &resp);
-            // } else {
-            //     println!("error !");
-            //             }
         }
 
         Ok(())

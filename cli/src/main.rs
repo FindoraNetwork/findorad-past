@@ -1,4 +1,4 @@
-use clap::{Clap, IntoApp};
+use clap::Clap;
 
 pub mod command;
 pub mod config;
@@ -14,10 +14,8 @@ async fn main() {
         Ok(_) => {}
         Err(e) => {
             e.print(None);
-
-            let mut app = command::Opts::into_app();
-            app.print_help().unwrap();
-
+            //             let mut app = command::Opts::into_app();
+            //             app.print_help().unwrap();
             panic!();
         }
     }

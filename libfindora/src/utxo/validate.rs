@@ -8,6 +8,7 @@ use zei::{
     },
 };
 
+#[derive(Debug)]
 pub struct ValidateTransaction {
     pub inputs: Vec<BlindAssetRecord>,
     pub outputs: Vec<BlindAssetRecord>,
