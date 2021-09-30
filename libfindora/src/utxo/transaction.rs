@@ -61,7 +61,6 @@ impl From<&Transaction> for UtxoTransacrion {
             });
         }
 
-
         Self {
             txid: tx.txid.clone(),
             inputs,

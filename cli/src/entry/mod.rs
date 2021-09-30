@@ -13,6 +13,7 @@ pub use transfer::TransferEntry;
 use self::transfer::build_input_asset_record_and_id;
 
 mod utils;
+pub mod wallet;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Entry {

@@ -1,4 +1,3 @@
-
 use std::collections::BTreeMap;
 
 use abcf_sdk::providers::HttpGetProvider;
@@ -95,4 +94,3 @@ pub async fn clean_list(config: &Config, batch: &str) -> Result<()> {
 
     Ok(())
 }
-
