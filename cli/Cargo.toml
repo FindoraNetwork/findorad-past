@@ -19,7 +19,7 @@ libfindora = { path = "../libfindora" }
 findorad = { path = "../findorad" }
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 tokio = { version = "1", features = ["full"] }
-abcf-sdk = { git = "ssh://git@github.com/FindoraNetwork/abcf", features = ["http"] , branch="modify-rpc-macro"}
+abcf-sdk = { git = "ssh://git@github.com/FindoraNetwork/abcf", features = ["http"] }
 base64 = "0.10"
 sha3 = "0.9.1"
 hex-literal = "0.3.1"
