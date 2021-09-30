@@ -42,11 +42,11 @@ impl Opts {
 enum SubCommand {
     #[clap(version, author, about = "Setup configuration entry.")]
     Setup(setup::Command),
-    #[clap(version, author, about)]
+    #[clap(version, author, about = "Execute batch of transaction.")]
     Execute(execute::Command),
-    #[clap(version, author, about)]
+    #[clap(version, author, about = "Transfer asset to other user.")]
     Transfer(transfer::Command),
-    #[clap(version, author, about)]
+    #[clap(version, author, about = "Issue asset.")]
     Issue(issue::Command),
     #[clap(version, author, about = "Manage wallet")]
     Wallet(wallet::Command),

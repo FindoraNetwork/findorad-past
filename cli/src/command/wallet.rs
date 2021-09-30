@@ -1,15 +1,11 @@
-use clap::{ArgGroup, Clap};
-use ruc::*;
-use zei::{
-    serialization::ZeiFromToBytes,
-    xfr::sig:: XfrSecretKey,
-};
-use ed25519_dalek_bip32::{DerivationPath, ExtendedSecretKey};
 use bip0039::{Count, Language, Mnemonic};
+use clap::{ArgGroup, Clap};
+use ed25519_dalek_bip32::{DerivationPath, ExtendedSecretKey};
+use ruc::*;
+use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrSecretKey};
 
+use crate::entry::wallet::{AccountEntry, BipPath};
 use crate::{config::Config, utils::get_value_map};
-use crate::entry::wallet::{AccountEntry,BipPath};
-
 
 macro_rules! restore_keypair_from_mnemonic {
     ($phrase: expr, $l: expr, $p: expr, $bip: tt) => {
@@ -29,8 +25,7 @@ macro_rules! restore_keypair_from_mnemonic {
                     .map_err(|e| eg!(e))
             })
             .and_then(|kp| {
-                XfrSecretKey::zei_from_bytes(&kp.secret_key.to_bytes()[..])
-                    .map_err(|e| eg!(e))
+                XfrSecretKey::zei_from_bytes(&kp.secret_key.to_bytes()[..]).map_err(|e| eg!(e))
             })
             .map(|sk| sk.into_keypair())
     };
@@ -69,7 +64,6 @@ pub fn check_lang(lang: &str) -> Result<Language> {
     }
 }
 
-
 #[derive(Clap, Debug)]
 #[clap(group = ArgGroup::new("account"))]
 pub struct Command {
@@ -100,12 +94,13 @@ impl Command {
     pub async fn execute(&self, config: Config) -> Result<()> {
         if self.generate {
             let mnemonic = pnk!(generate_mnemonic_custom(24, "en"));
-            let keypair = restore_keypair_from_mnemonic!(mnemonic.clone(), "en", BipPath::new_fra(), bip44)
-                .c(d!())?;
+            let keypair =
+                restore_keypair_from_mnemonic!(mnemonic.clone(), "en", BipPath::new_fra(), bip44)
+                    .c(d!())?;
 
             let ae = AccountEntry::form_keypair(keypair, mnemonic)?;
 
-            println!("{:#?}",ae);
+            println!("{:#?}", ae);
 
             AccountEntry::save(&mut vec![ae], &config, false)?;
             return Ok(());
@@ -114,27 +109,24 @@ impl Command {
         if self.list_account {
             let v = AccountEntry::read(&config)?;
 
-
-            println!("{:#?}",v);
+            println!("{:#?}", v);
             return Ok(());
         }
 
         if let Some(index) = self.delete_account {
-
             let ae = AccountEntry::delete(index, &config)?;
 
-            println!("{:#?}",ae);
-            return Ok(())
+            println!("{:#?}", ae);
+            return Ok(());
         }
 
-        if let Some(phrase) = self.add_mnemonic.as_ref(){
-
-            let keypair = restore_keypair_from_mnemonic!(phrase, "en", BipPath::new_fra(), bip44)
-                .c(d!())?;
+        if let Some(phrase) = self.add_mnemonic.as_ref() {
+            let keypair =
+                restore_keypair_from_mnemonic!(phrase, "en", BipPath::new_fra(), bip44).c(d!())?;
 
             let ae = AccountEntry::form_keypair(keypair, phrase.clone())?;
 
-            println!("{:#?}",ae);
+            println!("{:#?}", ae);
 
             AccountEntry::save(&mut vec![ae], &config, false)?;
             return Ok(());
@@ -148,7 +140,6 @@ impl Command {
                 let keypair = sk.into_keypair();
                 vec![keypair]
             } else {
-
                 let aes = AccountEntry::read(&config)?;
                 let mut vec = vec![];
                 for ae in aes.iter() {

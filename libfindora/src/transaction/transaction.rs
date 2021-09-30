@@ -355,7 +355,6 @@ impl Transaction {
             return Err(eg!("this tx is signed."));
         }
 
-
         if self.inputs.len() != keypairs.len() {
             return Err(eg!("please give right keypair for inputs."));
         }
@@ -380,7 +379,6 @@ impl Transaction {
 
 impl ToBytes for Transaction {
     fn to_bytes(&self) -> abcf::Result<Vec<u8>> {
-
         let mut result = Vec::new();
 
         let mut message = capnp::message::Builder::new_default();

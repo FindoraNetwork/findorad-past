@@ -3,11 +3,14 @@ use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use ruc::*;
 
-use crate::{config::Config, entry::build_transaction, utils::{clean_list, read_list, send_tx}};
+use crate::{
+    config::Config,
+    entry::build_transaction,
+    utils::{clean_list, read_list, send_tx},
+};
 
 #[derive(Clap, Debug)]
 pub struct Command {
-
     #[clap(short, long)]
     dump_transaction: bool,
 

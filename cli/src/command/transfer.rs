@@ -12,21 +12,21 @@ use zei::{
     },
 };
 
+use crate::entry::wallet::AccountEntry;
 use crate::{
     config::Config,
     entry::{build_transaction, Entry, TransferEntry},
     utils::send_tx,
 };
-use crate::entry::wallet::AccountEntry;
 
 #[derive(Clap, Debug)]
-#[clap(group = ArgGroup::new("transfer"))]
+#[clap(group = ArgGroup::new("account"))]
 pub struct Command {
     #[clap(short, long)]
     /// Special a batch name.
     batch: Option<String>,
 
-    #[clap(short = 'f', long, group = "transfer")]
+    #[clap(short = 'f', long, group = "account")]
     /// From secret key.
     from_secret_key: Option<String>,
 
@@ -45,29 +45,21 @@ pub struct Command {
     #[clap(short = 'T', long)]
     confidential_asset: bool,
 
-    #[clap(short, long, group = "transfer")]
-    account_index: Option<usize>,
-
+    #[clap(short, long, group = "account")]
+    account: Option<usize>,
 }
 
 impl Command {
     pub async fn execute(&self, config: Config) -> Result<()> {
-
-        let mut from = None;
-
-        if let Some(from_secret_key) = self.from_secret_key.as_ref() {
+        let from = if let Some(from_secret_key) = self.from_secret_key.as_ref() {
             let from_sk_bytes = base64::decode(from_secret_key).c(d!())?;
             let from_sk = XfrSecretKey::zei_from_bytes(&from_sk_bytes)?;
-            from = Some(from_sk.into_keypair());
-        }
-
-        if let Some(account_index) = self.account_index {
-            from = Some(AccountEntry::from_index_to_keypair(account_index, &config)?);
-        }
-
-        if from.is_none() {
-            return Err(Box::from(d!("keypair is none")));
-        }
+            from_sk.into_keypair()
+        } else if let Some(account_index) = self.account {
+            AccountEntry::from_index_to_keypair(account_index, &config)?
+        } else {
+            return Err(eg!("keypair is none"));
+        };
 
         let mut prng = ChaChaRng::from_entropy();
 
@@ -87,7 +79,7 @@ impl Command {
                 confidential_asset: self.confidential_asset,
                 amount: self.amount,
                 asset_type,
-                from: from.unwrap(),//safe
+                from,
                 to,
             });
 
