@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 
 use abcf::ToBytes;
-use capnp::{message::ReaderOptions, serialize::read_message};
+use capnp::{message::ReaderOptions, serialize_packed};
 use digest::Digest;
 use ruc::*;
 use serde::{Deserialize, Serialize};
@@ -91,7 +91,6 @@ fn parse_range_proof(
 fn parse_chaum_pederson_proof(
     reader: transaction_capnp::chaum_pedersen_proof::Reader,
 ) -> abcf::Result<ChaumPedersenProof> {
-    println!("-----------------");
     let c3 = RistrettoPoint::zei_from_bytes(reader.get_c3().map_err(convert_capnp_error)?)
         .map_err(convert_ruc_error)?;
     let c4 = RistrettoPoint::zei_from_bytes(reader.get_c4().map_err(convert_capnp_error)?)
@@ -102,7 +101,6 @@ fn parse_chaum_pederson_proof(
         .map_err(convert_ruc_error)?;
     let z3 = RistrettoScalar::zei_from_bytes(reader.get_z3().map_err(convert_capnp_error)?)
         .map_err(convert_ruc_error)?;
-    println!("-----------------");
     Ok(ChaumPedersenProof { c3, c4, z1, z2, z3 })
 }
 
@@ -111,7 +109,7 @@ impl abcf::module::FromBytes for Transaction {
     where
         Self: Sized,
     {
-        let reader = read_message(bytes, ReaderOptions::new()).map_err(convert_capnp_error)?;
+        let reader = serialize_packed::read_message(bytes, ReaderOptions::new()).map_err(convert_capnp_error)?;
         let root = reader
             .get_root::<transaction_capnp::transaction::Reader>()
             .map_err(convert_capnp_error)?;
@@ -625,7 +623,7 @@ impl ToBytes for Transaction {
             }
         }
 
-        capnp::serialize::write_message(&mut result, &message)
+        serialize_packed::write_message(&mut result, &message)
             .map_err(|e| abcf::Error::ABCIApplicationError(90002, format!("{:?}", e)))?;
         Ok(result)
     }
