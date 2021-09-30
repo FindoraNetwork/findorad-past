@@ -91,6 +91,7 @@ fn parse_range_proof(
 fn parse_chaum_pederson_proof(
     reader: transaction_capnp::chaum_pedersen_proof::Reader,
 ) -> abcf::Result<ChaumPedersenProof> {
+    println!("-----------------");
     let c3 = RistrettoPoint::zei_from_bytes(reader.get_c3().map_err(convert_capnp_error)?)
         .map_err(convert_ruc_error)?;
     let c4 = RistrettoPoint::zei_from_bytes(reader.get_c4().map_err(convert_capnp_error)?)
@@ -101,6 +102,7 @@ fn parse_chaum_pederson_proof(
         .map_err(convert_ruc_error)?;
     let z3 = RistrettoScalar::zei_from_bytes(reader.get_z3().map_err(convert_capnp_error)?)
         .map_err(convert_ruc_error)?;
+    println!("-----------------");
     Ok(ChaumPedersenProof { c3, c4, z1, z2, z3 })
 }
 
@@ -542,7 +544,7 @@ impl ToBytes for Transaction {
                     }
 
                     if let Some(e) = &a.zero {
-                        let mut p1 = ca.reborrow().get(0);
+                        let mut p1 = ca.reborrow().get(1);
 
                         let c3 = e.c3.zei_to_bytes();
                         let c4 = e.c4.zei_to_bytes();
@@ -604,7 +606,7 @@ impl ToBytes for Transaction {
                         }
 
                         if let Some(e) = &p.zero {
-                            let mut p1 = ca.reborrow().get(0);
+                            let mut p1 = ca.reborrow().get(1);
 
                             let c3 = e.c3.zei_to_bytes();
                             let c4 = e.c4.zei_to_bytes();
