@@ -8,7 +8,7 @@ edition = "2018"
 [dependencies]
 ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
 libfindora = { path = "../libfindora" }
-abcf-sdk = { git = "ssh://git@github.com/FindoraNetwork/abcf", features = ["http"] }
+abcf-sdk = { git = "ssh://git@github.com/FindoraNetwork/abcf" }
 serde = "1.0.130"
 log = "0.4.14"
 zei = { git = "ssh://git@github.com/tiannian/zei", branch = "feat-refactor" }
