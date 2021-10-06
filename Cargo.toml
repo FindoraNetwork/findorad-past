@@ -2,5 +2,6 @@
 members = [
     "findorad",
     "libfindora",
+    "libfn",
     "cli",
 ]
