@@ -6,7 +6,8 @@ use libfindora::{transaction::Transaction, utxo::GetOwnedUtxoReq};
 use ruc::*;
 use zei::xfr::{asset_record::open_blind_asset_record, sig::XfrKeyPair, structs::AssetType};
 
-use crate::{config::Config, entry::Entry};
+use crate::{config::Config};
+use libfn::Entry;
 
 pub async fn send_tx(tx: &Transaction) -> Result<()> {
     let provider = abcf_sdk::providers::HttpGetProvider {};

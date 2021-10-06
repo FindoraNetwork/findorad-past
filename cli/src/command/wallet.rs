@@ -73,11 +73,11 @@ pub struct Command {
 
     #[clap(short, long, group = "account")]
     /// List account.
-    list_account: bool,
+    list: bool,
 
     #[clap(short, long, group = "account")]
     /// List account.
-    delete_account: Option<usize>,
+    delete: Option<usize>,
 
     #[clap(short, long, group = "account")]
     /// List account.
@@ -106,14 +106,14 @@ impl Command {
             return Ok(());
         }
 
-        if self.list_account {
+        if self.list {
             let v = AccountEntry::read(&config)?;
 
             println!("{:#?}", v);
             return Ok(());
         }
 
-        if let Some(index) = self.delete_account {
+        if let Some(index) = self.delete {
             let ae = AccountEntry::delete(index, &config)?;
 
             println!("{:#?}", ae);
