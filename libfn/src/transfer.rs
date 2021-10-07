@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use abcf_sdk::providers::HttpGetProvider;
-use findorad_lib::utxo_module_rpc::get_owned_outputs;
+use fm_utxo::utxo_module_rpc::get_owned_outputs;
 use libfindora::utxo::GetOwnedUtxoReq;
 use rand_core::{CryptoRng, RngCore};
 use ruc::*;

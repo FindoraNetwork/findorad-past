@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use abcf_sdk::providers::HttpGetProvider;
-use findorad_lib::utxo_module_rpc::get_owned_outputs;
+use fm_utxo::utxo_module_rpc::get_owned_outputs;
 use libfindora::{transaction::Transaction, utxo::GetOwnedUtxoReq};
 use ruc::*;
 use zei::xfr::{asset_record::open_blind_asset_record, sig::XfrKeyPair, structs::AssetType};

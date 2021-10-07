@@ -203,6 +203,6 @@ impl Application for UtxoModule {
 #[abcf::methods]
 impl UtxoModule {}
 
-// pub mod utxo_module_rpc {
-    // include!(concat!(env!("OUT_DIR"), "/utxomodule.rs"));
-// }
+pub mod utxo_module_rpc {
+    include!(concat!(env!("OUT_DIR"), "/utxomodule.rs"));
+}

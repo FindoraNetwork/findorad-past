@@ -8,7 +8,7 @@ edition = "2018"
 [dependencies]
 abcf = { git = "ssh://git@github.com/FindoraNetwork/abcf" }
 abcf-node = { git = "ssh://git@github.com/FindoraNetwork/abcf" }
-abcf-sdk = { git = "ssh://git@github.com/FindoraNetwork/abcf" }
+abcf-sdk = { git = "ssh://git@github.com/FindoraNetwork/abcf", default-features = false }
 async-trait = "0.1.51"
 libfindora = { path = "../../libfindora" }
 zei = { git = "ssh://git@github.com/tiannian/zei", branch = "feat-refactor" }
