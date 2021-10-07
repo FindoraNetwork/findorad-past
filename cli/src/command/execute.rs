@@ -5,9 +5,9 @@ use ruc::*;
 
 use crate::{
     config::Config,
-    entry::build_transaction,
     utils::{clean_list, read_list, send_tx},
 };
+use libfn::build_transaction;
 
 #[derive(Clap, Debug)]
 pub struct Command {

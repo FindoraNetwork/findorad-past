@@ -12,9 +12,10 @@ use zei::{
 
 use crate::{
     config::Config,
-    entry::{build_transaction, wallet::AccountEntry, Entry, IssueEntry},
+    entry::{wallet::AccountEntry},
     utils::send_tx,
 };
+use libfn::{build_transaction, Entry, IssueEntry};
 
 #[derive(Clap, Debug)]
 #[clap(group = ArgGroup::new("account"))]

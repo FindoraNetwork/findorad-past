@@ -15,9 +15,9 @@ use zei::{
 use crate::entry::wallet::AccountEntry;
 use crate::{
     config::Config,
-    entry::{build_transaction, Entry, TransferEntry},
     utils::send_tx,
 };
+use libfn::{build_transaction, Entry, TransferEntry};
 
 #[derive(Clap, Debug)]
 #[clap(group = ArgGroup::new("account"))]

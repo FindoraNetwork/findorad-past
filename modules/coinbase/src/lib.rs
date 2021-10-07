@@ -1,3 +1,5 @@
+#![feature(generic_associated_types)]
+
 use abcf::{
     bs3::{
         model::{Map, Value},
@@ -100,7 +102,7 @@ impl Application for CoinbaseModule {
             }
 
             // TODO: this code used to module call, modify in next version of abcf.
-            let call_arg = crate::utxo::calls::ArgAddUtxo {
+            let call_arg = fm_utxo::calls::ArgAddUtxo {
                 txid: req.tx.txid.clone(),
                 n: output.0,
                 output: output.1.clone(),

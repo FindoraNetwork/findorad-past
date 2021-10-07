@@ -2,5 +2,8 @@
 members = [
     "findorad",
     "libfindora",
+    "libfn",
     "cli",
+    "modules/utxo",
+    "modules/coinbase",
 ]
