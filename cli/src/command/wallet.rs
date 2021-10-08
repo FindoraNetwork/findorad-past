@@ -2,13 +2,13 @@ use clap::{ArgGroup, Parser};
 use ruc::*;
 use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrSecretKey};
 
-use crate::{config::Config, utils::{get_value_map,
-                                    write_list,
-                                    read_list,
-                                    delete_one,
-                                    account_to_keypair,}
+use crate::{config::Config,
+            utils::{
+                get_value_map, write_account_list, read_account_list,
+                    delete_account_one, account_to_keypair,
+            }
 };
-use libfn::{AccountEntry, Entry};
+use libfn::AccountEntry;
 
 
 #[derive(Parser, Debug)]
@@ -47,18 +47,18 @@ impl Command {
         if self.generate {
             let entry = AccountEntry::generate_keypair()?;
             println!("{:#?}",entry);
-            write_list(&config, "account",vec![Entry::Account(entry)]).await?;
+            write_account_list(&config, vec![entry],false).await?;
             return Ok(());
         }
 
         if self.list {
-            let v = read_list(&config,"account").await?;
+            let v = read_account_list(&config).await?;
             println!("{:#?}", v);
             return Ok(());
         }
 
         if let Some(index) = self.delete {
-            let entry = delete_one(&config, "account", index).await?;
+            let entry = delete_account_one(&config, index).await?;
             println!("{:#?}", entry);
             return Ok(());
         }
@@ -67,7 +67,7 @@ impl Command {
             let entry = AccountEntry::generate_keypair_from_mnemonic(phrase)?;
             println!("{:#?}", entry);
 
-            write_list(&config, "account",vec![Entry::Account(entry)]).await?;
+            write_account_list(&config,vec![entry], false).await?;
             return Ok(());
         }
 
@@ -76,16 +76,10 @@ impl Command {
             let mut wallets = vec![];
 
             if let Some(index) = &self.account_index {
-                let v = read_list(&config,"account").await?;
-                let entry = v.get(*index).ok_or(d!(format!("the index not exist, array len:{}",v.len())))?;
-                if let Some(account) = match entry {
-                    Entry::Issue(_) => {None}
-                    Entry::Transfer(_) => {None}
-                    Entry::Account(account) => {Some(account)}
-                }{
-                    let kp = account_to_keypair(account)?;
-                    wallets.push(kp);
-                }
+                let v = read_account_list(&config).await?;
+                let account = v.get(*index).ok_or(d!(format!("the index not exist, array len:{}",v.len())))?;
+                let kp = account_to_keypair(account)?;
+                wallets.push(kp);
             }
 
             if let Some(w) = &self.wallet {

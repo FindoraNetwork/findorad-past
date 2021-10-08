@@ -14,7 +14,7 @@ use zei::{
 
 use crate::{
     config::Config,
-    utils::{send_tx, read_list, account_to_keypair},
+    utils::{send_tx, read_account_list, account_to_keypair},
 };
 use libfn::{build_transaction, Entry, TransferEntry};
 
@@ -44,7 +44,7 @@ pub struct Command {
     #[clap(short = 'T', long)]
     confidential_asset: bool,
 
-    #[clap(short = 'i', long, group = "account")]
+    #[clap(long, group = "account")]
     account_index: Option<usize>,
 }
 
@@ -56,19 +56,14 @@ impl Command {
             Some(from_sk.into_keypair())
         } else if let Some(account_index) = self.account_index {
             let mut kp = None;
-            let v = read_list(&config,"account").await?;
-            if let Some(entry) = v.get(account_index) {
-                if let Some(account) = match entry {
-                    Entry::Account(account) => {Some(account)},
-                    _ => {None}
-                }{
-                    let result = account_to_keypair(account);
-                    if result.is_err() {
-                        return Err(result.unwrap_err());
-                    }
-                    kp = result.ok();
+            let v = read_account_list(&config).await?;
+            if let Some(account) = v.get(account_index){
+                let result = account_to_keypair(account);
+                if result.is_err() {
+                    return Err(result.unwrap_err());
                 }
-            };
+                kp = result.ok();
+            }
             kp
         } else {
             return Err(eg!("keypair is none"));

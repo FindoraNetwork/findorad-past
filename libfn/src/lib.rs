@@ -19,7 +19,6 @@ pub use wallet::AccountEntry;
 pub enum Entry {
     Issue(IssueEntry),
     Transfer(TransferEntry),
-    Account(AccountEntry),
 }
 
 pub async fn build_transaction<R: CryptoRng + RngCore>(
@@ -49,7 +48,6 @@ pub async fn build_transaction<R: CryptoRng + RngCore>(
             Entry::Transfer(e) => {
                 transfer_entry.push(e);
             }
-            _ => {}
         };
         index += 1;
     }
