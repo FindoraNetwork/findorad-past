@@ -12,10 +12,14 @@ pub use transfer::TransferEntry;
 
 use transfer::build_input_asset_record_and_id;
 
+mod wallet;
+pub use wallet::AccountEntry;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Entry {
     Issue(IssueEntry),
     Transfer(TransferEntry),
+    Account(AccountEntry),
 }
 
 pub async fn build_transaction<R: CryptoRng + RngCore>(
@@ -45,6 +49,7 @@ pub async fn build_transaction<R: CryptoRng + RngCore>(
             Entry::Transfer(e) => {
                 transfer_entry.push(e);
             }
+            _ => {}
         };
         index += 1;
     }

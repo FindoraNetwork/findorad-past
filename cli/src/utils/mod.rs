@@ -4,10 +4,13 @@ use abcf_sdk::providers::HttpGetProvider;
 use fm_utxo::utxo_module_rpc::get_owned_outputs;
 use libfindora::{transaction::Transaction, utxo::GetOwnedUtxoReq};
 use ruc::*;
+use zei::serialization::ZeiFromToBytes;
 use zei::xfr::{asset_record::open_blind_asset_record, sig::XfrKeyPair, structs::AssetType};
+use zei::xfr::sig::XfrSecretKey;
 
 use crate::{config::Config};
-use libfn::Entry;
+use libfn::{AccountEntry, Entry};
+// use crate::entry::wallet::AccountEntry;
 
 pub async fn send_tx(tx: &Transaction) -> Result<()> {
     let provider = abcf_sdk::providers::HttpGetProvider {};
@@ -94,4 +97,26 @@ pub async fn clean_list(config: &Config, batch: &str) -> Result<()> {
     tokio::fs::remove_file(path).await.c(d!())?;
 
     Ok(())
+}
+
+pub async fn delete_one(config: &Config, batch: &str, index:usize) -> Result<Entry> {
+    let mut v = read_list(config, batch).await?;
+
+    let entry = v.remove(index);
+
+    let p = if batch == "" { "default" } else { batch };
+
+    let path = config.node.home.clone().join("batch").join(p);
+    let content = serde_json::to_string_pretty(&v).c(d!())?;
+
+    tokio::fs::write(path, content).await.c(d!())?;
+    Ok(entry)
+}
+
+pub fn account_to_keypair(entry:&AccountEntry) -> Result<XfrKeyPair>{
+    let sk_bytes = base64::decode(&entry.base64.key_pair.secret_key).c(d!())?;
+    let sk = XfrSecretKey::zei_from_bytes(&sk_bytes)?;
+
+    let keypair = sk.into_keypair();
+    Ok(keypair)
 }
