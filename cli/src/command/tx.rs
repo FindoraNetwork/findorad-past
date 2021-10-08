@@ -1,10 +1,10 @@
 use crate::config::Config;
-use clap::Clap;
+use clap::Parser;
 use ruc::*;
 
 use crate::utils::query_tx;
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub struct Command {
     hash: Option<String>,
 }

@@ -22,6 +22,12 @@ pub async fn send_tx(tx: &Transaction) -> Result<String> {
 
     log::debug!("resp:{:?}",r);
 
+    if r.is_none() {
+        return Err(Box::from(d!("send tx return none".to_string())));
+    }
+
+    let r = r.unwrap();
+
     let resp = serde_json::from_value::<Resp>(r).c(d!())?;
 
     println!("{:#?}", resp);
@@ -42,11 +48,17 @@ pub async fn query_tx(hash: &str) -> Result<()> {
 
     log::debug!("resp:{:?}",r);
 
+    if r.is_none() {
+        return Err(Box::from(d!("send tx return none".to_string())));
+    }
+
+    let r = r.unwrap();
+
     let mut resp = serde_json::from_value::<QueryResp>(r).c(d!())?;
     resp.parse_tx()?;
 
-    if resp.code != 0 {
-        return Err(Box::from(d!(resp.log)));
+    if resp.tx_result.code != 0 {
+        return Err(Box::from(d!(resp.tx_result.log)));
     }
 
     println!("{:#?}",resp);
@@ -131,17 +143,43 @@ pub async fn clean_list(config: &Config, batch: &str) -> Result<()> {
     Ok(())
 }
 
-pub async fn delete_one(config: &Config, batch: &str, index:usize) -> Result<Entry> {
-    let mut v = read_list(config, batch).await?;
+pub async fn read_account_list(config: &Config) -> Result<Vec<AccountEntry>> {
+    let path = config.node.home.clone().join("account");
 
-    let entry = v.remove(index);
+    let list = if !path.exists() {
+        tokio::fs::create_dir_all(path).await.c(d!())?;
+        Vec::new()
+    } else {
+        let content = tokio::fs::read_to_string(path).await.c(d!())?;
+        serde_json::from_str(&content).c(d!())?
+    };
 
-    let p = if batch == "" { "default" } else { batch };
+    Ok(list)
+}
 
-    let path = config.node.home.clone().join("batch").join(p);
-    let content = serde_json::to_string_pretty(&v).c(d!())?;
+pub async fn write_account_list(config: &Config, list: Vec<AccountEntry>, is_cover: bool) -> Result<()>{
+    let path = config.node.home.clone().join("account");
+
+    let l = if is_cover {
+        list
+    } else {
+        let mut l = read_account_list(config).await?;
+        let mut list = list;
+        l.append(&mut list);
+        l
+    };
+
+    let content = serde_json::to_string_pretty(&l).c(d!())?;
 
     tokio::fs::write(path, content).await.c(d!())?;
+    Ok(())
+}
+
+pub async fn delete_account_one(config: &Config, index:usize) -> Result<AccountEntry> {
+    let mut v = read_account_list(config).await?;
+    let entry = v.remove(index);
+
+    write_account_list(config, v, true).await.c(d!())?;
     Ok(entry)
 }
 
