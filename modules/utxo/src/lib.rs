@@ -12,6 +12,7 @@ use libfindora::utxo::{
     GetOwnedUtxoReq, GetOwnedUtxoResp, Output, OutputId, OwnedOutput, UtxoTransacrion,
     ValidateTransaction,
 };
+use libfindora::event;
 use rand_chacha::ChaChaRng;
 use zei::{setup::PublicParams, xfr::sig::XfrPublicKey};
 
@@ -195,6 +196,19 @@ impl Application for UtxoModule {
                 return Err(abcf::Error::ABCIApplicationError(90002, format!("{}", e)));
             }
         }
+
+
+        // 1. recv events
+        for input in validate_tx.inputs {
+            let e = event::SendEvent::new_from_record(&input);
+            context.events.emmit(e)?;
+        }
+        // 2. send events
+        for output in validate_tx.outputs {
+            let e = event::RecvEvent::new_from_record(&output);
+            context.events.emmit(e)?;
+        }
+
         Ok(Default::default())
     }
 }
