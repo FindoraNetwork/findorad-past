@@ -1,4 +1,4 @@
-use clap::Clap;
+use clap::Parser;
 
 pub mod command;
 pub mod config;
