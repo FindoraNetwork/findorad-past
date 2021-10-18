@@ -12,10 +12,10 @@ use zei::{
 
 use crate::{
     config::Config,
+    entry::{wallet::AccountEntry},
     utils::send_tx,
 };
 use libfn::{build_transaction, Entry, IssueEntry};
-use crate::utils::{read_account_list,account_to_keypair};
 
 #[derive(Parser, Debug)]
 #[clap(group = ArgGroup::new("account"))]
@@ -33,8 +33,8 @@ pub struct Command {
     #[clap(short = 'A', long)]
     confidential_amount: bool,
 
-    #[clap(short = 'i', long, group = "account")]
-    account_index: Option<usize>,
+    #[clap(short, long, group = "account")]
+    account: Option<usize>,
 }
 
 impl Command {
@@ -42,18 +42,9 @@ impl Command {
         let keypair = if let Some(secret_key) = self.secret_key.as_ref() {
             let sk_bytes = base64::decode(secret_key).c(d!())?;
             let sk = XfrSecretKey::zei_from_bytes(&sk_bytes)?;
-            Some(sk.into_keypair())
-        } else if let Some(account_index) = self.account_index {
-            let mut kp = None;
-            let v = read_account_list(&config).await?;
-            if let Some(account) = v.get(account_index){
-                let result = account_to_keypair(account);
-                if result.is_err() {
-                    return Err(result.unwrap_err());
-                }
-                kp = result.ok();
-            }
-            kp
+            sk.into_keypair()
+        } else if let Some(account_index) = self.account {
+            AccountEntry::from_index_to_keypair(account_index, &config)?
         } else {
             return Err(Box::from(d!("keypair is none")));
         };
@@ -68,7 +59,7 @@ impl Command {
             amount: self.amount,
             asset_type: AssetType(asset_type),
             confidential_amount: self.confidential_amount,
-            keypair: keypair.unwrap(),//safe
+            keypair,
         });
 
         if let Some(_e) = &self.batch {
