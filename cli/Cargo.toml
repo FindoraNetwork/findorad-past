@@ -33,3 +33,4 @@ ed25519-dalek-bip32 = { git = "https://github.com/FindoraNetwork/ed25519-dalek-b
 libfn = { path = "../libfn" }
 fm-utxo = { path = "../modules/utxo" }
 
+abcf = { git = "ssh://git@github.com/FindoraNetwork/abcf" }
