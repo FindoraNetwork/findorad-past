@@ -1,9 +1,9 @@
-use clap::{ArgGroup, Clap};
+use clap::{ArgGroup, Parser};
 use ruc::*;
 
 use crate::config::Config;
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(group = ArgGroup::new("server_address"))]
 pub struct Command {
     #[clap(short = 's', long, group = "server_address")]

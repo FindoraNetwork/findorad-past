@@ -1,4 +1,4 @@
-use clap::Clap;
+use clap::Parser;
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use ruc::*;
@@ -9,7 +9,7 @@ use crate::{
 };
 use libfn::build_transaction;
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 pub struct Command {
     #[clap(short, long)]
     dump_transaction: bool,

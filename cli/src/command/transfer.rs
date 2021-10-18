@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 
-use clap::{ArgGroup, Clap};
+use clap::{ArgGroup, Parser};
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use ruc::*;
@@ -19,7 +19,7 @@ use crate::{
 };
 use libfn::{build_transaction, Entry, TransferEntry};
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(group = ArgGroup::new("account"))]
 pub struct Command {
     #[clap(short, long)]

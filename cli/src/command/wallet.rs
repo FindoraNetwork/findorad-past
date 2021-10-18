@@ -1,5 +1,5 @@
 use bip0039::{Count, Language, Mnemonic};
-use clap::{ArgGroup, Clap};
+use clap::{ArgGroup, Parser};
 use ed25519_dalek_bip32::{DerivationPath, ExtendedSecretKey};
 use ruc::*;
 use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrSecretKey};
@@ -64,7 +64,7 @@ pub fn check_lang(lang: &str) -> Result<Language> {
     }
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(group = ArgGroup::new("account"))]
 pub struct Command {
     #[clap(short, long, group = "account")]

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Clap, ValueHint};
+use clap::{Parser, ValueHint};
 use ruc::*;
 
 use crate::config::Config;
@@ -11,7 +11,7 @@ mod setup;
 mod transfer;
 mod wallet;
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(author, about, version)]
 pub struct Opts {
     #[clap(short, long, env = "FN_HOME", default_value = concat!(env!("HOME"), "/.findora/fn"), value_hint = ValueHint::DirPath)]
@@ -38,7 +38,7 @@ impl Opts {
     }
 }
 
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 enum SubCommand {
     #[clap(version, author, about = "Setup configuration entry.")]
     Setup(setup::Command),
