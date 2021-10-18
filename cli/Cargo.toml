@@ -27,6 +27,10 @@ hex = "0.4.3"
 reqwest = { version = "0.11", features = ["json"]}
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 rand_chacha = "0.2.2"
+bech32 = "0.8.1"
+bip0039 = "0.8.0"
+ed25519-dalek-bip32 = { git = "https://github.com/FindoraNetwork/ed25519-dalek-bip32", branch = "feat-allow-nohardened" }
 libfn = { path = "../libfn" }
 fm-utxo = { path = "../modules/utxo" }
+
 abcf = { git = "ssh://git@github.com/FindoraNetwork/abcf" }

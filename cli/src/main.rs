@@ -2,6 +2,7 @@ use clap::Parser;
 
 pub mod command;
 pub mod config;
+pub mod entry;
 pub mod utils;
 
 #[tokio::main]

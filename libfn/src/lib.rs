@@ -8,12 +8,12 @@ mod issue;
 pub use issue::IssueEntry;
 
 mod transfer;
+mod wallet;
+pub use wallet::AccountEntry;
+
 pub use transfer::TransferEntry;
 
 use transfer::build_input_asset_record_and_id;
-
-mod wallet;
-pub use wallet::AccountEntry;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Entry {
