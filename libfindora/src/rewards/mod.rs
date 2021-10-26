@@ -13,4 +13,3 @@ pub struct Transaction {
     pub delegator: XfrPublicKey,
     pub amount: u64,
 }
-

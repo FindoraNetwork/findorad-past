@@ -4,4 +4,3 @@ use abcf::tm_protos::crypto;
 pub struct Delegate {
     pub validator: crypto::PublicKey,
 }
-

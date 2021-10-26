@@ -8,7 +8,7 @@ use abcf::{
 };
 
 #[abcf::module(
-    name = "staking",
+    name = "rewards",
     version = 1,
     impl_version = "0.1.1",
     target_height = 0
@@ -27,7 +27,7 @@ impl Module {}
 // /// Module's block logic.
 // #[abcf::application]
 // impl Application for Module {
-//     type Transaction = CoinbaseTransaction;
+//     type Transaction = Rewa;
 //
 //     async fn check_tx(
 //         &mut self,

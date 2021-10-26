@@ -24,16 +24,23 @@ struct OwnerMemo {
     ephemeralPublicKey @2: Data;
 }
 
+struct ValidatorKey {
+    key :union {
+        ed25519 @0: Data;
+        secp256k1 @1: Data;
+    }
+}
+
 struct DelegateData {
-    validator @0: Data;
+    validator @0: ValidatorKey;
 }
 
 struct UndelegateData {
-    validator @0: Data;
+    validator @0: ValidatorKey;
 }
 
 struct ClaimData {
-    validator @0: Data;
+    validator @0: ValidatorKey;
 }
 
 struct Output {

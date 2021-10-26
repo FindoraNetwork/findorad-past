@@ -1,4 +1,4 @@
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 
 use crate::{
     transaction::{OutputOperation, Transaction},
@@ -14,8 +14,10 @@ pub struct CoinbaseTransaction {
     pub outputs: Vec<(u32, Output)>,
 }
 
-impl From<&Transaction> for CoinbaseTransaction {
-    fn from(tx: &Transaction) -> Self {
+impl TryFrom<&Transaction> for CoinbaseTransaction {
+    type Error = abcf::Error;
+
+    fn try_from(tx: &Transaction) -> Result<Self, Self::Error> {
         let mut outputs = Vec::new();
 
         for i in 0..tx.outputs.len() {
@@ -23,7 +25,7 @@ impl From<&Transaction> for CoinbaseTransaction {
             if let OutputOperation::IssueAsset = output.operation {
                 // safety unwrap
                 outputs.push((
-                    i.try_into().unwrap(),
+                    i.try_into().map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("convert index error, {}", e)))?,
                     Output {
                         core: output.core.clone(),
                         owner_memo: output.owner_memo.clone(),
@@ -32,9 +34,9 @@ impl From<&Transaction> for CoinbaseTransaction {
             }
         }
 
-        Self {
+        Ok(Self {
             txid: tx.txid.clone(),
             outputs,
-        }
+        })
     }
 }

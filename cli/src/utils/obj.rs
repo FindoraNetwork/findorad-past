@@ -42,8 +42,6 @@ impl QueryResp {
 
         let tx = Transaction::from_bytes(&*bytes).map_err(|e| d!(e.message()))?;
 
-        let tx = serde_json::to_string(&tx).c(d!())?;
-
         self.tx = tx;
         Ok(())
     }

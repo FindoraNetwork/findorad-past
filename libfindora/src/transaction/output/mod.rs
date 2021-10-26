@@ -1,16 +1,16 @@
 use zei::xfr::structs::{BlindAssetRecord, OwnerMemo};
 
-use crate::staking;
 use crate::rewards;
+use crate::staking;
 
 #[derive(Debug, Clone)]
 pub enum Operation {
     TransferAsset,
     IssueAsset,
     Fee,
-    Undelegate(staking::Delegate),
+    Delegate(staking::Delegate),
     ClaimReward(rewards::Claim),
-    Delegate(staking::Undelegate),
+    Undelegate(staking::Undelegate),
 }
 
 #[derive(Debug)]
