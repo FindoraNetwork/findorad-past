@@ -1,3 +1,4 @@
+use std::thread::park;
 use abcf_sdk::jsonrpc::Request;
 use tokio::runtime::Runtime;
 use abcf_sdk::providers::{Provider, WsProvider};
@@ -8,16 +9,22 @@ use ruc::*;
 fn main() -> Result<()> {
     let rt = Runtime::new().unwrap();
     let mut provider = WsProvider::new();
-    let query = json!(["tm.event='SendEvent'"]);
-    let subscribe_req = Request::new_to_str("subscribe", query);
-    let resp = provider.request("subscribe", &*subscribe_req).await?;
+    // pub_key can be change from test case
+    let query = json!(["SendEvent.pub_key='DK5o6w6OkXk6soHvMToYfp0W/rIWuk9ODjukNEpUFKI='"]);
+    let subscribe_req = Request::new_to_value("subscribe", query);
 
-    println!("{:?}", resp);
+    rt.block_on(async {
+        let resp = provider.request::<Value,String>("subscribe", &subscribe_req).await.unwrap();
+        println!("{:?}", resp);
 
-    for _ in 0..10 {
-        let r = provider.receive().await.unwrap().unwrap();
-        println!("{:#?}", r);
-    }
+        loop {
+            let r = provider.receive().await.unwrap();
+            println!("{:?}", r);
+        }
+
+    });
+
+    park();
 
     Ok(())
 }
