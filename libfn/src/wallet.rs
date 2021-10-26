@@ -1,9 +1,9 @@
-use ruc::*;
-use ed25519_dalek_bip32::{DerivationPath, ExtendedSecretKey};
-use bip0039::{Count, Language, Mnemonic};
-use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrSecretKey};
 use bech32::{ToBase32, Variant};
+use bip0039::{Count, Language, Mnemonic};
+use ed25519_dalek_bip32::{DerivationPath, ExtendedSecretKey};
+use ruc::*;
 use serde::{Deserialize, Serialize};
+use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrSecretKey};
 
 macro_rules! restore_keypair_from_mnemonic {
     ($phrase: expr, $l: expr, $p: expr, $bip: tt) => {
@@ -104,16 +104,14 @@ impl BipPath {
 }
 
 impl AccountEntry {
-
     pub fn generate_keypair() -> Result<AccountEntry> {
         let mnemonic = pnk!(generate_mnemonic_custom(24, "en"));
         AccountEntry::generate_keypair_from_mnemonic(&*mnemonic)
     }
 
     pub fn generate_keypair_from_mnemonic(mnemonic: &str) -> Result<AccountEntry> {
-        let kp =
-            restore_keypair_from_mnemonic!(mnemonic.clone(), "en", BipPath::new_fra(), bip44)
-                .c(d!())?;
+        let kp = restore_keypair_from_mnemonic!(mnemonic.clone(), "en", BipPath::new_fra(), bip44)
+            .c(d!())?;
         let base64_pub_key = base64::encode(&kp.get_pk().zei_to_bytes());
         let base64_sec_key = base64::encode(&kp.get_sk().zei_to_bytes());
 
@@ -122,13 +120,13 @@ impl AccountEntry {
             &kp.get_pk().zei_to_bytes().to_base32(),
             Variant::Bech32,
         )
-            .c(d!())?;
+        .c(d!())?;
         let bech32_sec_key = bech32::encode(
             "fra",
             &kp.get_sk().zei_to_bytes().to_base32(),
             Variant::Bech32,
         )
-            .c(d!())?;
+        .c(d!())?;
 
         Ok(Self {
             mnemonic: mnemonic.to_string(),

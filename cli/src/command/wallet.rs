@@ -2,14 +2,14 @@ use clap::{ArgGroup, Parser};
 use ruc::*;
 use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrSecretKey};
 
-use crate::{config::Config,
-            utils::{
-                get_value_map, write_account_list, read_account_list,
-                    delete_account_one, account_to_keypair,
-            }
+use crate::{
+    config::Config,
+    utils::{
+        account_to_keypair, delete_account_one, get_value_map, read_account_list,
+        write_account_list,
+    },
 };
 use libfn::AccountEntry;
-
 
 #[derive(Parser, Debug)]
 #[clap(group = ArgGroup::new("account"))]
@@ -43,11 +43,10 @@ pub struct Command {
 
 impl Command {
     pub async fn execute(&self, config: Config) -> Result<()> {
-
         if self.generate {
             let entry = AccountEntry::generate_keypair()?;
-            println!("{:#?}",entry);
-            write_account_list(&config, vec![entry],false).await?;
+            println!("{:#?}", entry);
+            write_account_list(&config, vec![entry], false).await?;
             return Ok(());
         }
 
@@ -67,17 +66,18 @@ impl Command {
             let entry = AccountEntry::generate_keypair_from_mnemonic(phrase)?;
             println!("{:#?}", entry);
 
-            write_account_list(&config,vec![entry], false).await?;
+            write_account_list(&config, vec![entry], false).await?;
             return Ok(());
         }
 
         if self.show {
-
             let mut wallets = vec![];
 
             if let Some(index) = &self.account_index {
                 let v = read_account_list(&config).await?;
-                let account = v.get(*index).ok_or(d!(format!("the index not exist, array len:{}",v.len())))?;
+                let account = v
+                    .get(*index)
+                    .ok_or(d!(format!("the index not exist, array len:{}", v.len())))?;
                 let kp = account_to_keypair(account)?;
                 wallets.push(kp);
             }
@@ -91,7 +91,9 @@ impl Command {
             }
 
             if wallets.len() == 0 {
-                return Err(Box::from(d!("must set wallet(base64) or wallet-index(usize)")));
+                return Err(Box::from(d!(
+                    "must set wallet(base64) or wallet-index(usize)"
+                )));
             }
 
             let value_map = get_value_map(wallets).await?;

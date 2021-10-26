@@ -6,4 +6,5 @@ members = [
     "cli",
     "modules/utxo",
     "modules/coinbase",
+    "modules/staking",
 ]

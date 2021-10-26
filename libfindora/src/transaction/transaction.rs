@@ -4,7 +4,6 @@ use abcf::ToBytes;
 use capnp::{message::ReaderOptions, serialize_packed};
 use digest::Digest;
 use ruc::*;
-use serde::{Deserialize, Serialize};
 use sha3::Sha3_512;
 use zei::{
     chaum_pedersen::{ChaumPedersenProof, ChaumPedersenProofX},
@@ -24,7 +23,7 @@ use crate::transaction_capnp;
 
 use super::{Input, InputOperation, Output, OutputOperation};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug)]
 pub struct Transaction {
     pub txid: Vec<u8>,
     pub inputs: Vec<Input>,
@@ -109,7 +108,8 @@ impl abcf::module::FromBytes for Transaction {
     where
         Self: Sized,
     {
-        let reader = serialize_packed::read_message(bytes, ReaderOptions::new()).map_err(convert_capnp_error)?;
+        let reader = serialize_packed::read_message(bytes, ReaderOptions::new())
+            .map_err(convert_capnp_error)?;
         let root = reader
             .get_root::<transaction_capnp::transaction::Reader>()
             .map_err(convert_capnp_error)?;
@@ -462,7 +462,7 @@ impl ToBytes for Transaction {
                     }
                     OutputOperation::Undelegate => {
                         output.set_operation(transaction_capnp::output::Operation::Undelegate)
-                    },
+                    }
                     OutputOperation::Delegate => {
                         output.set_operation(transaction_capnp::output::Operation::Delegate)
                     }

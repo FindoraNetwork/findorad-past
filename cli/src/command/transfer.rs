@@ -14,7 +14,7 @@ use zei::{
 
 use crate::{
     config::Config,
-    utils::{send_tx, read_account_list, account_to_keypair},
+    utils::{account_to_keypair, read_account_list, send_tx},
 };
 use libfn::{build_transaction, Entry, TransferEntry};
 
@@ -57,7 +57,7 @@ impl Command {
         } else if let Some(account_index) = self.account_index {
             let mut kp = None;
             let v = read_account_list(&config).await?;
-            if let Some(account) = v.get(account_index){
+            if let Some(account) = v.get(account_index) {
                 let result = account_to_keypair(account);
                 if result.is_err() {
                     return Err(result.unwrap_err());
@@ -87,7 +87,7 @@ impl Command {
                 confidential_asset: self.confidential_asset,
                 amount: self.amount,
                 asset_type,
-                from:from.unwrap(),//safe
+                from: from.unwrap(), //safe
                 to,
             });
 

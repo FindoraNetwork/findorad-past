@@ -1,17 +1,19 @@
-use serde::{Deserialize, Serialize};
 use zei::xfr::structs::{BlindAssetRecord, OwnerMemo};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+use crate::staking;
+use crate::rewards;
+
+#[derive(Debug, Clone)]
 pub enum Operation {
     TransferAsset,
     IssueAsset,
     Fee,
-    Undelegate,
-    ClaimReward,
-    Delegate,
+    Undelegate(staking::Delegate),
+    ClaimReward(rewards::Claim),
+    Delegate(staking::Undelegate),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug)]
 pub struct Output {
     pub core: BlindAssetRecord,
     pub operation: Operation,
