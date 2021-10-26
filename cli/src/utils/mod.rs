@@ -147,7 +147,7 @@ pub async fn read_account_list(config: &Config) -> Result<Vec<AccountEntry>> {
     let path = config.node.home.clone().join("account");
 
     let list = if !path.exists() {
-        tokio::fs::create_dir_all(path).await.c(d!())?;
+        tokio::fs::File::create(path).await.c(d!())?;
         Vec::new()
     } else {
         let content = tokio::fs::read_to_string(path).await.c(d!())?;
