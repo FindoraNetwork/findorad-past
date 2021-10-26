@@ -5,7 +5,10 @@ use zei::xfr::structs::{BlindAssetRecord, OwnerMemo};
 pub enum Operation {
     TransferAsset,
     IssueAsset,
-    // Fee,
+    Fee,
+    Undelegate,
+    ClaimReward,
+    Delegate,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

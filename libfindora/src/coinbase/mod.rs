@@ -9,12 +9,12 @@ mod rpc;
 pub use rpc::{GetAssetOwnerReq, GetAssetOwnerResp};
 
 #[derive(Debug, Default)]
-pub struct CoinbaseTransacrion {
+pub struct CoinbaseTransaction {
     pub txid: Vec<u8>,
     pub outputs: Vec<(u32, Output)>,
 }
 
-impl From<&Transaction> for CoinbaseTransacrion {
+impl From<&Transaction> for CoinbaseTransaction {
     fn from(tx: &Transaction) -> Self {
         let mut outputs = Vec::new();
 

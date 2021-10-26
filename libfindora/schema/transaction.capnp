@@ -8,6 +8,8 @@ struct Input {
     enum Operation {
         transferAsset @0;
         issueAsset @1;
+        undelegate @2;
+        claimReward @3;
     }
 }
 
@@ -30,6 +32,10 @@ struct Output {
     enum Operation {
         transferAsset @0;
         issueAsset @1;
+        fee @2;
+        undelegate @3;
+        claimReward @4;
+        delegate @5;
     }
 
     amount :union {

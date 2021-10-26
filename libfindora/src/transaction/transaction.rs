@@ -125,6 +125,8 @@ impl abcf::module::FromBytes for Transaction {
             let operation = match input.get_operation().map_err(convert_capnp_noinschema)? {
                 transaction_capnp::input::Operation::IssueAsset => InputOperation::IssueAsset,
                 transaction_capnp::input::Operation::TransferAsset => InputOperation::TransferAsset,
+                transaction_capnp::input::Operation::Undelegate => InputOperation::Undelegate,
+                transaction_capnp::input::Operation::ClaimReward => InputOperation::ClaimReward,
             };
 
             let i = Input { txid, n, operation };
@@ -145,6 +147,10 @@ impl abcf::module::FromBytes for Transaction {
                 transaction_capnp::output::Operation::TransferAsset => {
                     OutputOperation::TransferAsset
                 }
+                transaction_capnp::output::Operation::Fee => OutputOperation::Fee,
+                transaction_capnp::output::Operation::Undelegate => OutputOperation::Undelegate,
+                transaction_capnp::output::Operation::Delegate => OutputOperation::Delegate,
+                transaction_capnp::output::Operation::ClaimReward => OutputOperation::ClaimReward,
             };
 
             let amount = match output
@@ -413,6 +419,12 @@ impl ToBytes for Transaction {
                     InputOperation::TransferAsset => {
                         input.set_operation(transaction_capnp::input::Operation::TransferAsset)
                     }
+                    InputOperation::Undelegate => {
+                        input.set_operation(transaction_capnp::input::Operation::Undelegate)
+                    }
+                    InputOperation::ClaimReward => {
+                        input.set_operation(transaction_capnp::input::Operation::ClaimReward)
+                    }
                 }
             }
 
@@ -444,6 +456,18 @@ impl ToBytes for Transaction {
                     }
                     OutputOperation::TransferAsset => {
                         output.set_operation(transaction_capnp::output::Operation::TransferAsset)
+                    }
+                    OutputOperation::Fee => {
+                        output.set_operation(transaction_capnp::output::Operation::Fee)
+                    }
+                    OutputOperation::Undelegate => {
+                        output.set_operation(transaction_capnp::output::Operation::Undelegate)
+                    },
+                    OutputOperation::Delegate => {
+                        output.set_operation(transaction_capnp::output::Operation::Delegate)
+                    }
+                    OutputOperation::ClaimReward => {
+                        output.set_operation(transaction_capnp::output::Operation::ClaimReward)
                     }
                 }
 
