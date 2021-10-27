@@ -8,6 +8,7 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
+use libfindora::event;
 use libfindora::utxo::{
     GetOwnedUtxoReq, GetOwnedUtxoResp, Output, OutputId, OwnedOutput, UtxoTransacrion,
     ValidateTransaction,
