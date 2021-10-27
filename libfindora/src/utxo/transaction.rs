@@ -1,4 +1,5 @@
 use std::convert::TryFrom;
+
 use crate::transaction::Transaction;
 use serde::{Deserialize, Serialize};
 use zei::xfr::structs::{AssetTypeAndAmountProof, BlindAssetRecord, OwnerMemo};

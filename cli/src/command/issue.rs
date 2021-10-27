@@ -10,12 +10,9 @@ use zei::{
     },
 };
 
-use crate::{
-    config::Config,
-    utils::send_tx,
-};
+use crate::utils::{account_to_keypair, read_account_list};
+use crate::{config::Config, utils::send_tx};
 use libfn::{build_transaction, Entry, IssueEntry};
-use crate::utils::{read_account_list,account_to_keypair};
 
 #[derive(Parser, Debug)]
 #[clap(group = ArgGroup::new("account"))]
@@ -46,7 +43,7 @@ impl Command {
         } else if let Some(account_index) = self.account_index {
             let mut kp = None;
             let v = read_account_list(&config).await?;
-            if let Some(account) = v.get(account_index){
+            if let Some(account) = v.get(account_index) {
                 let result = account_to_keypair(account);
                 if result.is_err() {
                     return Err(result.unwrap_err());
@@ -68,7 +65,7 @@ impl Command {
             amount: self.amount,
             asset_type: AssetType(asset_type),
             confidential_amount: self.confidential_amount,
-            keypair: keypair.unwrap(),//safe
+            keypair: keypair.unwrap(), //safe
         });
 
         if let Some(_e) = &self.batch {

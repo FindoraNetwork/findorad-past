@@ -8,6 +8,8 @@ struct Input {
     enum Operation {
         transferAsset @0;
         issueAsset @1;
+        undelegate @2;
+        claimReward @3;
     }
 }
 
@@ -22,30 +24,52 @@ struct OwnerMemo {
     ephemeralPublicKey @2: Data;
 }
 
+struct ValidatorKey {
+    key :union {
+        ed25519 @0: Data;
+        secp256k1 @1: Data;
+    }
+}
+
+struct DelegateData {
+    validator @0: ValidatorKey;
+}
+
+struct UndelegateData {
+    validator @0: ValidatorKey;
+}
+
+struct ClaimData {
+    validator @0: ValidatorKey;
+}
+
 struct Output {
     publicKey @0: Data;
 
-    operation @1: Operation;
-
-    enum Operation {
-        transferAsset @0;
-        issueAsset @1;
-    }
-
     amount :union {
-        confidential @2: ConfidentialAmount;
-        nonConfidential @3: UInt64;
+        confidential @1: ConfidentialAmount;
+        nonConfidential @2: UInt64;
     }
 
     asset :union {
-        confidential @4: Data;
-        nonConfidential @5: Data;
+        confidential @3: Data;
+        nonConfidential @4: Data;
     }
 
     ownerMemo :union {
-        none @6: Void;
-        some @7: OwnerMemo;
+        none @5: Void;
+        some @6: OwnerMemo;
     }
+
+    operation :union {
+        transferAsset @7: Void;
+        issueAsset @8: Void;
+        fee @9: Void;
+        undelegate @10: UndelegateData;
+        claimReward @11: ClaimData;
+        delegate @12: DelegateData;
+    }
+
 }
 
 struct RangeProof {

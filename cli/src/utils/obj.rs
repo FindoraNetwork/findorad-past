@@ -1,8 +1,8 @@
+use abcf::FromBytes;
+use libfindora::transaction::Transaction;
+use ruc::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use ruc::*;
-use libfindora::transaction::Transaction;
-use abcf::FromBytes;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Resp {
@@ -31,7 +31,7 @@ pub struct QueryResp {
     pub height: String,
     pub index: i64,
     pub tx: String,
-    pub tx_result: QueryRespResult
+    pub tx_result: QueryRespResult,
 }
 
 impl QueryResp {
@@ -40,11 +40,9 @@ impl QueryResp {
 
         let bytes = base64::decode(tx.as_bytes()).c(d!())?;
 
-        let tx = Transaction::from_bytes(&*bytes).map_err(|e|d!(e.message()))?;
+        let _tx = Transaction::from_bytes(&*bytes).map_err(|e| d!(e.message()))?;
 
-        let tx = serde_json::to_string(&tx).c(d!())?;
-
-        self.tx = tx;
+        // self.tx = tx;
         Ok(())
     }
 }

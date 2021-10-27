@@ -1,10 +1,9 @@
 use std::convert::TryInto;
 
-use abcf::ToBytes;
+use abcf::{tm_protos::crypto, ToBytes};
 use capnp::{message::ReaderOptions, serialize_packed};
 use digest::Digest;
 use ruc::*;
-use serde::{Deserialize, Serialize};
 use sha3::Sha3_512;
 use zei::{
     chaum_pedersen::{ChaumPedersenProof, ChaumPedersenProofX},
@@ -20,11 +19,11 @@ use zei::{
     },
 };
 
-use crate::transaction_capnp;
+use crate::{staking, transaction_capnp};
 
 use super::{Input, InputOperation, Output, OutputOperation};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug)]
 pub struct Transaction {
     pub txid: Vec<u8>,
     pub inputs: Vec<Input>,
@@ -109,7 +108,8 @@ impl abcf::module::FromBytes for Transaction {
     where
         Self: Sized,
     {
-        let reader = serialize_packed::read_message(bytes, ReaderOptions::new()).map_err(convert_capnp_error)?;
+        let reader = serialize_packed::read_message(bytes, ReaderOptions::new())
+            .map_err(convert_capnp_error)?;
         let root = reader
             .get_root::<transaction_capnp::transaction::Reader>()
             .map_err(convert_capnp_error)?;
@@ -125,6 +125,8 @@ impl abcf::module::FromBytes for Transaction {
             let operation = match input.get_operation().map_err(convert_capnp_noinschema)? {
                 transaction_capnp::input::Operation::IssueAsset => InputOperation::IssueAsset,
                 transaction_capnp::input::Operation::TransferAsset => InputOperation::TransferAsset,
+                transaction_capnp::input::Operation::Undelegate => InputOperation::Undelegate,
+                transaction_capnp::input::Operation::ClaimReward => InputOperation::ClaimReward,
             };
 
             let i = Input { txid, n, operation };
@@ -135,16 +137,45 @@ impl abcf::module::FromBytes for Transaction {
         let mut outputs = Vec::new();
 
         for output in root.get_outputs().map_err(convert_capnp_error)?.iter() {
+            use transaction_capnp::output::operation;
+            use transaction_capnp::validator_key;
+
             let public_key_bytes = output.get_public_key().map_err(convert_capnp_error)?;
 
             let public_key = ed25519_dalek::PublicKey::from_bytes(public_key_bytes)
                 .map_err(|e| abcf::Error::ABCIApplicationError(90003, format!("{:?}", e)))?;
 
-            let operation = match output.get_operation().map_err(convert_capnp_noinschema)? {
-                transaction_capnp::output::Operation::IssueAsset => OutputOperation::IssueAsset,
-                transaction_capnp::output::Operation::TransferAsset => {
-                    OutputOperation::TransferAsset
+            let operation = match output
+                .get_operation()
+                .which()
+                .map_err(|e| abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)))?
+            {
+                operation::Which::IssueAsset(_) => OutputOperation::IssueAsset,
+                operation::Which::TransferAsset(_) => OutputOperation::TransferAsset,
+                operation::Which::Fee(_) => OutputOperation::Fee,
+                operation::Which::Delegate(a) => {
+                    let reader = a.map_err(convert_capnp_error)?;
+                    let validator = reader.get_validator().map_err(convert_capnp_error)?;
+                    let key = match validator
+                        .get_key()
+                        .which()
+                        .map_err(convert_capnp_noinschema)?
+                    {
+                        validator_key::key::Which::Ed25519(a) => crypto::public_key::Sum::Ed25519(
+                            a.map_err(convert_capnp_error)?.to_vec(),
+                        ),
+                        validator_key::key::Which::Secp256k1(a) => {
+                            crypto::public_key::Sum::Secp256k1(
+                                a.map_err(convert_capnp_error)?.to_vec(),
+                            )
+                        }
+                    };
+
+                    let validator = crypto::PublicKey { sum: Some(key) };
+
+                    OutputOperation::Delegate(staking::Delegate { validator })
                 }
+                _ => OutputOperation::IssueAsset,
             };
 
             let amount = match output
@@ -413,6 +444,12 @@ impl ToBytes for Transaction {
                     InputOperation::TransferAsset => {
                         input.set_operation(transaction_capnp::input::Operation::TransferAsset)
                     }
+                    InputOperation::Undelegate => {
+                        input.set_operation(transaction_capnp::input::Operation::Undelegate)
+                    }
+                    InputOperation::ClaimReward => {
+                        input.set_operation(transaction_capnp::input::Operation::ClaimReward)
+                    }
                 }
             }
 
@@ -438,12 +475,44 @@ impl ToBytes for Transaction {
 
                 output.set_public_key(&public_key);
 
-                match ori_output.operation {
-                    OutputOperation::IssueAsset => {
-                        output.set_operation(transaction_capnp::output::Operation::IssueAsset)
+                let mut operation = output.reborrow().init_operation();
+
+                macro_rules! set_validator {
+                    ($op:ident, $in:ident, $f:ident) => {
+                        let undelegate = $op.$f();
+
+                        let validator = undelegate.init_validator();
+
+                        let mut key = validator.init_key();
+
+                        if let Some(v) = &$in.validator.sum {
+                            match v {
+                                crypto::public_key::Sum::Ed25519(v) => key.set_ed25519(v.as_ref()),
+                                crypto::public_key::Sum::Secp256k1(v) => {
+                                    key.set_secp256k1(v.as_ref())
+                                }
+                            }
+                        } else {
+                            return Err(abcf::Error::ABCIApplicationError(
+                                90006,
+                                String::from("sum must be not null"),
+                            ));
+                        }
+                    };
+                }
+
+                match &ori_output.operation {
+                    OutputOperation::IssueAsset => operation.set_issue_asset(()),
+                    OutputOperation::TransferAsset => operation.set_transfer_asset(()),
+                    OutputOperation::Fee => operation.set_fee(()),
+                    OutputOperation::Undelegate(a) => {
+                        set_validator!(operation, a, init_undelegate);
                     }
-                    OutputOperation::TransferAsset => {
-                        output.set_operation(transaction_capnp::output::Operation::TransferAsset)
+                    OutputOperation::Delegate(a) => {
+                        set_validator!(operation, a, init_delegate);
+                    }
+                    OutputOperation::ClaimReward(a) => {
+                        set_validator!(operation, a, init_claim_reward);
                     }
                 }
 

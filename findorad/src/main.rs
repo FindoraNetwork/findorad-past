@@ -3,15 +3,15 @@
 // pub mod coinbase;
 // pub mod utxo;
 
-use std::marker::PhantomData;
 use bs3::backend::SledBackend;
+use fm_coinbase::CoinbaseModule;
+use fm_utxo::UtxoModule;
 use libfindora::transaction::Transaction;
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use sha3::Sha3_512;
+use std::marker::PhantomData;
 use zei::setup::PublicParams;
-use fm_utxo::UtxoModule;
-use fm_coinbase::CoinbaseModule;
 
 #[abcf::manager(
     name = "findorad",
