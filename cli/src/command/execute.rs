@@ -27,8 +27,7 @@ impl Command {
         let tx = build_transaction(&mut prng, list).await?;
 
         if self.dump_transaction {
-            let tx_json = serde_json::to_string_pretty(&tx).c(d!())?;
-            println!("{}", tx_json);
+            println!("{:#?}", tx);
         } else {
             log::debug!("Result tx is: {:?}", tx);
 

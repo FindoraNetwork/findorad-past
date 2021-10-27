@@ -16,7 +16,6 @@ serde = "1.0.130"
 toml = "0.5.8"
 zei = { git = "ssh://git@github.com/tiannian/zei", branch = "feat-refactor" }
 libfindora = { path = "../libfindora" }
-findorad = { path = "../findorad" }
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 tokio = { version = "1", features = ["full"] }
 abcf-sdk = { git = "ssh://git@github.com/FindoraNetwork/abcf", features = ["http"] }

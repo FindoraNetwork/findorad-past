@@ -9,7 +9,7 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
-use libfindora::coinbase::{CoinbaseTransacrion, GetAssetOwnerReq, GetAssetOwnerResp};
+use libfindora::coinbase::{CoinbaseTransaction, GetAssetOwnerReq, GetAssetOwnerResp};
 use zei::xfr::{
     sig::XfrPublicKey,
     structs::{AssetType, XfrAssetType},
@@ -24,6 +24,7 @@ use zei::xfr::{
 pub struct CoinbaseModule {
     #[stateful]
     pub asset_owner: Map<AssetType, XfrPublicKey>,
+    // Only a placeholder, will remove when abcf update.
     #[stateless]
     pub sl_value: Value<u32>,
 }
@@ -54,7 +55,7 @@ impl CoinbaseModule {
 /// Module's block logic.
 #[abcf::application]
 impl Application for CoinbaseModule {
-    type Transaction = CoinbaseTransacrion;
+    type Transaction = CoinbaseTransaction;
 
     async fn check_tx(
         &mut self,

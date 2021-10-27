@@ -10,6 +10,7 @@ mod issue;
 mod setup;
 mod transfer;
 mod wallet;
+mod tx;
 
 #[derive(Parser, Debug)]
 #[clap(author, about, version)]
