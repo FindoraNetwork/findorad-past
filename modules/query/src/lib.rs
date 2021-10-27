@@ -3,7 +3,7 @@
 use std::convert::TryInto;
 
 use abcf::{
-    bs3::{model::Map, MapStore, model::Vec},
+    bs3::{model::Map, MapStore, model::Vec as bs3_vec},
     manager::TContext,
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
@@ -33,7 +33,7 @@ pub struct QueryModule {
     #[stateless]
     pub token_code: Map<AssetTypeCode, Issuances>,
     #[stateless]
-    pub state_commitment_versions: Vec<StateCommitmentData>,
+    pub state_commitment_versions: bs3_vec<StateCommitmentData>,
 }
 
 #[abcf::rpcs]
