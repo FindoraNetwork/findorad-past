@@ -7,4 +7,5 @@ members = [
     "modules/utxo",
     "modules/coinbase",
     "modules/staking",
+    "modules/rewards",
 ]

@@ -40,9 +40,9 @@ impl QueryResp {
 
         let bytes = base64::decode(tx.as_bytes()).c(d!())?;
 
-        let tx = Transaction::from_bytes(&*bytes).map_err(|e| d!(e.message()))?;
+        let _tx = Transaction::from_bytes(&*bytes).map_err(|e| d!(e.message()))?;
 
-        self.tx = tx;
+        // self.tx = tx;
         Ok(())
     }
 }
