@@ -1,5 +1,13 @@
 # findorad
 
+## Install Dependencies
+
+Install [Cap’n Proto](https://capnproto.org/index.html) on Ubuntu platform :
+
+```
+sudo apt-get install capnproto
+```
+
 ## Construction and crates.
 
 - libfindora: Common data struct for findora node, client and wallet.

@@ -26,3 +26,8 @@ fm-coinbase = { path = "../modules/coinbase" }
 # [lib]
 # name = "findorad_lib"
 # path = "src/lib.rs"
+
+[dev-dependencies]
+abcf-sdk = { git = "ssh://git@github.com/FindoraNetwork/abcf", default-features = false, features=["websocket"] }
+tokio = { version = "1", features = ["full"] }
+ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }

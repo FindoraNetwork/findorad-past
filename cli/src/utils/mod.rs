@@ -10,9 +10,9 @@ use zei::serialization::ZeiFromToBytes;
 use zei::xfr::sig::XfrSecretKey;
 use zei::xfr::{asset_record::open_blind_asset_record, sig::XfrKeyPair, structs::AssetType};
 
-use crate::config::Config;
-use crate::utils::obj::{QueryResp, Resp};
+use crate::{config::Config};
 use libfn::{AccountEntry, Entry};
+use crate::utils::obj::Resp;
 
 pub async fn send_tx(tx: &Transaction) -> Result<String> {
     let provider = abcf_sdk::providers::HttpGetProvider {};
@@ -39,32 +39,32 @@ pub async fn send_tx(tx: &Transaction) -> Result<String> {
     Ok(resp.hash)
 }
 
-pub async fn query_tx(hash: &str) -> Result<()> {
-    let provider = abcf_sdk::providers::HttpGetProvider {};
-
-    let r = abcf_sdk::sender::query_tx(provider, "tx", hash)
-        .await
-        .map_err(|e| eg!(format!("{:?}", e)))?;
-
-    log::debug!("resp:{:?}", r);
-
-    if r.is_none() {
-        return Err(Box::from(d!("send tx return none".to_string())));
-    }
-
-    let r = r.unwrap();
-
-    let mut resp = serde_json::from_value::<QueryResp>(r).c(d!())?;
-    resp.parse_tx()?;
-
-    if resp.tx_result.code != 0 {
-        return Err(Box::from(d!(resp.tx_result.log)));
-    }
-
-    println!("{:#?}", resp);
-
-    Ok(())
-}
+// pub async fn query_tx(hash: &str) -> Result<()> {
+//     let provider = abcf_sdk::providers::HttpGetProvider {};
+//
+//     let r = abcf_sdk::sender::query_tx(provider, "tx", hash)
+//         .await
+//         .map_err(|e| eg!(format!("{:?}", e)))?;
+//
+//     log::debug!("resp:{:?}",r);
+//
+//     if r.is_none() {
+//         return Err(Box::from(d!("send tx return none".to_string())));
+//     }
+//
+//     let r = r.unwrap();
+//
+//     let mut resp = serde_json::from_value::<QueryResp>(r).c(d!())?;
+//     resp.parse_tx()?;
+//
+//     if resp.tx_result.code != 0 {
+//         return Err(Box::from(d!(resp.tx_result.log)));
+//     }
+//
+//     println!("{:#?}",resp);
+//
+//     Ok(())
+// }
 
 pub async fn get_value_map(wallets: Vec<XfrKeyPair>) -> Result<BTreeMap<AssetType, u64>> {
     let params = GetOwnedUtxoReq {
@@ -147,7 +147,7 @@ pub async fn read_account_list(config: &Config) -> Result<Vec<AccountEntry>> {
     let path = config.node.home.clone().join("account");
 
     let list = if !path.exists() {
-        tokio::fs::create_dir_all(path).await.c(d!())?;
+        tokio::fs::File::create(path).await.c(d!())?;
         Vec::new()
     } else {
         let content = tokio::fs::read_to_string(path).await.c(d!())?;
