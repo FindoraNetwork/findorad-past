@@ -1,4 +1,4 @@
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 
 use crate::{
     transaction::{OutputOperation, Transaction},
@@ -14,8 +14,10 @@ pub struct CoinbaseTransacrion {
     pub outputs: Vec<(u32, Output)>,
 }
 
-impl From<&Transaction> for CoinbaseTransacrion {
-    fn from(tx: &Transaction) -> Self {
+impl TryFrom<&Transaction> for CoinbaseTransacrion {
+    type Error = abcf::Error;
+
+    fn try_from(tx: &Transaction) -> Result<Self, Self::Error> {
         let mut outputs = Vec::new();
 
         for i in 0..tx.outputs.len() {
@@ -32,9 +34,9 @@ impl From<&Transaction> for CoinbaseTransacrion {
             }
         }
 
-        Self {
+        Ok(Self {
             txid: tx.txid.clone(),
             outputs,
-        }
+        })
     }
 }

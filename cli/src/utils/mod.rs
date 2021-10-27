@@ -12,7 +12,7 @@ use zei::xfr::sig::XfrSecretKey;
 
 use crate::{config::Config};
 use libfn::{AccountEntry, Entry};
-use crate::utils::obj::{QueryResp, Resp};
+use crate::utils::obj::Resp;
 
 pub async fn send_tx(tx: &Transaction) -> Result<String> {
     let provider = abcf_sdk::providers::HttpGetProvider {};
@@ -39,32 +39,32 @@ pub async fn send_tx(tx: &Transaction) -> Result<String> {
     Ok(resp.hash)
 }
 
-pub async fn query_tx(hash: &str) -> Result<()> {
-    let provider = abcf_sdk::providers::HttpGetProvider {};
-
-    let r = abcf_sdk::sender::query_tx(provider, "tx", hash)
-        .await
-        .map_err(|e| eg!(format!("{:?}", e)))?;
-
-    log::debug!("resp:{:?}",r);
-
-    if r.is_none() {
-        return Err(Box::from(d!("send tx return none".to_string())));
-    }
-
-    let r = r.unwrap();
-
-    let mut resp = serde_json::from_value::<QueryResp>(r).c(d!())?;
-    resp.parse_tx()?;
-
-    if resp.tx_result.code != 0 {
-        return Err(Box::from(d!(resp.tx_result.log)));
-    }
-
-    println!("{:#?}",resp);
-
-    Ok(())
-}
+// pub async fn query_tx(hash: &str) -> Result<()> {
+//     let provider = abcf_sdk::providers::HttpGetProvider {};
+//
+//     let r = abcf_sdk::sender::query_tx(provider, "tx", hash)
+//         .await
+//         .map_err(|e| eg!(format!("{:?}", e)))?;
+//
+//     log::debug!("resp:{:?}",r);
+//
+//     if r.is_none() {
+//         return Err(Box::from(d!("send tx return none".to_string())));
+//     }
+//
+//     let r = r.unwrap();
+//
+//     let mut resp = serde_json::from_value::<QueryResp>(r).c(d!())?;
+//     resp.parse_tx()?;
+//
+//     if resp.tx_result.code != 0 {
+//         return Err(Box::from(d!(resp.tx_result.log)));
+//     }
+//
+//     println!("{:#?}",resp);
+//
+//     Ok(())
+// }
 
 pub async fn get_value_map(wallets: Vec<XfrKeyPair>) -> Result<BTreeMap<AssetType, u64>> {
     let params = GetOwnedUtxoReq {

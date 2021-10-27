@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use zei::serialization::ZeiFromToBytes;
 use zei::xfr::structs::BlindAssetRecord;
-use abcf::module::EventValue;
 
 #[derive(Clone, Debug, Deserialize, Serialize, abcf::Event)]
 pub struct SendEvent {

@@ -1,3 +1,4 @@
+use std::convert::TryFrom;
 use crate::transaction::Transaction;
 use serde::{Deserialize, Serialize};
 use zei::xfr::structs::{AssetTypeAndAmountProof, BlindAssetRecord, OwnerMemo};
@@ -33,8 +34,10 @@ impl Default for UtxoTransacrion {
     }
 }
 
-impl From<&Transaction> for UtxoTransacrion {
-    fn from(tx: &Transaction) -> Self {
+impl TryFrom<&Transaction> for UtxoTransacrion {
+    type Error = abcf::Error;
+
+    fn try_from(tx: &Transaction) -> Result<Self, Self::Error> {
         let mut inputs = Vec::new();
 
         for input in &tx.inputs {
@@ -61,11 +64,11 @@ impl From<&Transaction> for UtxoTransacrion {
             });
         }
 
-        Self {
+        Ok(Self {
             txid: tx.txid.clone(),
             inputs,
             outputs,
             proof: tx.proof.clone(),
-        }
+        })
     }
 }
