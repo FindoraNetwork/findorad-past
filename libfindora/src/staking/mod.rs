@@ -28,9 +28,7 @@ pub struct Transaction {
 
 impl Default for Transaction {
     fn default() -> Self {
-        Self {
-            infos: Vec::new()
-        }
+        Self { infos: Vec::new() }
     }
 }
 

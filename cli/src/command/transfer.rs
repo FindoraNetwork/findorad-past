@@ -19,13 +19,13 @@ use crate::{
 use libfn::{build_transaction, Entry, TransferEntry};
 
 #[derive(Parser, Debug)]
-#[clap(group = ArgGroup::new("account"))]
+#[clap(group = ArgGroup::new("account_info"))]
 pub struct Command {
     #[clap(short, long)]
     /// Special a batch name.
     batch: Option<String>,
 
-    #[clap(short = 'f', long, group = "account")]
+    #[clap(short = 'f', long, group = "account_info")]
     /// From secret key.
     from_secret_key: Option<String>,
 
@@ -44,8 +44,8 @@ pub struct Command {
     #[clap(short = 'T', long)]
     confidential_asset: bool,
 
-    #[clap(long, group = "account")]
-    account_index: Option<usize>,
+    #[clap(long, group = "account_info")]
+    account: Option<usize>,
 }
 
 impl Command {
@@ -54,7 +54,7 @@ impl Command {
             let from_sk_bytes = base64::decode(from_secret_key).c(d!())?;
             let from_sk = XfrSecretKey::zei_from_bytes(&from_sk_bytes)?;
             Some(from_sk.into_keypair())
-        } else if let Some(account_index) = self.account_index {
+        } else if let Some(account_index) = self.account {
             let mut kp = None;
             let v = read_account_list(&config).await?;
             if let Some(account) = v.get(account_index) {

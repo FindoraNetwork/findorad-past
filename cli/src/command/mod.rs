@@ -8,9 +8,10 @@ use crate::config::Config;
 mod execute;
 mod issue;
 mod setup;
+mod stake;
 mod transfer;
-mod wallet;
 mod tx;
+mod wallet;
 
 #[derive(Parser, Debug)]
 #[clap(author, about, version)]
@@ -33,6 +34,7 @@ impl Opts {
             SubCommand::Transfer(c) => c.execute(config).await?,
             SubCommand::Issue(c) => c.execute(config).await?,
             SubCommand::Wallet(c) => c.execute(config).await?,
+            SubCommand::Stake(c) => c.execute(config).await?,
         }
 
         Ok(())
@@ -51,4 +53,10 @@ enum SubCommand {
     Issue(issue::Command),
     #[clap(version, author, about = "Manage wallet")]
     Wallet(wallet::Command),
+    #[clap(
+        version,
+        author,
+        about = "Stake tokens from a Findora account to a Validator"
+    )]
+    Stake(stake::Command),
 }
