@@ -23,7 +23,7 @@ use crate::{staking, transaction_capnp};
 
 use super::{Input, InputOperation, Output, OutputOperation};
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Transaction {
     pub txid: Vec<u8>,
     pub inputs: Vec<Input>,

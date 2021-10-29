@@ -13,7 +13,7 @@ pub enum Operation {
     Undelegate(staking::Undelegate),
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Output {
     pub core: BlindAssetRecord,
     pub operation: Operation,

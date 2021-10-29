@@ -6,6 +6,7 @@
 use bs3::backend::SledBackend;
 use fm_coinbase::CoinbaseModule;
 use fm_utxo::UtxoModule;
+use fm_query::QueryModule;
 use libfindora::transaction::Transaction;
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
@@ -23,6 +24,7 @@ use zei::setup::PublicParams;
 pub struct Findorad {
     pub coinbase: CoinbaseModule,
     pub utxo: UtxoModule,
+    pub query: QueryModule,
 }
 
 fn main() {
@@ -36,10 +38,13 @@ fn main() {
 
     let utxo = UtxoModule::new(params, prng);
 
-    let manager = Findorad::<SledBackend>::new(coinbase, utxo);
+    let query = QueryModule::new();
+
+    let manager = Findorad::<SledBackend>::new(coinbase, utxo, query);
 
     let coinbase_backend = bs3::backend::sled_db_open(Some("./target/findorad/coinbase")).unwrap();
     let utxo_backend = bs3::backend::sled_db_open(Some("./target/findorad/utxo")).unwrap();
+    let query_backend = bs3::backend::sled_db_open(Some("./target/findorad/query")).unwrap();
 
     let stateful = abcf::Stateful::<Findorad<SledBackend>> {
         coinbase: abcf::Stateful::<CoinbaseModule<SledBackend>> {
@@ -56,6 +61,14 @@ fn main() {
                 SledBackend::open_tree(&coinbase_backend, "output_set").unwrap(),
             )
             .unwrap(),
+            __marker_s: PhantomData,
+        },
+        query: abcf::Stateful::<QueryModule<SledBackend>> {
+            none: bs3::SnapshotableStorage::new(
+                Default::default(),
+                SledBackend::open_tree(&query_backend, "none").unwrap(),
+            )
+                .unwrap(),
             __marker_s: PhantomData,
         },
     };
@@ -75,6 +88,34 @@ fn main() {
                 SledBackend::open_tree(&utxo_backend, "owned_outputs").unwrap(),
             )
             .unwrap(),
+            __marker_s: PhantomData,
+        },
+        query: abcf::Stateless::<QueryModule<SledBackend>> {
+            owned_outputs: bs3::SnapshotableStorage::new(
+                Default::default(),
+                SledBackend::open_tree(&query_backend, "owned_outputs").unwrap(),
+            )
+                .unwrap(),
+            owned_asset: bs3::SnapshotableStorage::new(
+                Default::default(),
+                SledBackend::open_tree(&query_backend, "owned_asset").unwrap(),
+            )
+                .unwrap(),
+            asset_types: bs3::SnapshotableStorage::new(
+                Default::default(),
+                SledBackend::open_tree(&query_backend, "asset_types").unwrap(),
+            )
+                .unwrap(),
+            token_code: bs3::SnapshotableStorage::new(
+                Default::default(),
+                SledBackend::open_tree(&query_backend, "token_code").unwrap(),
+            )
+                .unwrap(),
+            state_commitment_versions: bs3::SnapshotableStorage::new(
+                Default::default(),
+                SledBackend::open_tree(&query_backend, "state_commitment_versions").unwrap(),
+            )
+                .unwrap(),
             __marker_s: PhantomData,
         },
     };

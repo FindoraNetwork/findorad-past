@@ -4,11 +4,14 @@ use std::collections::BTreeMap;
 
 use abcf_sdk::providers::HttpGetProvider;
 use fm_utxo::utxo_module_rpc::get_owned_outputs;
+use fm_query::query_module_rpc::{get_owned_asset, get_asset_types, get_token_code};
 use libfindora::{transaction::Transaction, utxo::GetOwnedUtxoReq};
 use ruc::*;
 use zei::serialization::ZeiFromToBytes;
-use zei::xfr::sig::XfrSecretKey;
+use zei::xfr::sig::{XfrPublicKey, XfrSecretKey};
 use zei::xfr::{asset_record::open_blind_asset_record, sig::XfrKeyPair, structs::AssetType};
+use libfindora::common::AssetTypeCode;
+use libfindora::query::rpc::{GetAssetTypeReq, GetAssetTypeResp, GetOwnedAssetReq, GetOwnedAssetResp, GetTokenCodeReq, GetTokenCodeResp};
 
 use crate::{config::Config};
 use libfn::{AccountEntry, Entry};
@@ -99,6 +102,53 @@ pub async fn get_value_map(wallets: Vec<XfrKeyPair>) -> Result<BTreeMap<AssetTyp
         }
     }
     Ok(value_map)
+}
+
+pub async fn get_owned_asset_list(wallets: Vec<XfrPublicKey>) -> Result<GetOwnedAssetResp> {
+
+    let params = GetOwnedAssetReq {
+        owner: wallets
+    };
+
+    let provider = HttpGetProvider {};
+
+    let result = get_owned_asset(provider, params)
+        .await
+        .map_err(|e| eg!(format!("{:?}", e)))?;
+
+    let data = result.data.c(d!())?;
+
+    Ok(data)
+}
+
+pub async fn get_asset_type_list(acts: Vec<AssetTypeCode>) -> Result<GetAssetTypeResp> {
+    let params = GetAssetTypeReq {
+        asset_type_code: acts,
+    };
+
+    let provider = HttpGetProvider {};
+
+    let result = get_asset_types(provider, params)
+        .await
+        .map_err(|e| eg!(format!("{:?}", e)))?;
+
+    let data = result.data.c(d!())?;
+
+    Ok(data)
+}
+
+pub async fn get_token_code_list(act: AssetTypeCode) -> Result<GetTokenCodeResp> {
+    let params = GetTokenCodeReq { asset_type_code: act };
+
+    let provider = HttpGetProvider {};
+
+    let result = get_token_code(provider, params)
+        .await
+        .map_err(|e| eg!(format!("{:?}", e)))?;
+
+    let data = result.data.c(d!())?;
+
+    Ok(data)
 }
 
 pub async fn read_list(config: &Config, batch: &str) -> Result<Vec<Entry>> {

@@ -18,3 +18,4 @@ pub struct OwnedOutput {
 pub struct GetOwnedUtxoResp {
     pub outputs: Vec<(usize, OwnedOutput)>,
 }
+
