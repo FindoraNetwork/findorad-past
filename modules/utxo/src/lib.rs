@@ -8,11 +8,11 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
+use libfindora::event;
 use libfindora::utxo::{
     GetOwnedUtxoReq, GetOwnedUtxoResp, Output, OutputId, OwnedOutput, UtxoTransacrion,
     ValidateTransaction,
 };
-use libfindora::event;
 use rand_chacha::ChaChaRng;
 use zei::{setup::PublicParams, xfr::sig::XfrPublicKey};
 
@@ -196,7 +196,6 @@ impl Application for UtxoModule {
                 return Err(abcf::Error::ABCIApplicationError(90002, format!("{}", e)));
             }
         }
-
 
         // 1. recv events
         for input in validate_tx.inputs {

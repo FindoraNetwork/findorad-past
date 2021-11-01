@@ -9,6 +9,8 @@ pub use undelegate::Undelegate;
 use crate::{transaction, FRA_XFR_ASSET_TYPE};
 use zei::xfr::{sig::XfrPublicKey, structs::XfrAmount};
 
+pub mod voting;
+
 #[derive(Debug, Clone)]
 pub enum Operation {
     Delegate(Delegate),
@@ -28,9 +30,7 @@ pub struct Transaction {
 
 impl Default for Transaction {
     fn default() -> Self {
-        Self {
-            infos: Vec::new()
-        }
+        Self { infos: Vec::new() }
     }
 }
 

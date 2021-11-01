@@ -11,7 +11,6 @@ pub struct Command {
 
 impl Command {
     pub async fn _execute(&self, _config: Config) -> Result<()> {
-
         // if let Some(hash) = &self.hash {
         //     query_tx(hash).await?;
         // }

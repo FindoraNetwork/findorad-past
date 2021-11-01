@@ -14,7 +14,7 @@ impl SendEvent {
         let send_amount = record.amount.get_amount();
         Self {
             pub_key: base64_pub_key,
-            send_amount
+            send_amount,
         }
     }
 }
@@ -31,8 +31,7 @@ impl RecvEvent {
         let recv_amount = record.amount.get_amount();
         Self {
             pub_key: base64_pub_key,
-            recv_amount
+            recv_amount,
         }
     }
 }
-
