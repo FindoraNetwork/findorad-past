@@ -8,10 +8,10 @@ edition = "2018"
 [dependencies]
 ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
 libfindora = { path = "../libfindora" }
-abcf-sdk = { git = "ssh://git@github.com/FindoraNetwork/abcf", default-features = false }
+abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", default-features = false }
 serde = "1.0.130"
 log = "0.4.14"
-zei = { git = "ssh://git@github.com/tiannian/zei", branch = "feat-refactor" }
+zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor" }
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 rand_chacha = "0.2.2"
 fm-utxo = { path = "../modules/utxo" }

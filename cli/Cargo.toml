@@ -14,11 +14,12 @@ log = "0.4.14"
 ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
 serde = "1.0.130"
 toml = "0.5.8"
-zei = { git = "ssh://git@github.com/tiannian/zei", branch = "feat-refactor" }
+zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor" }
 libfindora = { path = "../libfindora" }
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 tokio = { version = "1", features = ["full"] }
-abcf-sdk = { git = "ssh://git@github.com/FindoraNetwork/abcf", features = ["http"] }
+abcf = { git = "https://github.com/FindoraNetwork/abcf.git" }
+abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", features = ["http"] }
 base64 = "0.10"
 sha3 = "0.9.1"
 hex-literal = "0.3.1"
@@ -32,4 +33,3 @@ ed25519-dalek-bip32 = { git = "https://github.com/FindoraNetwork/ed25519-dalek-b
 libfn = { path = "../libfn" }
 fm-utxo = { path = "../modules/utxo" }
 
-abcf = { git = "ssh://git@github.com/FindoraNetwork/abcf" }
