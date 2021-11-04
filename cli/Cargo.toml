@@ -2,7 +2,7 @@
 name = "fn"
 authors = ["FindoraNetwork"]
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 description = "Findora Network command line tool."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
