@@ -23,6 +23,9 @@ log = "0.4.14"
 fm-utxo = { path = "../modules/utxo" }
 fm-coinbase = { path = "../modules/coinbase" }
 fm-staking = { path = "../modules/staking" }
+tokio = { version = "1", features = ["full"] }
+clap = "3.0.0-beta.5"
+ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
 
 [dev-dependencies]
 abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", default-features = false, features=["websocket"] }
