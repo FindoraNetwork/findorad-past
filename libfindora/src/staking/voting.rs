@@ -11,7 +11,7 @@ pub type Power = u64;
 pub const FRA_DECIMALS: u8 = 6;
 
 // tendermint address
-pub type TendermintAddr = String;
+// pub type TendermintAddr = String;
 
 /// block height of tendermint
 pub type BlockHeight = u64;
