@@ -1,10 +1,10 @@
-use std::thread::park;
 use abcf_sdk::jsonrpc::Request;
-use tokio::runtime::Runtime;
 use abcf_sdk::providers::{Provider, WsProvider};
+use ruc::*;
 use serde_json::json;
 use serde_json::Value;
-use ruc::*;
+use std::thread::park;
+use tokio::runtime::Runtime;
 
 fn main() -> Result<()> {
     let rt = Runtime::new().unwrap();
@@ -14,14 +14,16 @@ fn main() -> Result<()> {
     let subscribe_req = Request::new_to_value("subscribe", query);
 
     rt.block_on(async {
-        let resp = provider.request::<Value,String>("subscribe", &subscribe_req).await.unwrap();
+        let resp = provider
+            .request::<Value, String>("subscribe", &subscribe_req)
+            .await
+            .unwrap();
         println!("{:?}", resp);
 
         loop {
             let r = provider.receive().await.unwrap();
             println!("{:?}", r);
         }
-
     });
 
     park();

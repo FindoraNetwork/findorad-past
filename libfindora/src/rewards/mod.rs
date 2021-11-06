@@ -5,7 +5,7 @@ use zei::xfr::{sig::XfrPublicKey, structs::XfrAmount};
 mod claim;
 pub use claim::Claim;
 
-use crate::{FRA_XFR_ASSET_TYPE, transaction};
+use crate::{transaction, FRA_XFR_ASSET_TYPE};
 
 #[derive(Debug, Clone)]
 pub enum Operation {
@@ -26,9 +26,7 @@ pub struct Transaction {
 
 impl Default for Transaction {
     fn default() -> Self {
-        Transaction {
-            infos: Vec::new(),
-        }
+        Transaction { infos: Vec::new() }
     }
 }
 
@@ -72,6 +70,5 @@ impl TryFrom<&transaction::Transaction> for Transaction {
         }
 
         Ok(Transaction { infos })
-
     }
 }

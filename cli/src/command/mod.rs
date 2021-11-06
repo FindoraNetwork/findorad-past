@@ -9,8 +9,8 @@ mod execute;
 mod issue;
 mod setup;
 mod transfer;
-mod wallet;
 mod tx;
+mod wallet;
 
 #[derive(Parser, Debug)]
 #[clap(author, about, version)]

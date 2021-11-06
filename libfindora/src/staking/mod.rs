@@ -1,12 +1,13 @@
 mod delegate;
-use std::convert::TryFrom;
-
 pub use delegate::Delegate;
 
 mod undelegate;
 pub use undelegate::Undelegate;
 
+pub mod voting;
+
 use crate::{transaction, FRA_XFR_ASSET_TYPE};
+use std::convert::TryFrom;
 use zei::xfr::{sig::XfrPublicKey, structs::XfrAmount};
 
 #[derive(Debug, Clone)]
@@ -28,9 +29,7 @@ pub struct Transaction {
 
 impl Default for Transaction {
     fn default() -> Self {
-        Self {
-            infos: Vec::new()
-        }
+        Self { infos: Vec::new() }
     }
 }
 
