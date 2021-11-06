@@ -39,7 +39,7 @@ fn main() {
     let prng = ChaChaRng::from_entropy();
 
     let utxo = UtxoModule::new(params, prng);
-
+ 
     let manager = Findorad::<SledBackend>::new(staking, coinbase, utxo);
 
     let staking_backend = bs3::backend::sled_db_open(Some("./target/findorad/staking")).unwrap();
@@ -48,24 +48,24 @@ fn main() {
 
     let stateful = abcf::Stateful::<Findorad<SledBackend>> {
         staking: abcf::Stateful::<StakingModule<SledBackend>> {
-            global_delegation_amount: bs3::SnapshotableStorage::new(
+            global_power: bs3::SnapshotableStorage::new(
                 Default::default(),
-                SledBackend::open_tree(&staking_backend, "global_delegation_amount").unwrap(),
+                SledBackend::open_tree(&staking_backend, "global_power").unwrap(),
             )
             .unwrap(),
-            delegation_amount_map: bs3::SnapshotableStorage::new(
+            delegation_amount: bs3::SnapshotableStorage::new(
                 Default::default(),
-                SledBackend::open_tree(&staking_backend, "delegation_amount_map").unwrap(),
+                SledBackend::open_tree(&staking_backend, "delegation_amount").unwrap(),
             )
             .unwrap(),
-            delegator_validator_map: bs3::SnapshotableStorage::new(
+            delegators: bs3::SnapshotableStorage::new(
                 Default::default(),
-                SledBackend::open_tree(&staking_backend, "delegator_validator_map").unwrap(),
+                SledBackend::open_tree(&staking_backend, "delegators").unwrap(),
             )
             .unwrap(),
-            validator_power_map: bs3::SnapshotableStorage::new(
+            powers: bs3::SnapshotableStorage::new(
                 Default::default(),
-                SledBackend::open_tree(&staking_backend, "validator_power_map").unwrap(),
+                SledBackend::open_tree(&staking_backend, "powers").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,
