@@ -8,6 +8,7 @@ use zei::xfr::sig::XfrPublicKey;
 
 use crate::ValidatorPublicKey;
 
+#[allow(dead_code)]
 pub struct DelegateOp {
     delegator: XfrPublicKey,
     validator: ValidatorPublicKey,
@@ -19,6 +20,7 @@ pub struct DelegateOp {
 // powers: &'a mut dyn MapStore<ValidatorPublicKey, Power>,
 // }
 
+#[allow(dead_code)]
 pub fn execute_delegate<'a>(
     op: DelegateOp,
     powers: &mut impl MapStore<ValidatorPublicKey, Power>,

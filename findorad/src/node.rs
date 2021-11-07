@@ -8,6 +8,7 @@ use rand_core::SeedableRng;
 use sha3::Sha3_512;
 use std::marker::PhantomData;
 use zei::setup::PublicParams;
+use fm_staking::StakingModule;
 use crate::entry::DevOperation;
 
 #[abcf::manager(
@@ -18,6 +19,7 @@ impl_version = "1.0.0",
 transaction = "Transaction"
 )]
 pub struct Findorad {
+    pub staking: StakingModule,
     pub coinbase: CoinbaseModule,
     pub utxo: UtxoModule,
 }
@@ -91,9 +93,12 @@ pub fn start(operation: DevOperation) {
     };
 
     for (path,node_str) in path_vec.iter() {
+        let staking_path = path.clone() + "/staking";
         let coinbase_path = path.clone() + "/coinbase";
         let utxo_path = path.clone() + "/utxo";
         let abcf_path = path.clone() + "/abcf";
+
+        let staking = StakingModule::new(Vec::new());
 
         let coinbase = CoinbaseModule::new();
 
@@ -103,12 +108,36 @@ pub fn start(operation: DevOperation) {
 
         let utxo = UtxoModule::new(params, prng);
 
-        let manager = Findorad::<SledBackend>::new(coinbase, utxo);
+        let manager = Findorad::<SledBackend>::new(staking, coinbase, utxo);
 
+        let staking_backend = bs3::backend::sled_db_open(Some(&*staking_path)).unwrap();
         let coinbase_backend = bs3::backend::sled_db_open(Some(&*coinbase_path)).unwrap();
         let utxo_backend = bs3::backend::sled_db_open(Some(&*utxo_path)).unwrap();
 
         let stateful = abcf::Stateful::<Findorad<SledBackend>> {
+            staking: abcf::Stateful::<StakingModule<SledBackend>> {
+                global_power: bs3::SnapshotableStorage::new(
+                    Default::default(),
+                    SledBackend::open_tree(&staking_backend, "global_power").unwrap(),
+                )
+                    .unwrap(),
+                delegation_amount: bs3::SnapshotableStorage::new(
+                    Default::default(),
+                    SledBackend::open_tree(&staking_backend, "delegation_amount").unwrap(),
+                )
+                    .unwrap(),
+                delegators: bs3::SnapshotableStorage::new(
+                    Default::default(),
+                    SledBackend::open_tree(&staking_backend, "delegators").unwrap(),
+                )
+                    .unwrap(),
+                powers: bs3::SnapshotableStorage::new(
+                    Default::default(),
+                    SledBackend::open_tree(&staking_backend, "powers").unwrap(),
+                )
+                    .unwrap(),
+                __marker_s: PhantomData,
+            },
             coinbase: abcf::Stateful::<CoinbaseModule<SledBackend>> {
                 asset_owner: bs3::SnapshotableStorage::new(
                     Default::default(),
@@ -128,6 +157,14 @@ pub fn start(operation: DevOperation) {
         };
 
         let stateless = abcf::Stateless::<Findorad<SledBackend>> {
+            staking: abcf::Stateless::<StakingModule<SledBackend>> {
+                sl_value: abcf::bs3::SnapshotableStorage::new(
+                    Default::default(),
+                    SledBackend::open_tree(&staking_backend, "sl_value").unwrap(),
+                )
+                    .unwrap(),
+                __marker_s: PhantomData,
+            },
             coinbase: abcf::Stateless::<CoinbaseModule<SledBackend>> {
                 sl_value: abcf::bs3::SnapshotableStorage::new(
                     Default::default(),
