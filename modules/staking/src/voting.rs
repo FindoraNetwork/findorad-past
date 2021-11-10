@@ -4,35 +4,84 @@
 //! un-delegate -> decrease voting power
 //!
 
-use abcf::tm_protos::abci::ValidatorUpdate;
-use libfindora::staking::{Operation, StakingInfo};
-// use ruc::*;
+use crate::{
+    delegate::{execute_delegate, DelegateOp},
+    undelegate::{execute_undelegate, UnDelegateOp},
+    validator_pubkey::ValidatorPublicKey,
+};
+use abcf::{
+    bs3::{MapStore, ValueStore},
+    tm_protos::abci::ValidatorUpdate,
+    Error,
+};
+use libfindora::staking::{
+    voting::{Amount, Power, MAX_POWER_PERCENT_PER_VALIDATOR, MAX_TOTAL_POWER},
+    Operation, StakingInfo,
+};
+use std::collections::BTreeMap;
+use zei::xfr::sig::XfrPublicKey;
 
-pub fn execute_staking(info: &StakingInfo) -> abcf::Result<Vec<ValidatorUpdate>> {
-    let updates = Vec::new();
-
+pub fn execute_staking(
+    info: &StakingInfo,
+    global_power: &mut impl ValueStore<Power>,
+    delegation_amount: &mut impl MapStore<XfrPublicKey, Amount>,
+    delegators: &mut impl MapStore<ValidatorPublicKey, BTreeMap<XfrPublicKey, Amount>>,
+    powers: &mut impl MapStore<ValidatorPublicKey, Power>,
+) -> abcf::Result<Vec<ValidatorUpdate>> {
     match &info.operation {
-        Operation::Delegate(_d) => {}
-        Operation::Undelegate(_d) => {}
-    }
+        Operation::Delegate(d) => {
+            let op = DelegateOp {
+                delegator: info.delegator.clone(),
+                validator: ValidatorPublicKey::from_crypto_publickey(&d.validator).unwrap(),
+                amount: info.amount,
+                memo: d.memo.clone(),
+            };
 
-    Ok(updates)
+            return execute_delegate(op, global_power, delegation_amount, delegators, powers);
+        }
+        Operation::Undelegate(ud) => {
+            let op = UnDelegateOp {
+                delegator: info.delegator.clone(),
+                validator: ValidatorPublicKey::from_crypto_publickey(&ud.validator).unwrap(),
+                amount: info.amount,
+            };
+
+            return execute_undelegate(op, global_power, delegation_amount, delegators, powers);
+        }
+    }
 }
 
-// /// Check amount can delegation?.
-// pub fn check_delegation_amount(am: Amount, is_append: bool) -> Result<()> {
-//     let lowb = alt!(
-//         is_append,
-//         MIN_DELEGATION_AMOUNT,
-//         STAKING_VALIDATOR_MIN_POWER
-//     );
-//     if (lowb..=MAX_DELEGATION_AMOUNT).contains(&am) {
-//         return Ok(());
-//     } else {
-//         let msg = format!(
-//             "Invalid delegation amount: {} (min: {}, max: {})",
-//             am, lowb, MAX_DELEGATION_AMOUNT
-//         );
-//         Err(eg!(msg))
-//     }
-// }
+/// check validatro's power rules
+/// A single validator's power percentage MUST NOT > MAX_POWER_PERCENT_PER_VALIDATOR
+pub fn validator_power_rules(
+    current_power: Power,
+    current_global_power: Power,
+) -> abcf::Result<()> {
+    if (current_power as u128)
+        .checked_mul(MAX_POWER_PERCENT_PER_VALIDATOR[1])
+        .unwrap()
+        > MAX_POWER_PERCENT_PER_VALIDATOR[0]
+            .checked_mul(current_global_power as u128)
+            .unwrap()
+    {
+        return Err(Error::ABCIApplicationError(
+            90001,
+            "validator power overflow".to_owned(),
+        ));
+    }
+
+    Ok(())
+}
+
+/// check global power rules
+/// after delegate operation, new global power MUST NOT > MAX_TOTAL_POWER
+pub fn global_power_rules(current_global_power: Power) -> abcf::Result<()> {
+    if MAX_TOTAL_POWER < current_global_power {
+        return Err(Error::ABCIApplicationError(
+            90001,
+            "global power overflow".to_owned(),
+        ));
+    }
+
+    Ok(())
+}
