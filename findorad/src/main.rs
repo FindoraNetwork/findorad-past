@@ -39,7 +39,7 @@ fn main() {
     let prng = ChaChaRng::from_entropy();
 
     let utxo = UtxoModule::new(params, prng);
- 
+
     let manager = Findorad::<SledBackend>::new(staking, coinbase, utxo);
 
     let staking_backend = bs3::backend::sled_db_open(Some("./target/findorad/staking")).unwrap();

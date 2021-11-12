@@ -1,4 +1,3 @@
-use std::collections::BTreeMap;
 
 use abcf::{
     bs3::model::{Map, Value},
@@ -15,10 +14,8 @@ use libfindora::staking::{
     voting::{Amount, Power},
 };
 use zei::xfr::sig::XfrPublicKey;
-
-use crate::{voting, ValidatorPublicKey};
-
-use std::mem;
+use crate::{voting, validator_pubkey::ValidatorPublicKey};
+use std::{mem, collections::BTreeMap};
 
 #[abcf::module(
     name = "staking",
@@ -51,8 +48,6 @@ pub struct StakingModule {
     /// Validator power.
     #[stateful]
     pub powers: Map<ValidatorPublicKey, Power>,
-    //     #[stateful]
-    //     pub coinbase: Map<i64, >
 }
 
 #[abcf::rpcs]
@@ -66,20 +61,14 @@ impl Application for StakingModule {
     async fn check_tx(
         &mut self,
         _context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
-        req: &RequestCheckTx<Self::Transaction>,
+        _req: &RequestCheckTx<Self::Transaction>,
     ) -> abcf::Result<ResponseCheckTx> {
-        let infos = &req.tx.infos;
-
-        for info in infos {
-            let _updates = voting::execute_staking(info)?;
-        }
-
         Ok(Default::default())
     }
 
     async fn deliver_tx(
         &mut self,
-        _context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
         let infos = &req.tx.infos;
@@ -87,7 +76,13 @@ impl Application for StakingModule {
         let mut updates = Vec::new();
 
         for info in infos {
-            let mut update = voting::execute_staking(info)?;
+            let mut update = voting::execute_staking(
+                info,
+                &mut context.stateful.global_power,
+                &mut context.stateful.delegation_amount,
+                &mut context.stateful.delegators,
+                &mut context.stateful.powers,
+            )?;
             updates.append(&mut update);
         }
 
@@ -110,8 +105,4 @@ impl Application for StakingModule {
 }
 
 #[abcf::methods]
-impl StakingModule {
-    //     pub fn execute_tx() -> ruc::Result<Vec<ValidatorPublicKey>> {
-    // Ok(Vec::new())
-    //     }
-}
+impl StakingModule {}
