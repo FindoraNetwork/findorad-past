@@ -1,9 +1,11 @@
+use crate::validator_module::{ValidatorAddr, ValidatorPubKeyPair};
 ///! delegate operation logics
 /// increase validator's voting power
-///
+/// 
+
 use crate::{
-    validator_pubkey::ValidatorPublicKey,
     voting::{global_power_rules, validator_power_rules},
+    validator_pubkey::ValidatorPublicKey,
 };
 use abcf::{
     bs3::{MapStore, ValueStore},
@@ -31,6 +33,7 @@ pub fn execute_delegate<'a>(
     delegation_amount: &mut impl MapStore<XfrPublicKey, Amount>,
     delegators: &mut impl MapStore<ValidatorPublicKey, BTreeMap<XfrPublicKey, Amount>>,
     powers: &mut impl MapStore<ValidatorPublicKey, Power>,
+    validator_addr_map: &mut impl MapStore<ValidatorAddr, ValidatorPubKeyPair>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
     // op.validator exists && has done self-delegate operation
     if let Some(power) = powers.get_mut(&op.validator)? {
@@ -42,8 +45,8 @@ pub fn execute_delegate<'a>(
                 current_global_power = power;
             }
 
-            if global_power_rules(current_global_power).is_ok()
-                && validator_power_rules(curren_power, current_global_power).is_ok()
+            if global_power_rules(current_global_power)?
+                && validator_power_rules(curren_power, current_global_power)?
             {
                 // update global power
                 global_power.set(current_global_power)?;
@@ -98,12 +101,19 @@ pub fn execute_delegate<'a>(
                 let power = p.checked_add(op.amount).ok_or(p).unwrap();
                 current_global_power = power;
             }
-            if global_power_rules(current_global_power).is_ok() {
+
+            if global_power_rules(current_global_power)? {
                 // update global power
                 global_power.set(current_global_power)?;
 
                 // udate powers
                 powers.insert(op.validator.clone(), op.amount)?;
+
+                // add validator addr
+                validator_addr_map.insert(
+                    op.validator.to_validator_addr(),
+                    (op.validator.clone(), op.delegator),
+                )?;
 
                 let validator_update = ValidatorUpdate {
                     pub_key: op.validator.to_crypto_publickey(),

@@ -4,10 +4,11 @@
 //! un-delegate -> decrease voting power
 //!
 
+use crate::validator_module::{ValidatorAddr, ValidatorPubKeyPair};
 use crate::{
     delegate::{execute_delegate, DelegateOp},
     undelegate::{execute_undelegate, UnDelegateOp},
-    validator_pubkey::ValidatorPublicKey,
+    validator_module::ValidatorPublicKey,
 };
 use abcf::{
     bs3::{MapStore, ValueStore},
@@ -27,6 +28,7 @@ pub fn execute_staking(
     delegation_amount: &mut impl MapStore<XfrPublicKey, Amount>,
     delegators: &mut impl MapStore<ValidatorPublicKey, BTreeMap<XfrPublicKey, Amount>>,
     powers: &mut impl MapStore<ValidatorPublicKey, Power>,
+    validator_addr_map: &mut impl MapStore<ValidatorAddr, ValidatorPubKeyPair>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
     match &info.operation {
         Operation::Delegate(d) => {
@@ -37,7 +39,14 @@ pub fn execute_staking(
                 memo: d.memo.clone(),
             };
 
-            return execute_delegate(op, global_power, delegation_amount, delegators, powers);
+            return execute_delegate(
+                op,
+                global_power,
+                delegation_amount,
+                delegators,
+                powers,
+                validator_addr_map,
+            );
         }
         Operation::Undelegate(ud) => {
             let op = UnDelegateOp {
@@ -56,7 +65,7 @@ pub fn execute_staking(
 pub fn validator_power_rules(
     current_power: Power,
     current_global_power: Power,
-) -> abcf::Result<()> {
+) -> abcf::Result<bool> {
     if (current_power as u128)
         .checked_mul(MAX_POWER_PERCENT_PER_VALIDATOR[1])
         .unwrap()
@@ -70,12 +79,12 @@ pub fn validator_power_rules(
         ));
     }
 
-    Ok(())
+    Ok(true)
 }
 
 /// check global power rules
 /// after delegate operation, new global power MUST NOT > MAX_TOTAL_POWER
-pub fn global_power_rules(current_global_power: Power) -> abcf::Result<()> {
+pub fn global_power_rules(current_global_power: Power) -> abcf::Result<bool> {
     if MAX_TOTAL_POWER < current_global_power {
         return Err(Error::ABCIApplicationError(
             90001,
@@ -83,5 +92,5 @@ pub fn global_power_rules(current_global_power: Power) -> abcf::Result<()> {
         ));
     }
 
-    Ok(())
+    Ok(true)
 }
