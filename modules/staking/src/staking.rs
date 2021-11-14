@@ -1,4 +1,4 @@
-
+use crate::{validator_pubkey::ValidatorPublicKey, voting};
 use abcf::{
     bs3::model::{Map, Value},
     manager::{AContext, TContext},
@@ -13,9 +13,8 @@ use libfindora::staking::{
     self,
     voting::{Amount, Power},
 };
+use std::{collections::BTreeMap, mem};
 use zei::xfr::sig::XfrPublicKey;
-use crate::{voting, validator_pubkey::ValidatorPublicKey};
-use std::{mem, collections::BTreeMap};
 
 #[abcf::module(
     name = "staking",

@@ -1,9 +1,9 @@
 #![feature(generic_associated_types)]
 
-mod voting;
-mod validator_pubkey;
-mod staking;
 mod delegate;
+mod staking;
 mod undelegate;
+mod validator_pubkey;
+mod voting;
 
 pub use staking::StakingModule;

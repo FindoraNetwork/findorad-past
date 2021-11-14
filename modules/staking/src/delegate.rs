@@ -1,10 +1,9 @@
 ///! delegate operation logics
 /// increase validator's voting power
-/// 
-
+///
 use crate::{
-    voting::{global_power_rules, validator_power_rules},
     validator_pubkey::ValidatorPublicKey,
+    voting::{global_power_rules, validator_power_rules},
 };
 use abcf::{
     bs3::{MapStore, ValueStore},
@@ -14,8 +13,8 @@ use abcf::{
 use libfindora::staking::voting::{
     Amount, Power, MAX_DELEGATION_AMOUNT, MIN_DELEGATION_AMOUNT, STAKING_VALIDATOR_MIN_POWER,
 };
-use zei::xfr::sig::XfrPublicKey;
 use std::collections::BTreeMap;
+use zei::xfr::sig::XfrPublicKey;
 
 /// delegation operation
 pub struct DelegateOp {
@@ -36,8 +35,8 @@ pub fn execute_delegate<'a>(
     // op.validator exists && has done self-delegate operation
     if let Some(power) = powers.get_mut(&op.validator)? {
         if op.amount >= MIN_DELEGATION_AMOUNT && op.amount <= MAX_DELEGATION_AMOUNT {
-            let curren_power = power.checked_add(op.amount).ok_or(power).unwrap();            
-            let mut current_global_power= 0;
+            let curren_power = power.checked_add(op.amount).ok_or(power).unwrap();
+            let mut current_global_power = 0;
             if let Some(p) = global_power.get()? {
                 let power = p.checked_add(op.amount).ok_or(p).unwrap();
                 current_global_power = power;
@@ -47,7 +46,7 @@ pub fn execute_delegate<'a>(
                 && validator_power_rules(curren_power, current_global_power).is_ok()
             {
                 // update global power
-                global_power.set(current_global_power)?; 
+                global_power.set(current_global_power)?;
 
                 // update delegation_amount
                 let actual_amount;
