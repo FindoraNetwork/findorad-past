@@ -21,7 +21,7 @@ use zei::{
 
 use crate::{staking, transaction_capnp};
 
-use super::{Input, InputOperation, Output, OutputOperation};
+use super::{Input, InputOperation, Memo, Output, OutputOperation};
 
 #[derive(Debug)]
 pub struct Transaction {
@@ -30,6 +30,7 @@ pub struct Transaction {
     pub outputs: Vec<Output>,
     pub proof: AssetTypeAndAmountProof,
     pub signatures: Vec<XfrSignature>,
+    pub memos: Vec<Memo>,
 }
 
 impl abcf::Transaction for Transaction {}
@@ -42,6 +43,7 @@ impl Default for Transaction {
             outputs: Vec::new(),
             proof: AssetTypeAndAmountProof::NoProof,
             signatures: Vec::new(),
+            memos: Vec::new(),
         }
     }
 }
@@ -373,6 +375,7 @@ impl abcf::module::FromBytes for Transaction {
             outputs,
             proof,
             signatures,
+            memos: Vec::new(),
         };
 
         // validate tx.

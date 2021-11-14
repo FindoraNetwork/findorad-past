@@ -11,6 +11,7 @@ pub enum Operation {
     Delegate(staking::Delegate),
     ClaimReward(rewards::Claim),
     Undelegate(staking::Undelegate),
+    TransferAccount,
 }
 
 #[derive(Debug)]

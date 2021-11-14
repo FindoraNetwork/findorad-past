@@ -6,6 +6,7 @@ pub enum Operation {
     IssueAsset,
     Undelegate,
     ClaimReward,
+    TransferAccount,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
