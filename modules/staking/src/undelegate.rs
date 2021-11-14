@@ -1,7 +1,6 @@
 ///! un-delegate operation logics
 /// decrease validator's voting power
-/// 
-
+///
 use crate::validator_pubkey::ValidatorPublicKey;
 use abcf::{
     bs3::{MapStore, ValueStore},
@@ -9,10 +8,10 @@ use abcf::{
     Error,
 };
 use libfindora::staking::voting::{Amount, Power};
-use zei::xfr::sig::XfrPublicKey;
 use std::collections::BTreeMap;
+use zei::xfr::sig::XfrPublicKey;
 
-/// un-delegate operation 
+/// un-delegate operation
 pub struct UnDelegateOp {
     pub delegator: XfrPublicKey,
     pub validator: ValidatorPublicKey,
@@ -36,11 +35,11 @@ pub fn execute_undelegate<'a>(
                     let amount = *amount;
 
                     // update global power
-                    let mut current_global_power= 0;
+                    let mut current_global_power = 0;
                     if let Some(p) = global_power.get()? {
                         let power = p.checked_add(op.amount).ok_or(p).unwrap();
                         current_global_power = power;
-                    }        
+                    }
                     global_power.set(current_global_power)?;
 
                     // update delegation_amount
