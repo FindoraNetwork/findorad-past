@@ -98,6 +98,7 @@ pub async fn build_transaction<R: CryptoRng + RngCore>(
         outputs: tx_outputs,
         proof: zei_body.proofs.asset_type_and_amount_proof,
         signatures: Vec::new(),
+        memos: Vec::new(),
     };
 
     log::debug!("Result tx is: {:?}", tx);
