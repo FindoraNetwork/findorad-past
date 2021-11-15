@@ -1,8 +1,9 @@
 pub mod obj;
 
 use std::collections::BTreeMap;
+use abcf_sdk::jsonrpc::Response;
 
-use abcf_sdk::providers::HttpGetProvider;
+use abcf_sdk::providers::{HttpGetProvider, Provider};
 use fm_utxo::utxo_module_rpc::get_owned_outputs;
 use libfindora::{transaction::Transaction, utxo::GetOwnedUtxoReq};
 use ruc::*;
@@ -11,8 +12,9 @@ use zei::xfr::sig::XfrSecretKey;
 use zei::xfr::{asset_record::open_blind_asset_record, sig::XfrKeyPair, structs::AssetType};
 
 use crate::config::Config;
-use crate::utils::obj::Resp;
+use crate::utils::obj::{QueryValidator, QueryValidators, Resp};
 use libfn::{AccountEntry, Entry};
+use serde_json::{json, Value, Map};
 
 pub async fn send_tx(tx: &Transaction) -> Result<String> {
     let provider = abcf_sdk::providers::HttpGetProvider {};
@@ -37,6 +39,67 @@ pub async fn send_tx(tx: &Transaction) -> Result<String> {
     }
 
     Ok(resp.hash)
+}
+
+pub async fn query_validators() -> Result<()> {
+
+    let mut provider = abcf_sdk::providers::HttpGetProvider{};
+
+    let mut params = Map::new();
+    params.insert("page".to_string(),json!(1));
+    params.insert("per_page".to_string(), json!(100));
+
+    let mut qvs = QueryValidators::default();
+
+    loop {
+        let req = serde_json::to_value(&params).map_err(|e|eg!(e.to_string()))?;
+        let r = provider.request::<Value,Response<Value>>("validators", &req)
+            .await
+            .map_err(|e| eg!(format!("{:?}", e)))?;
+
+        if let Some(resp) = r {
+            if let Some(result) = resp.result {
+                if let Some(map) = result.as_object() {
+                    // safe
+                    let c = map.get("count").unwrap()
+                        .as_str()
+                        .unwrap()
+                        .parse::<u64>()
+                        .unwrap();
+                    // safe
+                    let t = map.get("total").unwrap()
+                        .as_str()
+                        .unwrap()
+                        .parse::<u64>()
+                        .unwrap();
+
+                    let list = map.get("validators").unwrap()
+                        .as_array().unwrap();
+
+                    for v in list.iter() {
+                        let qv = serde_json::from_value::
+                            <QueryValidator>(v.clone()).unwrap();
+                        qvs.validators.push(qv);
+                    }
+
+                    if t > c {
+                        // safe
+                        let mut page = params.get_mut("page").unwrap();
+                        let mut p = page.as_u64().unwrap();
+                        p = p + 1;
+                        page = &mut json!(p);
+                    } else {
+                        qvs.total = t;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    println!("{:#?}", qvs);
+
+    Ok(())
 }
 
 // pub async fn query_tx(hash: &str) -> Result<()> {

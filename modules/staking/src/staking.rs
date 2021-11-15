@@ -1,20 +1,15 @@
 use crate::{validator_pubkey::ValidatorPublicKey, voting};
-use abcf::{
-    bs3::model::{Map, Value},
-    manager::{AContext, TContext},
-    module::types::{
-        RequestCheckTx, RequestDeliverTx, RequestEndBlock, ResponseCheckTx, ResponseDeliverTx,
-        ResponseEndBlock,
-    },
-    tm_protos::abci::ValidatorUpdate,
-    Application, Stateful, StatefulBatch, Stateless, StatelessBatch,
-};
+use abcf::{bs3::model::{Map, Value}, manager::{AContext, TContext}, module::types::{
+    RequestCheckTx, RequestDeliverTx, RequestEndBlock, ResponseCheckTx, ResponseDeliverTx,
+    ResponseEndBlock,
+}, tm_protos::abci::ValidatorUpdate, Application, Stateful, StatefulBatch, Stateless, StatelessBatch, RPCResponse};
 use libfindora::staking::{
     self,
     voting::{Amount, Power},
 };
 use std::{collections::BTreeMap, mem};
 use zei::xfr::sig::XfrPublicKey;
+use libfindora::staking::rpc::{GetOwnedStakingReq, GetOwnedStakingResp};
 
 #[abcf::module(
     name = "staking",
@@ -50,7 +45,16 @@ pub struct StakingModule {
 }
 
 #[abcf::rpcs]
-impl StakingModule {}
+impl StakingModule {
+    pub async fn get_owned_outputs(
+        &mut self,
+        context: &mut abcf::manager::RContext<'_, abcf::Stateless<Self>, abcf::Stateful<Self>>,
+        request: GetOwnedStakingReq,
+    ) -> RPCResponse<GetOwnedStakingResp> {
+
+
+    }
+}
 
 /// Module's block logic.
 #[abcf::application]

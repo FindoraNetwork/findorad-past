@@ -5,6 +5,7 @@ mod undelegate;
 pub use undelegate::Undelegate;
 
 pub mod voting;
+pub mod rpc;
 
 use crate::{transaction, FRA_XFR_ASSET_TYPE};
 use std::convert::TryFrom;

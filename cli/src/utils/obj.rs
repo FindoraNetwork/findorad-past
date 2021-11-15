@@ -34,6 +34,27 @@ pub struct QueryResp {
     pub tx_result: QueryRespResult,
 }
 
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct QueryValidator {
+    pub address: String,
+    pub pub_key: QueryVPK,
+    pub voting_power: String,
+    pub proposer_priority: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct QueryVPK {
+    #[serde(rename = "type")]
+    pub ty: String,
+    pub value: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct QueryValidators {
+    pub validators: Vec<QueryValidator>,
+    pub total: u64,
+}
+
 impl QueryResp {
     pub fn parse_tx(&mut self) -> Result<()> {
         let tx = self.tx.clone();
