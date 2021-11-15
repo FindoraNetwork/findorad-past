@@ -173,7 +173,10 @@ impl abcf::module::FromBytes for Transaction {
 
                     let validator = crypto::PublicKey { sum: Some(key) };
 
-                    OutputOperation::Delegate(staking::Delegate { validator })
+                    OutputOperation::Delegate(staking::Delegate {
+                        validator,
+                        memo: None,
+                    })
                 }
                 _ => OutputOperation::IssueAsset,
             };

@@ -1,14 +1,14 @@
 [package]
 name = "findorad"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-abcf = { git = "ssh://git@github.com/FindoraNetwork/abcf" }
-abcf-node = { git = "ssh://git@github.com/FindoraNetwork/abcf" }
-bs3 = { git = "ssh://git@github.com/FindoraNetwork/bs3", features = ["sled-backend"], tag = "0.1.0" }
+abcf = { git = "https://github.com/FindoraNetwork/abcf.git" }
+abcf-node = { git = "https://github.com/FindoraNetwork/abcf.git" }
+bs3 = { git = "https://github.com/FindoraNetwork/bs3.git", features = ["sled-backend"], tag = "0.1.0" }
 env_logger = "0.9.0"
 async-trait = "0.1.51"
 sha3 = "0.9.1"
@@ -16,18 +16,15 @@ digest = "0.9.0"
 serde_json = "1.0.68"
 serde = "1.0.130"
 libfindora = { path = "../libfindora" }
-zei = { git = "ssh://git@github.com/tiannian/zei", branch = "feat-refactor" }
+zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor" }
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 rand_chacha = "0.2.2"
 log = "0.4.14"
 fm-utxo = { path = "../modules/utxo" }
 fm-coinbase = { path = "../modules/coinbase" }
-
-# [lib]
-# name = "findorad_lib"
-# path = "src/lib.rs"
+fm-staking = { path = "../modules/staking" }
 
 [dev-dependencies]
-abcf-sdk = { git = "ssh://git@github.com/FindoraNetwork/abcf", default-features = false, features=["websocket"] }
+abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", default-features = false, features=["websocket"] }
 tokio = { version = "1", features = ["full"] }
 ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
