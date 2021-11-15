@@ -1,6 +1,6 @@
 mod delegate;
 pub use delegate::Delegate;
-
+use serde::{Deserialize, Serialize};
 mod undelegate;
 pub use undelegate::Undelegate;
 
@@ -10,8 +10,22 @@ use crate::{transaction, FRA_XFR_ASSET_TYPE};
 use std::convert::TryFrom;
 use zei::xfr::{sig::XfrPublicKey, structs::XfrAmount};
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TendermintAddress([u8; 20]);
+
+impl TendermintAddress {
+    pub fn new_from_vec(v: &Vec<u8>) -> Self {
+        let mut array = [0; 20];
+        for (index, val) in v.iter().enumerate() {
+            array[index] = *val;
+        }
+        Self { 0: array }
+    }
+
+    pub fn to_byte(&self) -> Vec<u8> {
+        self.0.to_vec()
+    }
+}
 
 #[derive(Debug, Clone)]
 pub enum Operation {

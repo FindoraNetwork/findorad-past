@@ -32,11 +32,15 @@ struct ValidatorKey {
 }
 
 struct DelegateData {
-    validator @0: ValidatorKey;
+    address @0: Data;
+    validator :union {
+        none @1: Void;
+        some @2: ValidatorKey;
+    }
 }
 
 struct UndelegateData {
-    validator @0: ValidatorKey;
+    address @0: Data;
 }
 
 struct ClaimData {

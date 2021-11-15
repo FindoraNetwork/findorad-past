@@ -1,5 +1,4 @@
 use crate::governance::{penalty_amount_power, ByzantineKind};
-use crate::validator_keys::{ValidatorAddr, ValidatorPubKeyPair};
 use crate::{validator_keys::ValidatorPublicKey, voting};
 use abcf::module::types::RequestBeginBlock;
 use abcf::{
@@ -36,9 +35,8 @@ pub struct StakingModule {
     /// This field will send to tendermint when end block.
     pub vote_updaters: Vec<ValidatorUpdate>,
 
-    // /// validator addr -> (validator pubkey, wallet pubkey) mapping
-    // #[stateful]
-    // pub validator_addr_map: Map<ValidatorAddr, ValidatorPubKeyPair>,
+    #[stateful]
+    pub validator_staker: Map<TendermintAddress, XfrPublicKey>,
 
     /// Global delegation amount.
     #[stateful]
@@ -120,7 +118,7 @@ impl Application for StakingModule {
             &mut _context.stateful.global_power,
             &mut _context.stateful.delegation_amount,
             &mut _context.stateful.delegators,
-            &mut _context.stateful.validator_addr_map,
+            &mut _context.stateful.validator_staker,
             &penalty_list,
         );
     }
@@ -141,7 +139,8 @@ impl Application for StakingModule {
                 &mut context.stateful.delegation_amount,
                 &mut context.stateful.delegators,
                 &mut context.stateful.powers,
-                &mut context.stateful.validator_addr_map,
+                &mut context.stateful.validator_staker,
+                &mut context.stateful.validator_addr_pubkey,
             )?;
             updates.append(&mut update);
         }

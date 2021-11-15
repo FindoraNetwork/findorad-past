@@ -1,15 +1,5 @@
 use abcf::tm_protos::crypto;
 use serde::{Deserialize, Serialize};
-use sha3::{Digest, Sha3_256};
-use zei::xfr::sig::XfrPublicKey;
-
-pub type ValidatorPubKeyPair = (ValidatorPublicKey, XfrPublicKey);
-
-/// validator addr from ValidatorPublicKey sha256[0..20]
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct ValidatorAddr {
-    pub addr: Vec<u8>,
-}
 
 /// crypto::PublicKey Wrapper
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -46,15 +36,5 @@ impl ValidatorPublicKey {
             ValidatorPublicKey::Ed25519(v) => v.clone(),
             ValidatorPublicKey::Secp256k1(v) => v.clone(),
         }
-    }
-
-    pub fn to_validator_addr(&self) -> ValidatorAddr {
-        let mut hasher = Sha3_256::new();
-
-        hasher.update(self.get_bytes());
-
-        let result = hasher.finalize()[0..20].to_vec();
-
-        ValidatorAddr { addr: result }
     }
 }

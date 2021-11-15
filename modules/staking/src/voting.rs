@@ -4,7 +4,6 @@
 //! un-delegate -> decrease voting power
 //!
 
-use crate::validator_keys::{ValidatorAddr, ValidatorPubKeyPair};
 use crate::{
     delegate::{execute_delegate, DelegateOp},
     undelegate::{execute_undelegate, UnDelegateOp},
@@ -17,7 +16,7 @@ use abcf::{
 };
 use libfindora::staking::{
     voting::{Amount, Power, MAX_POWER_PERCENT_PER_VALIDATOR, MAX_TOTAL_POWER},
-    Operation, StakingInfo,
+    Operation, StakingInfo, TendermintAddress,
 };
 use std::collections::BTreeMap;
 use zei::xfr::sig::XfrPublicKey;
@@ -26,17 +25,31 @@ pub fn execute_staking(
     info: &StakingInfo,
     global_power: &mut impl ValueStore<Power>,
     delegation_amount: &mut impl MapStore<XfrPublicKey, Amount>,
-    delegators: &mut impl MapStore<ValidatorPublicKey, BTreeMap<XfrPublicKey, Amount>>,
-    powers: &mut impl MapStore<ValidatorPublicKey, Power>,
-    validator_addr_map: &mut impl MapStore<ValidatorAddr, ValidatorPubKeyPair>,
+    delegators: &mut impl MapStore<TendermintAddress, BTreeMap<XfrPublicKey, Amount>>,
+    powers: &mut impl MapStore<TendermintAddress, Power>,
+    validator_staker: &mut impl MapStore<TendermintAddress, XfrPublicKey>,
+    validator_addr_pubkey: &mut impl MapStore<TendermintAddress, ValidatorPublicKey>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
     match &info.operation {
         Operation::Delegate(d) => {
-            let op = DelegateOp {
-                delegator: info.delegator.clone(),
-                validator: ValidatorPublicKey::from_crypto_publickey(&d.validator).unwrap(),
-                amount: info.amount,
-                memo: d.memo.clone(),
+            let op = if let Some(pubkey) = &d.validator {
+                DelegateOp {
+                    delegator: info.delegator.clone(),
+                    validator_pubkey: Some(
+                        ValidatorPublicKey::from_crypto_publickey(pubkey).unwrap(),
+                    ),
+                    validator_address: d.address.clone(),
+                    amount: info.amount,
+                    memo: d.memo.clone(),
+                }
+            } else {
+                DelegateOp {
+                    delegator: info.delegator.clone(),
+                    validator_pubkey: None,
+                    validator_address: d.address.clone(),
+                    amount: info.amount,
+                    memo: d.memo.clone(),
+                }
             };
 
             return execute_delegate(
@@ -45,17 +58,25 @@ pub fn execute_staking(
                 delegation_amount,
                 delegators,
                 powers,
-                validator_addr_map,
+                validator_staker,
+                validator_addr_pubkey,
             );
         }
         Operation::Undelegate(ud) => {
             let op = UnDelegateOp {
                 delegator: info.delegator.clone(),
-                validator: ValidatorPublicKey::from_crypto_publickey(&ud.validator).unwrap(),
+                validator_address: ud.address.clone(),
                 amount: info.amount,
             };
 
-            return execute_undelegate(op, global_power, delegation_amount, delegators, powers);
+            return execute_undelegate(
+                op,
+                global_power,
+                delegation_amount,
+                delegators,
+                powers,
+                validator_addr_pubkey,
+            );
         }
     }
 }
