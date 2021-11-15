@@ -37,14 +37,19 @@ pub fn execute_undelegate<'a>(
                     // update global power
                     let mut current_global_power = 0;
                     if let Some(p) = global_power.get()? {
-                        let power = p.checked_add(op.amount).ok_or(p).unwrap();
+                        let power = p.checked_sub(op.amount).ok_or(
+                            abcf::Error::ABCIApplicationError(90002, "sub global power overflow".to_string())
+                        )?;
                         current_global_power = power;
                     }
                     global_power.set(current_global_power)?;
 
                     // update delegation_amount
                     let current_delegatioon_amount =
-                        amount.checked_sub(op.amount).ok_or(amount).unwrap();
+                        amount.checked_sub(op.amount).ok_or(
+                            abcf::Error::ABCIApplicationError(90002,
+                                                              "sub delegation all amount overflow".to_string())
+                        )?;
                     delegation_amount.insert(op.delegator.clone(), current_delegatioon_amount)?;
 
                     // update delegators
@@ -54,8 +59,18 @@ pub fn execute_undelegate<'a>(
                         .unwrap();
 
                     // update powers
-                    let current_power = power.checked_sub(op.amount).ok_or(power).unwrap();
-                    powers.insert(op.validator, current_power)?;
+                    let current_power = power.checked_sub(op.amount).ok_or(
+                        abcf::Error::ABCIApplicationError(90002,
+                                                          "sub validator power overflow".to_string())
+                    )?;
+                    powers.insert(op.validator.clone(), current_power)?;
+
+                    let validator_update = ValidatorUpdate {
+                        pub_key: op.validator.to_crypto_publickey(),
+                        power: current_power as i64,
+                    };
+    
+                    return Ok(vec![validator_update]);    
                 } else {
                     // op.amount > delegated amount
                     let msg = format!(

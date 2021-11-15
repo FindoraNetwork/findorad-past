@@ -1,11 +1,9 @@
-use crate::validator_module::{ValidatorAddr, ValidatorPubKeyPair};
 ///! delegate operation logics
 /// increase validator's voting power
-/// 
-
+///
 use crate::{
     voting::{global_power_rules, validator_power_rules},
-    validator_pubkey::ValidatorPublicKey,
+    validator_module::{ValidatorAddr, ValidatorPubKeyPair, ValidatorPublicKey},
 };
 use abcf::{
     bs3::{MapStore, ValueStore},
@@ -38,10 +36,15 @@ pub fn execute_delegate<'a>(
     // op.validator exists && has done self-delegate operation
     if let Some(power) = powers.get_mut(&op.validator)? {
         if op.amount >= MIN_DELEGATION_AMOUNT && op.amount <= MAX_DELEGATION_AMOUNT {
-            let curren_power = power.checked_add(op.amount).ok_or(power).unwrap();
+            let curren_power = power.checked_add(op.amount).ok_or(
+                abcf::Error::ABCIApplicationError(90002, "add validator power overflow".to_string())
+            )?;
             let mut current_global_power = 0;
             if let Some(p) = global_power.get()? {
-                let power = p.checked_add(op.amount).ok_or(p).unwrap();
+                let power = p.checked_add(op.amount).ok_or(
+                    abcf::Error::ABCIApplicationError(90002, "add global power overflow".to_string())
+                )?;
+
                 current_global_power = power;
             }
 
@@ -55,7 +58,9 @@ pub fn execute_delegate<'a>(
                 let actual_amount;
                 if let Some(delegation_amount) = delegation_amount.get_mut(&op.delegator)? {
                     let amount = *delegation_amount;
-                    let amount = amount.checked_add(op.amount).ok_or(amount).unwrap();
+                    let amount = amount.checked_add(op.amount).ok_or(
+                        abcf::Error::ABCIApplicationError(90002, "add all delegation amount overflow".to_string())
+                    )?;
                     actual_amount = amount;
                     *delegation_amount = amount;
                 } else {
@@ -98,7 +103,9 @@ pub fn execute_delegate<'a>(
         if op.amount >= STAKING_VALIDATOR_MIN_POWER && op.amount <= MAX_DELEGATION_AMOUNT {
             let mut current_global_power = 0;
             if let Some(p) = global_power.get()? {
-                let power = p.checked_add(op.amount).ok_or(p).unwrap();
+                let power = p.checked_add(op.amount).ok_or(
+                    abcf::Error::ABCIApplicationError(90002, "add global power overflow".to_string())
+                )?;
                 current_global_power = power;
             }
 
