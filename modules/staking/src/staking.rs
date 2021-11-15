@@ -12,6 +12,7 @@ use abcf::{
     tm_protos::abci::ValidatorUpdate,
     Application, Stateful, StatefulBatch, Stateless, StatelessBatch,
 };
+use libfindora::staking::TendermintAddress;
 use libfindora::staking::{
     self,
     voting::{Amount, Power},
@@ -35,9 +36,9 @@ pub struct StakingModule {
     /// This field will send to tendermint when end block.
     pub vote_updaters: Vec<ValidatorUpdate>,
 
-    /// validator addr -> (validator pubkey, wallet pubkey) mapping
-    #[stateful]
-    pub validator_addr_map: Map<ValidatorAddr, ValidatorPubKeyPair>,
+    // /// validator addr -> (validator pubkey, wallet pubkey) mapping
+    // #[stateful]
+    // pub validator_addr_map: Map<ValidatorAddr, ValidatorPubKeyPair>,
 
     /// Global delegation amount.
     #[stateful]
@@ -49,11 +50,14 @@ pub struct StakingModule {
 
     /// Who delegate to which validator.
     #[stateful]
-    pub delegators: Map<ValidatorPublicKey, BTreeMap<XfrPublicKey, Amount>>,
+    pub delegators: Map<TendermintAddress, BTreeMap<XfrPublicKey, Amount>>,
+
+    #[stateful]
+    pub validator_addr_pubkey: Map<TendermintAddress, ValidatorPublicKey>,
 
     /// Validator power.
     #[stateful]
-    pub powers: Map<ValidatorPublicKey, Power>,
+    pub powers: Map<TendermintAddress, Power>,
 }
 
 #[abcf::rpcs]
