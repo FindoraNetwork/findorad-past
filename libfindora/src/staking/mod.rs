@@ -10,6 +10,7 @@ use crate::{transaction, FRA_XFR_ASSET_TYPE};
 use std::convert::TryFrom;
 use zei::xfr::{sig::XfrPublicKey, structs::XfrAmount};
 
+#[derive(Debug, Clone)]
 pub struct TendermintAddress([u8; 20]);
 
 #[derive(Debug, Clone)]
