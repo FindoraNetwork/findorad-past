@@ -1,15 +1,15 @@
-use serde::{Deserialize, Serialize};
+use crate::account;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug, Clone)]
 pub enum Operation {
     TransferAsset,
     IssueAsset,
     Undelegate,
     ClaimReward,
-    TransferAccount,
+    TransferAccount(account::InputOperation),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug, Clone)]
 pub struct Input {
     pub txid: Vec<u8>,
     pub n: u32,

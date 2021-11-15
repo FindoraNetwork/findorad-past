@@ -456,7 +456,7 @@ impl ToBytes for Transaction {
                     InputOperation::ClaimReward => {
                         input.set_operation(transaction_capnp::input::Operation::ClaimReward)
                     }
-                    InputOperation::TransferAccount => {}
+                    InputOperation::TransferAccount(_) => {}
                 }
             }
 
@@ -521,7 +521,7 @@ impl ToBytes for Transaction {
                     OutputOperation::ClaimReward(a) => {
                         set_validator!(operation, a, init_claim_reward);
                     }
-                    OutputOperation::TransferAccount => {}
+                    OutputOperation::TransferAccount(_) => {}
                 }
 
                 let mut amount = output.reborrow().get_amount();

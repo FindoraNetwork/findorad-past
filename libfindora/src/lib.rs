@@ -7,6 +7,7 @@ pub mod rewards;
 pub mod staking;
 pub mod transaction;
 pub mod utxo;
+pub mod account;
 pub mod evm;
 
 pub const FRA_ASSET_TYPE: AssetType = AssetType([0; ASSET_TYPE_LENGTH]);
