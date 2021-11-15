@@ -1,4 +1,4 @@
-use crate::validator_module::{ValidatorAddr, ValidatorPubKeyPair, ValidatorPublicKey};
+use crate::validator_keys::{ValidatorAddr, ValidatorPubKeyPair, ValidatorPublicKey};
 use abcf::bs3::{MapStore, ValueStore};
 use abcf::tm_protos::abci::Validator;
 use libfindora::staking::voting::{Amount, Power};

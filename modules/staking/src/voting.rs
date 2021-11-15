@@ -4,11 +4,11 @@
 //! un-delegate -> decrease voting power
 //!
 
-use crate::validator_module::{ValidatorAddr, ValidatorPubKeyPair};
+use crate::validator_keys::{ValidatorAddr, ValidatorPubKeyPair};
 use crate::{
     delegate::{execute_delegate, DelegateOp},
     undelegate::{execute_undelegate, UnDelegateOp},
-    validator_module::ValidatorPublicKey,
+    validator_keys::ValidatorPublicKey,
 };
 use abcf::{
     bs3::{MapStore, ValueStore},

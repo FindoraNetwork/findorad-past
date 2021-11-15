@@ -1,7 +1,7 @@
 ///! un-delegate operation logics
 /// decrease validator's voting power
 ///
-use crate::validator_module::ValidatorPublicKey;
+use crate::validator_keys::ValidatorPublicKey;
 use abcf::{
     bs3::{MapStore, ValueStore},
     tm_protos::abci::ValidatorUpdate,

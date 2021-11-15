@@ -3,7 +3,7 @@
 ///
 use crate::{
     voting::{global_power_rules, validator_power_rules},
-    validator_module::{ValidatorAddr, ValidatorPubKeyPair, ValidatorPublicKey},
+    validator_keys::{ValidatorAddr, ValidatorPubKeyPair, ValidatorPublicKey},
 };
 use abcf::{
     bs3::{MapStore, ValueStore},

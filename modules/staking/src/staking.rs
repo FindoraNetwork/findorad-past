@@ -1,6 +1,6 @@
 use crate::governance::{penalty_amount_power, ByzantineKind};
-use crate::validator_module::{ValidatorAddr, ValidatorPubKeyPair};
-use crate::{validator_module::ValidatorPublicKey, voting};
+use crate::validator_keys::{ValidatorAddr, ValidatorPubKeyPair};
+use crate::{validator_keys::ValidatorPublicKey, voting};
 use abcf::module::types::RequestBeginBlock;
 use abcf::{
     bs3::model::{Map, Value},
