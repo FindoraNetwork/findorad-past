@@ -1,4 +1,6 @@
-use crate::{validator_pubkey::ValidatorPublicKey, voting};
+use crate::governance::{penalty_amount_power, ByzantineKind};
+use crate::{validator_keys::ValidatorPublicKey, voting};
+use abcf::module::types::RequestBeginBlock;
 use abcf::{
     bs3::model::{Map, Value},
     manager::{AContext, TContext},
@@ -9,6 +11,7 @@ use abcf::{
     tm_protos::abci::ValidatorUpdate,
     Application, Stateful, StatefulBatch, Stateless, StatelessBatch,
 };
+use libfindora::staking::TendermintAddress;
 use libfindora::staking::{
     self,
     voting::{Amount, Power},
@@ -32,6 +35,9 @@ pub struct StakingModule {
     /// This field will send to tendermint when end block.
     pub vote_updaters: Vec<ValidatorUpdate>,
 
+    #[stateful]
+    pub validator_staker: Map<TendermintAddress, XfrPublicKey>,
+
     /// Global delegation amount.
     #[stateful]
     pub global_power: Value<Power>,
@@ -42,11 +48,14 @@ pub struct StakingModule {
 
     /// Who delegate to which validator.
     #[stateful]
-    pub delegators: Map<ValidatorPublicKey, BTreeMap<XfrPublicKey, Amount>>,
+    pub delegators: Map<TendermintAddress, BTreeMap<XfrPublicKey, Amount>>,
+
+    #[stateful]
+    pub validator_addr_pubkey: Map<TendermintAddress, ValidatorPublicKey>,
 
     /// Validator power.
     #[stateful]
-    pub powers: Map<ValidatorPublicKey, Power>,
+    pub powers: Map<TendermintAddress, Power>,
 }
 
 #[abcf::rpcs]
@@ -65,6 +74,55 @@ impl Application for StakingModule {
         Ok(Default::default())
     }
 
+    async fn begin_block(
+        &mut self,
+        _context: &mut AContext<Stateless<Self>, Stateful<Self>>,
+        _req: &RequestBeginBlock,
+    ) {
+        let mut penalty_list = vec![];
+
+        // get the list of validators to be punished
+        for eve in _req.byzantine_validators.iter() {
+            if let Some(validator) = &eve.validator {
+                let bk = ByzantineKind::from_evidence_type(eve.r#type);
+                if bk.is_err() {
+                    log::debug!(
+                        "height: {}, type: {}, msg: {}",
+                        eve.height,
+                        eve.r#type,
+                        bk.unwrap_err()
+                    );
+                    return;
+                }
+                let bk = bk.unwrap();
+
+                penalty_list.push((validator.clone(), bk));
+            }
+        }
+
+        // get list of validators offline
+        if let Some(lci) = &_req.last_commit_info {
+            for vote in lci.votes.iter() {
+                if let Some(validator) = &vote.validator {
+                    // 没有签名=离线
+                    if !vote.signed_last_block {
+                        let bk = ByzantineKind::OffLine;
+                        penalty_list.push((validator.clone(), bk));
+                    }
+                }
+            }
+        }
+
+        let _ = penalty_amount_power(
+            &mut _context.stateful.powers,
+            &mut _context.stateful.global_power,
+            &mut _context.stateful.delegation_amount,
+            &mut _context.stateful.delegators,
+            &mut _context.stateful.validator_staker,
+            &penalty_list,
+        );
+    }
+
     async fn deliver_tx(
         &mut self,
         context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
@@ -81,6 +139,8 @@ impl Application for StakingModule {
                 &mut context.stateful.delegation_amount,
                 &mut context.stateful.delegators,
                 &mut context.stateful.powers,
+                &mut context.stateful.validator_staker,
+                &mut context.stateful.validator_addr_pubkey,
             )?;
             updates.append(&mut update);
         }

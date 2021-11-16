@@ -68,6 +68,16 @@ fn main() {
                 SledBackend::open_tree(&staking_backend, "powers").unwrap(),
             )
             .unwrap(),
+            validator_staker: bs3::SnapshotableStorage::new(
+                Default::default(),
+                SledBackend::open_tree(&staking_backend, "validator_staker").unwrap(),
+            )
+            .unwrap(),
+            validator_addr_pubkey: bs3::SnapshotableStorage::new(
+                Default::default(),
+                SledBackend::open_tree(&staking_backend, "validator_addr_pubkey").unwrap(),
+            )
+            .unwrap(),
             __marker_s: PhantomData,
         },
         coinbase: abcf::Stateful::<CoinbaseModule<SledBackend>> {
