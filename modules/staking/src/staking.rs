@@ -50,6 +50,7 @@ pub struct StakingModule {
     #[stateful]
     pub delegators: Map<TendermintAddress, BTreeMap<XfrPublicKey, Amount>>,
 
+    /// TendermintAddress to validatorPublicKey
     #[stateful]
     pub validator_addr_pubkey: Map<TendermintAddress, ValidatorPublicKey>,
 
@@ -104,7 +105,7 @@ impl Application for StakingModule {
         if let Some(lci) = &_req.last_commit_info {
             for vote in lci.votes.iter() {
                 if let Some(validator) = &vote.validator {
-                    // 没有签名=离线
+                    // signed_last_block == false means validator is OffLine
                     if !vote.signed_last_block {
                         let bk = ByzantineKind::OffLine;
                         penalty_list.push((validator.clone(), bk));

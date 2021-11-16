@@ -37,7 +37,12 @@ pub fn execute_delegate<'a>(
     validator_addr_pubkey: &mut impl MapStore<TendermintAddress, ValidatorPublicKey>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
     // op.validator exists && has done self-delegate operation
-    if let Some(power) = powers.get_mut(&op.validator_address)? {
+    if let Some(_) = validator_addr_pubkey.get(&op.validator_address)? {
+        let mut power = 0;
+        if let Some(p) = powers.get(&op.validator_address)? {
+            power = *p;
+        }
+
         if op.amount >= MIN_DELEGATION_AMOUNT && op.amount <= MAX_DELEGATION_AMOUNT {
             let current_power =
                 power
