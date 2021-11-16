@@ -7,6 +7,10 @@ Install [Cap’n Proto](https://capnproto.org/index.html) on Ubuntu platform :
 ```
 sudo apt-get install capnproto
 ```
+Install `libssl-dev` 
+```
+sudo apt-get install libssl-dev
+```
 
 ## Construction and crates.
 

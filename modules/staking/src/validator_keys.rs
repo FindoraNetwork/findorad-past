@@ -7,6 +7,7 @@ pub enum ValidatorPublicKey {
     Ed25519(Vec<u8>),
     Secp256k1(Vec<u8>),
 }
+
 impl ValidatorPublicKey {
     pub fn from_crypto_publickey(cpk: &crypto::PublicKey) -> Option<Self> {
         if let Some(sum) = cpk.sum.as_ref() {
@@ -27,6 +28,13 @@ impl ValidatorPublicKey {
             Self::Secp256k1(s) => Some(crypto::PublicKey {
                 sum: Some(crypto::public_key::Sum::Secp256k1(s.clone())),
             }),
+        }
+    }
+
+    pub fn get_bytes(&self) -> Vec<u8> {
+        match self {
+            ValidatorPublicKey::Ed25519(v) => v.clone(),
+            ValidatorPublicKey::Secp256k1(v) => v.clone(),
         }
     }
 }
