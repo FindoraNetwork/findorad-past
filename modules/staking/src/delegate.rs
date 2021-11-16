@@ -153,16 +153,22 @@ pub fn execute_delegate<'a>(
                 let validator_pk = op.validator_pubkey.clone().unwrap();
                 validator_addr_pubkey.insert(op.validator_address.clone(), validator_pk)?;
 
-                let validator_update = if let Some(pubkey) = &op.validator_pubkey {
-                    ValidatorUpdate {
-                        pub_key: pubkey.to_crypto_publickey(),
-                        power: op.amount as i64,
-                    }
+                let pub_key = if let Some(pubkey) = &op.validator_pubkey {
+                    pubkey.to_crypto_publickey()
                 } else {
-                    ValidatorUpdate {
-                        pub_key: None,
-                        power: op.amount as i64,
+                    if let Some(pub_key) = validator_addr_pubkey.get(&op.validator_address)? {
+                        pub_key.to_crypto_publickey()
+                    } else {
+                        return Err(abcf::Error::ABCIApplicationError(
+                            90003,
+                            "there is no matching public key for this address".to_string(),
+                        ));
                     }
+                };
+
+                let validator_update = ValidatorUpdate {
+                    pub_key,
+                    power: op.amount as i64,
                 };
 
                 return Ok(vec![validator_update]);
