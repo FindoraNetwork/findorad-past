@@ -28,7 +28,12 @@ pub fn execute_undelegate<'a>(
     powers: &mut impl MapStore<TendermintAddress, Power>,
     validator_addr_pubkey: &mut impl MapStore<TendermintAddress, ValidatorPublicKey>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
-    if let Some(power) = powers.get_mut(&op.validator_address)? {
+    if let Some(_) = validator_addr_pubkey.get(&op.validator_address)? {
+        let mut power = 0;
+        if let Some(p) = powers.get(&op.validator_address)? {
+            power = *p;
+        }
+        
         // undelegate from validator
         if let Some(delegate_map) = delegators.get_mut(&op.validator_address)? {
             if let Some(amount) = delegate_map.get_mut(&op.delegator) {
