@@ -41,6 +41,7 @@ pub fn penalty_amount_power<'a>(
     delegation_amount: &mut impl MapStore<XfrPublicKey, Amount>,
     delegators: &mut impl MapStore<TendermintAddress, BTreeMap<XfrPublicKey, Amount>>,
     validator_staker: &mut impl MapStore<TendermintAddress, XfrPublicKey>,
+    delegation_info: &mut impl MapStore<XfrPublicKey, BTreeMap<TendermintAddress, Amount>>,
     penalty_list: &Vec<(Validator, ByzantineKind)>,
 ) -> abcf::Result<()> {
     for (validator, bk) in penalty_list.iter() {
@@ -79,6 +80,13 @@ pub fn penalty_amount_power<'a>(
         if let Some(g_power) = global_power.get()? {
             let g_cnt_power = g_power.saturating_sub(pa);
             global_power.set(g_cnt_power)?;
+        }
+
+        // modify delegation info
+        if let Some(map) = delegation_info.get_mut(&*v_xfr_pk)? {
+            if let Some(amount) = map.get_mut(&v_addr) {
+                *amount = *amount - pa;
+            }
         }
     }
 

@@ -29,6 +29,7 @@ pub fn execute_staking(
     powers: &mut impl MapStore<TendermintAddress, Power>,
     validator_staker: &mut impl MapStore<TendermintAddress, XfrPublicKey>,
     validator_addr_pubkey: &mut impl MapStore<TendermintAddress, ValidatorPublicKey>,
+    delegation_info: &mut impl MapStore<XfrPublicKey, BTreeMap<TendermintAddress, Amount>>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
     match &info.operation {
         Operation::Delegate(d) => {
@@ -60,6 +61,7 @@ pub fn execute_staking(
                 powers,
                 validator_staker,
                 validator_addr_pubkey,
+                delegation_info,
             );
         }
         Operation::Undelegate(ud) => {
@@ -76,6 +78,7 @@ pub fn execute_staking(
                 delegators,
                 powers,
                 validator_addr_pubkey,
+                delegation_info,
             );
         }
     }

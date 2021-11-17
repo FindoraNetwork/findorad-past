@@ -41,7 +41,7 @@ impl TransferEntry {
     }
 }
 
-pub async fn build_input_asset_record_and_id<R: CryptoRng + RngCore>(
+pub async fn transfer_build_input_asset_record_and_id<R: CryptoRng + RngCore>(
     prng: &mut R,
     entries: Vec<TransferEntry>,
 ) -> Result<(

@@ -5,6 +5,7 @@ use abcf::{
     bs3::{
         merkle::append_only::AppendOnlyMerkle,
         model::{Map, Value},
+        MapStore,
     },
     manager::{AContext, TContext},
     module::types::{
@@ -12,8 +13,9 @@ use abcf::{
         ResponseEndBlock,
     },
     tm_protos::abci::ValidatorUpdate,
-    Application, Stateful, StatefulBatch, Stateless, StatelessBatch,
+    Application, RPCResponse, Stateful, StatefulBatch, Stateless, StatelessBatch,
 };
+use libfindora::staking::rpc::{GDIEntry, GetDelegationInfoReq, GetDelegationInfoResp};
 use libfindora::staking::TendermintAddress;
 use libfindora::staking::{
     self,
@@ -21,7 +23,6 @@ use libfindora::staking::{
 };
 use std::{collections::BTreeMap, mem};
 use zei::xfr::sig::XfrPublicKey;
-use libfindora::staking::rpc::{GetOwnedStakingReq, GetOwnedStakingResp};
 
 #[abcf::module(
     name = "staking",
@@ -33,6 +34,9 @@ pub struct StakingModule {
     /// Placeholder for abcf.
     #[stateless]
     pub sl_value: Value<u32>,
+
+    #[stateless]
+    pub delegation_info: Map<XfrPublicKey, BTreeMap<TendermintAddress, Amount>>,
 
     /// Recording validator update info
     ///
@@ -65,13 +69,44 @@ pub struct StakingModule {
 
 #[abcf::rpcs]
 impl StakingModule {
-    pub async fn get_owned_outputs(
+    pub async fn delegation_info(
         &mut self,
         context: &mut abcf::manager::RContext<'_, abcf::Stateless<Self>, abcf::Stateful<Self>>,
-        request: GetOwnedStakingReq,
-    ) -> RPCResponse<GetOwnedStakingResp> {
+        request: GetDelegationInfoReq,
+    ) -> RPCResponse<Vec<GetDelegationInfoResp>> {
+        let mut resp_list = vec![];
 
+        for pubkey in request.owners.iter() {
+            let mut resp = GetDelegationInfoResp::default();
+            let pubkey_base64 = base64::encode(pubkey.as_bytes());
+            resp.pub_key = pubkey_base64;
 
+            match context.stateless.delegation_info.get(pubkey) {
+                Err(e) => {
+                    let error: abcf::Error = e.into();
+                    return error.into();
+                }
+                Ok(v) => match v {
+                    None => {}
+                    Some(map) => {
+                        for (address, amount) in map.iter() {
+                            if let Ok(Some(power)) = context.stateful.powers.get(address) {
+                                let address_base64 = base64::encode(&address.to_byte());
+                                let info = GDIEntry {
+                                    validator: address_base64,
+                                    amount: *amount,
+                                    power: *power,
+                                };
+                                resp.infos.push(info);
+                            }
+                        }
+                    }
+                },
+            }
+            resp_list.push(resp);
+        }
+
+        RPCResponse::new(resp_list)
     }
 }
 
@@ -133,6 +168,7 @@ impl Application for StakingModule {
             &mut _context.stateful.delegation_amount,
             &mut _context.stateful.delegators,
             &mut _context.stateful.validator_staker,
+            &mut _context.stateless.delegation_info,
             &penalty_list,
         );
     }
@@ -155,6 +191,7 @@ impl Application for StakingModule {
                 &mut context.stateful.powers,
                 &mut context.stateful.validator_staker,
                 &mut context.stateful.validator_addr_pubkey,
+                &mut context.stateless.delegation_info,
             )?;
             updates.append(&mut update);
         }
@@ -179,3 +216,7 @@ impl Application for StakingModule {
 
 #[abcf::methods]
 impl StakingModule {}
+
+pub mod staking_module_rpc {
+    include!(concat!(env!("OUT_DIR"), "/stakingmodule.rs"));
+}

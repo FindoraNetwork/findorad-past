@@ -35,6 +35,7 @@ pub fn execute_delegate<'a>(
     powers: &mut impl MapStore<TendermintAddress, Power>,
     validator_staker: &mut impl MapStore<TendermintAddress, XfrPublicKey>,
     validator_addr_pubkey: &mut impl MapStore<TendermintAddress, ValidatorPublicKey>,
+    delegation_info: &mut impl MapStore<XfrPublicKey, BTreeMap<TendermintAddress, Amount>>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
     // op.validator exists && has done self-delegate operation
     if let Some(_) = validator_addr_pubkey.get(&op.validator_address)? {
@@ -114,6 +115,19 @@ pub fn execute_delegate<'a>(
                     }
                 };
 
+                // update delegation_info
+                if let Some(map) = delegation_info.get_mut(&op.delegator)? {
+                    if let Some(amount) = map.get_mut(&op.validator_address) {
+                        *amount = actual_amount;
+                    } else {
+                        map.insert(op.validator_address.clone(), actual_amount);
+                    }
+                } else {
+                    let mut td_addr_amount_map = BTreeMap::new();
+                    td_addr_amount_map.insert(op.validator_address.clone(), actual_amount);
+                    delegation_info.insert(op.delegator.clone(), td_addr_amount_map)?;
+                }
+
                 let validator_update = ValidatorUpdate {
                     pub_key,
                     power: current_power as i64,
@@ -170,6 +184,20 @@ pub fn execute_delegate<'a>(
                         ));
                     }
                 };
+
+                // update delegation_info
+
+                if let Some(map) = delegation_info.get_mut(&op.delegator)? {
+                    if let Some(amount) = map.get_mut(&op.validator_address) {
+                        *amount = op.amount;
+                    } else {
+                        map.insert(op.validator_address.clone(), op.amount);
+                    }
+                } else {
+                    let mut td_addr_amount_map = BTreeMap::new();
+                    td_addr_amount_map.insert(op.validator_address.clone(), op.amount);
+                    delegation_info.insert(op.delegator.clone(), td_addr_amount_map)?;
+                }
 
                 let validator_update = ValidatorUpdate {
                     pub_key,
