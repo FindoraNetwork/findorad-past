@@ -105,6 +105,11 @@ fn main() {
                 SledBackend::open_tree(&staking_backend, "sl_value").unwrap(),
             )
             .unwrap(),
+            delegation_info: abcf::bs3::SnapshotableStorage::new(
+                Default::default(),
+                SledBackend::open_tree(&staking_backend, "delegation_info").unwrap(),
+            )
+            .unwrap(),
             __marker_s: PhantomData,
         },
         coinbase: abcf::Stateless::<CoinbaseModule<SledBackend>> {

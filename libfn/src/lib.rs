@@ -3,22 +3,31 @@ use rand_core::{CryptoRng, RngCore};
 use ruc::*;
 use serde::{Deserialize, Serialize};
 use zei::xfr::lib::gen_xfr_body;
+use zei::xfr::sig::XfrKeyPair;
+use zei::xfr::structs::AssetRecord;
 
 mod issue;
 pub use issue::IssueEntry;
+use libfindora::staking::Undelegate;
 
+mod stake;
 mod transfer;
 mod wallet;
+pub use stake::{DelegationEntry, UnDelegationEntry};
+
 pub use wallet::AccountEntry;
 
 pub use transfer::TransferEntry;
 
-use transfer::build_input_asset_record_and_id;
+use stake::delegation_build_input_asset_record_and_id;
+use transfer::transfer_build_input_asset_record_and_id;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Entry {
     Issue(IssueEntry),
     Transfer(TransferEntry),
+    Delegation(DelegationEntry),
+    UnDelegation(UnDelegationEntry),
 }
 
 pub async fn build_transaction<R: CryptoRng + RngCore>(
@@ -32,6 +41,7 @@ pub async fn build_transaction<R: CryptoRng + RngCore>(
     let mut keypairs = Vec::new();
 
     let mut transfer_entry = Vec::new();
+    let mut delegation_entry = Vec::new();
 
     let mut index = 0;
 
@@ -48,11 +58,39 @@ pub async fn build_transaction<R: CryptoRng + RngCore>(
             Entry::Transfer(e) => {
                 transfer_entry.push(e);
             }
+            Entry::Delegation(e) => {
+                delegation_entry.push(e);
+            }
+            Entry::UnDelegation(e) => {
+                keypairs.push(e.keypair.clone());
+                let output = e.to_output_asset_record(prng)?;
+                input_ids.push((Vec::new(), index, InputOperation::Undelegate));
+                output_ids.push(OutputOperation::Undelegate(Undelegate {
+                    address: e.validator_address.clone(),
+                }));
+                inputs.push(output.clone());
+                outputs.push(output);
+            }
         };
         index += 1;
     }
 
-    let ios = build_input_asset_record_and_id(prng, transfer_entry).await?;
+    let mut ios: (
+        Vec<(XfrKeyPair, Vec<u8>, u32, AssetRecord)>,
+        Vec<AssetRecord>,
+    ) = (Vec::new(), Vec::new());
+
+    {
+        let mut transfer_ios =
+            transfer_build_input_asset_record_and_id(prng, transfer_entry).await?;
+        ios.0.append(&mut transfer_ios.0);
+        ios.1.append(&mut transfer_ios.1);
+
+        let mut delegation_ios =
+            delegation_build_input_asset_record_and_id(prng, delegation_entry).await?;
+        ios.0.append(&mut delegation_ios.0);
+        ios.1.append(&mut delegation_ios.1);
+    }
 
     for input in ios.0 {
         keypairs.push(input.0);

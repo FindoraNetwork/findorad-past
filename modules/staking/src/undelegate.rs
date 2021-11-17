@@ -27,6 +27,7 @@ pub fn execute_undelegate<'a>(
     delegators: &mut impl MapStore<TendermintAddress, BTreeMap<XfrPublicKey, Amount>>,
     powers: &mut impl MapStore<TendermintAddress, Power>,
     validator_addr_pubkey: &mut impl MapStore<TendermintAddress, ValidatorPublicKey>,
+    delegation_info: &mut impl MapStore<XfrPublicKey, BTreeMap<TendermintAddress, Amount>>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
     if let Some(power) = powers.get_mut(&op.validator_address)? {
         // undelegate from validator
@@ -84,6 +85,13 @@ pub fn execute_undelegate<'a>(
                                 "there is no matching public key for this address".to_string(),
                             ));
                         };
+
+                    // update delegation_info
+                    if let Some(map) = delegation_info.get_mut(&op.delegator)? {
+                        if let Some(amount) = map.get_mut(&op.validator_address) {
+                            *amount = *amount - op.amount;
+                        }
+                    }
 
                     let validator_update = ValidatorUpdate {
                         pub_key,
