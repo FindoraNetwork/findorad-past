@@ -8,7 +8,6 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
-use libfindora::event;
 use libfindora::utxo::{
     GetOwnedUtxoReq, GetOwnedUtxoResp, Output, OutputId, OwnedOutput, UtxoTransacrion,
     ValidateTransaction,
@@ -17,6 +16,7 @@ use rand_chacha::ChaChaRng;
 use zei::{setup::PublicParams, xfr::sig::XfrPublicKey};
 
 pub mod calls;
+mod event;
 
 #[abcf::module(name = "utxo", version = 1, impl_version = "0.1.1", target_height = 0)]
 pub struct UtxoModule {

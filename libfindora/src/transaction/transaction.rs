@@ -19,6 +19,7 @@ use zei::{
     },
 };
 
+use crate::staking::TendermintAddress;
 use crate::{staking, transaction_capnp};
 
 use super::{Input, InputOperation, Memo, Output, OutputOperation};
@@ -139,6 +140,7 @@ impl abcf::module::FromBytes for Transaction {
         let mut outputs = Vec::new();
 
         for output in root.get_outputs().map_err(convert_capnp_error)?.iter() {
+            use transaction_capnp::delegate_data::validator;
             use transaction_capnp::output::operation;
             use transaction_capnp::validator_key;
 
@@ -157,25 +159,39 @@ impl abcf::module::FromBytes for Transaction {
                 operation::Which::Fee(_) => OutputOperation::Fee,
                 operation::Which::Delegate(a) => {
                     let reader = a.map_err(convert_capnp_error)?;
-                    let validator = reader.get_validator().map_err(convert_capnp_error)?;
-                    let key = match validator
-                        .get_key()
-                        .which()
-                        .map_err(convert_capnp_noinschema)?
-                    {
-                        validator_key::key::Which::Ed25519(a) => crypto::public_key::Sum::Ed25519(
-                            a.map_err(convert_capnp_error)?.to_vec(),
-                        ),
-                        validator_key::key::Which::Secp256k1(a) => {
-                            crypto::public_key::Sum::Secp256k1(
-                                a.map_err(convert_capnp_error)?.to_vec(),
-                            )
-                        }
-                    };
+                    let validator =
+                        match reader.get_validator().which().map_err(|e| {
+                            abcf::Error::ABCIApplicationError(90001, format!("{:?}", e))
+                        })? {
+                            validator::Which::None(_) => None,
+                            validator::Which::Some(b) => {
+                                let b_reader = b.map_err(convert_capnp_error)?;
+                                let key = match b_reader
+                                    .get_key()
+                                    .which()
+                                    .map_err(convert_capnp_noinschema)?
+                                {
+                                    validator_key::key::Which::Ed25519(a) => {
+                                        crypto::public_key::Sum::Ed25519(
+                                            a.map_err(convert_capnp_error)?.to_vec(),
+                                        )
+                                    }
+                                    validator_key::key::Which::Secp256k1(a) => {
+                                        crypto::public_key::Sum::Secp256k1(
+                                            a.map_err(convert_capnp_error)?.to_vec(),
+                                        )
+                                    }
+                                };
+                                Some(crypto::PublicKey { sum: Some(key) })
+                            }
+                        };
 
-                    let validator = crypto::PublicKey { sum: Some(key) };
+                    let address = reader.get_address().map_err(convert_capnp_error)?;
+
+                    let td_address = TendermintAddress::new_from_vec(&address.to_vec());
 
                     OutputOperation::Delegate(staking::Delegate {
+                        address: td_address,
                         validator,
                         memo: None,
                     })
@@ -513,10 +529,38 @@ impl ToBytes for Transaction {
                     OutputOperation::TransferAsset => operation.set_transfer_asset(()),
                     OutputOperation::Fee => operation.set_fee(()),
                     OutputOperation::Undelegate(a) => {
-                        set_validator!(operation, a, init_undelegate);
+                        // set_validator!(operation, a, init_undelegate);
+
+                        let mut undelegate = operation.init_undelegate();
+                        undelegate.reborrow().set_address(&a.address.to_byte());
                     }
                     OutputOperation::Delegate(a) => {
-                        set_validator!(operation, a, init_delegate);
+                        // set_validator!(operation, a, init_delegate);
+                        let mut delegation = operation.init_delegate();
+                        delegation.reborrow().set_address(&a.address.to_byte());
+
+                        let mut validator = delegation.init_validator();
+                        let mut key = validator.reborrow().init_some();
+                        let mut k = key.reborrow().init_key();
+                        if let Some(p) = &a.validator {
+                            if let Some(v) = &p.sum {
+                                match v {
+                                    crypto::public_key::Sum::Ed25519(v) => {
+                                        k.set_ed25519(v.as_ref());
+                                    }
+                                    crypto::public_key::Sum::Secp256k1(v) => {
+                                        k.set_secp256k1(v.as_ref());
+                                    }
+                                }
+                            } else {
+                                return Err(abcf::Error::ABCIApplicationError(
+                                    90006,
+                                    String::from("sum must be not null"),
+                                ));
+                            }
+                        } else {
+                            validator.set_none(());
+                        }
                     }
                     OutputOperation::ClaimReward(a) => {
                         set_validator!(operation, a, init_claim_reward);
