@@ -566,6 +566,7 @@ impl ToBytes for Transaction {
                         set_validator!(operation, a, init_claim_reward);
                     }
                     OutputOperation::TransferAccount(_) => {}
+                    OutputOperation::CallEVM(_) => {}
                 }
 
                 let mut amount = output.reborrow().get_amount();
