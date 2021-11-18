@@ -33,7 +33,7 @@ pub fn execute_undelegate<'a>(
         if let Some(p) = powers.get(&op.validator_address)? {
             power = *p;
         }
-        
+
         // undelegate from validator
         if let Some(delegate_map) = delegators.get_mut(&op.validator_address)? {
             if let Some(amount) = delegate_map.get_mut(&op.delegator) {

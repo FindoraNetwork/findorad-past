@@ -1,13 +1,13 @@
 use zei::xfr::structs::{AssetType, XfrAssetType, ASSET_TYPE_LENGTH};
 
+pub mod account;
 pub mod coinbase;
+pub mod evm;
 pub mod fee;
 pub mod rewards;
 pub mod staking;
 pub mod transaction;
 pub mod utxo;
-pub mod account;
-pub mod evm;
 
 pub const FRA_ASSET_TYPE: AssetType = AssetType([0; ASSET_TYPE_LENGTH]);
 pub const FRA_XFR_ASSET_TYPE: XfrAssetType = XfrAssetType::NonConfidential(FRA_ASSET_TYPE);

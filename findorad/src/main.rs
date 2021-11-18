@@ -1,8 +1,5 @@
 #![feature(generic_associated_types)]
 
-// pub mod coinbase;
-// pub mod utxo;
-
 use bs3::backend::SledBackend;
 use fm_coinbase::CoinbaseModule;
 use fm_staking::StakingModule;

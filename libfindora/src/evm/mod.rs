@@ -47,9 +47,6 @@ impl TryFrom<transaction::Transaction> for EvmTransaction {
 
         // TODO: check signature and match for ethereum memo.
 
-        Ok(EvmTransaction {
-            calls
-        })
+        Ok(EvmTransaction { calls })
     }
 }
-
