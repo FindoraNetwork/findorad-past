@@ -1,19 +1,25 @@
 use abcf::bs3::{DoubleKeyMapStore, MapStore, ValueStore};
-use evm::{backend::{Backend, Basic}, executor::stack::StackState};
+use ethereum::Log;
+use evm::{Transfer, backend::{Backend, Basic}, executor::stack::{StackState, StackSubstateMetadata}};
 use primitive_types::{H160, H256, U256};
 
 use crate::EVM_CHAIN_ID;
 
 use super::{basic::AccountBasic, chain::ChainInfo};
 
-pub struct State<'module> {
+pub struct State<'module, 'config> {
     pub chain_info: &'module dyn ValueStore<ChainInfo>,
     pub block_hashs: &'module dyn MapStore<U256, H256>,
-    pub account_basic: &'module dyn MapStore<H160, AccountBasic>,
-    pub account_storage: &'module dyn DoubleKeyMapStore<H160, H256, H256>,
+    pub account_basic: &'module mut dyn MapStore<H160, AccountBasic>,
+    pub account_storage: &'module mut dyn DoubleKeyMapStore<H160, H256, H256>,
+    pub substate: StackSubstateMetadata<'config>,
+
+    pub logs: Vec<Log>,
+    pub execute_result: bool,
+    pub transfers: Vec<Transfer>,
 }
 
-impl<'module> State<'module> {
+impl<'module, 'config> State<'module, 'config> {
     fn get_chain_info(&self) -> ChainInfo {
         let v = self
             .chain_info
@@ -24,7 +30,7 @@ impl<'module> State<'module> {
     }
 }
 
-impl<'module> Backend for State<'module> {
+impl<'module, 'config> Backend for State<'module, 'config> {
     fn gas_price(&self) -> U256 {
         let v = self.get_chain_info();
         v.gas_price
@@ -79,13 +85,17 @@ impl<'module> Backend for State<'module> {
     }
 
     fn exists(&self, address: H160) -> bool {
-        let result = self.account_basic.get(&address)
+        let result = self
+            .account_basic
+            .get(&address)
             .expect("Read EVM account basic from storge failed!");
         result.is_some()
     }
 
     fn code(&self, address: H160) -> Vec<u8> {
-        let result = self.account_basic.get(&address)
+        let result = self
+            .account_basic
+            .get(&address)
             .expect("Read EVM account basic from storge failed!");
         if let Some(v) = result {
             v.code.clone()
@@ -95,7 +105,9 @@ impl<'module> Backend for State<'module> {
     }
 
     fn storage(&self, address: H160, index: H256) -> H256 {
-        let result = self.account_storage.get(&address, &index)
+        let result = self
+            .account_storage
+            .get(&address, &index)
             .expect("Read EVM account storage from storge failed!");
 
         if let Some(v) = result {
@@ -106,7 +118,9 @@ impl<'module> Backend for State<'module> {
     }
 
     fn basic(&self, address: H160) -> Basic {
-        let result = self.account_basic.get(&address)
+        let result = self
+            .account_basic
+            .get(&address)
             .expect("Read EVM account basic from storge failed!");
 
         let nonce = if let Some(v) = result {
@@ -122,14 +136,137 @@ impl<'module> Backend for State<'module> {
     }
 
     fn original_storage(&self, address: H160, index: H256) -> Option<H256> {
-        let result = self.account_storage.get(&address, &index)
+        let result = self
+            .account_storage
+            .get(&address, &index)
             .expect("Read EVM account storage from storge failed!");
 
         result.map(|v| v.clone())
     }
 }
 
-impl<'config> StackState for State<'config> {
+impl<'module, 'config> StackState<'config> for State<'module, 'config> {
+    fn metadata(&self) -> &StackSubstateMetadata<'config> {
+        &self.substate
+    }
 
+    fn metadata_mut(&mut self) -> &mut StackSubstateMetadata<'config> {
+        &mut self.substate
+    }
+
+    fn enter(&mut self, gas_limit: u64, is_static: bool) {}
+
+    fn exit_commit(&mut self) -> Result<(), evm::ExitError> {
+        Ok(())
+    }
+
+    fn exit_revert(&mut self) -> Result<(), evm::ExitError> {
+        Ok(())
+    }
+
+    fn exit_discard(&mut self) -> Result<(), evm::ExitError> {
+        Ok(())
+    }
+
+    fn is_cold(&self, _address: H160) -> bool {
+        // No impl.
+        false
+    }
+
+    fn is_empty(&self, address: H160) -> bool {
+        let result = self.account_basic.get(&address)
+            .expect("Read EVM account basic from storge failed!");
+        if let Some(v) = result {
+            v.nonce == U256::zero() && v.code.len() == 0
+        } else {
+            true
+        }
+    }
+
+    fn is_storage_cold(&self, address: H160, key: H256) -> bool {
+        // no impl
+        false
+    }
+
+    fn deleted(&self, address: H160) -> bool {
+        // TODO: impl in substate
+        false
+    }
+
+    fn inc_nonce(&mut self, address: H160) {
+        let result = self.account_basic.get_mut(&address)
+            .expect("Read EVM account basic from storge failed!");
+
+        if let Some(v) = result {
+            v.nonce.saturating_add(1.into());
+        } else {
+            let basic = AccountBasic {
+                nonce: 1.into(),
+                code: Vec::new(),
+            };
+            self.account_basic.insert(address, basic).expect("Write EVM account basic to storage failed !");
+        }
+    }
+
+    fn set_code(&mut self, address: H160, code: Vec<u8>) {
+        let result = self.account_basic.get_mut(&address)
+            .expect("Read EVM account basic from storage failed!");
+
+        if let Some(v) = result {
+            v.code = code;
+        } else {
+            let basic = AccountBasic {
+                nonce: 0.into(),
+                code,
+            };
+            self.account_basic.insert(address, basic).expect("Write EVM account basic to storage failed !");
+        }
+    }
+
+    fn set_storage(&mut self, address: H160, key: H256, value: H256) {
+        let result = self.account_storage.get_mut(&address, &key)
+            .expect("Read EVM account storage from storage failed!");
+        if let Some(v) = result {
+            *v = value;
+        } else {
+            self.account_storage.insert(address, key, value).expect("Write EVM account basic to storage failed !");
+        }
+    }
+
+    fn set_deleted(&mut self, _address: H160) {
+        // TODO: impl in substate.
+    }
+
+    fn reset_storage(&mut self, _address: H160) {
+        // TODO: impl need bs3 support.
+    }
+
+    fn log(&mut self, address: H160, topics: Vec<H256>, data: Vec<u8>) {
+        self.logs.push(Log {
+            address, topics, data
+        })
+    }
+
+    fn transfer(&mut self, transfer: Transfer) -> Result<(), evm::ExitError> {
+        self.transfers.push(transfer);
+        Ok(())
+    }
+
+    fn touch(&mut self, address: H160) {
+        let result = self.account_basic.get(&address)
+            .expect("Read EVM account basic from storage failed!");
+
+        if let None = result {
+            let basic = AccountBasic {
+                nonce: 0.into(),
+                code: Vec::new(),
+            };
+            self.account_basic.insert(address, basic).expect("Write EVM account basic to storage failed !");
+        }
+    }
+
+    fn reset_balance(&mut self, _address: H160) {
+        // No impl.
+        // Beacuse our account is a ERC20.
+    }
 }
-
