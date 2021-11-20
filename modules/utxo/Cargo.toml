@@ -18,3 +18,4 @@ log = "0.4.14"
 serde_json = "1.0.68"
 serde = { version = "1.0", features = ["derive", "alloc"], default-features = false }
 base64 = "0.10"
+primitive-types = { version = "0.10.1", features = ["serde_no_std"] }

@@ -1,6 +1,7 @@
 use zei::xfr::structs::{AssetType, XfrAssetType, ASSET_TYPE_LENGTH};
 
 pub mod coinbase;
+pub mod error;
 pub mod fee;
 pub mod rewards;
 pub mod staking;

@@ -1,11 +1,11 @@
 use std::convert::TryFrom;
 
-use zei::xfr::{sig::XfrPublicKey, structs::XfrAmount};
+use zei::xfr::structs::XfrAmount;
 
 mod claim;
 pub use claim::Claim;
 
-use crate::{transaction, FRA_XFR_ASSET_TYPE};
+use crate::{transaction, utxo::Address, FRA_XFR_ASSET_TYPE};
 
 #[derive(Debug, Clone)]
 pub enum Operation {
@@ -14,7 +14,7 @@ pub enum Operation {
 
 #[derive(Debug, Clone)]
 pub struct RewardInfo {
-    pub delegator: XfrPublicKey,
+    pub delegator: Address,
     pub amount: u64,
     pub operation: Operation,
 }
@@ -39,14 +39,14 @@ impl TryFrom<&transaction::Transaction> for Transaction {
         for output in &tx.outputs {
             match &output.operation {
                 transaction::OutputOperation::ClaimReward(op) => {
-                    if output.core.asset_type != FRA_XFR_ASSET_TYPE {
+                    if output.core.asset != FRA_XFR_ASSET_TYPE {
                         return Err(abcf::Error::ABCIApplicationError(
                             90001,
                             String::from("Undelegate asset type must be FRA"),
                         ));
                     }
 
-                    let delegator = output.core.public_key.clone();
+                    let delegator = output.core.address.clone();
                     let amount = if let XfrAmount::NonConfidential(v) = output.core.amount {
                         v
                     } else {

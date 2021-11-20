@@ -6,5 +6,5 @@ use super::TendermintAddress;
 pub struct Delegate {
     pub address: TendermintAddress,
     pub validator: Option<crypto::PublicKey>,
-    pub memo: Option<String>,
+    pub memo: Option<Vec<u8>>,
 }

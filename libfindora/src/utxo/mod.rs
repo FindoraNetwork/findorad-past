@@ -6,3 +6,6 @@ pub use validate::ValidateTransaction;
 
 mod rpc;
 pub use rpc::{GetOwnedUtxoReq, GetOwnedUtxoResp, OwnedOutput};
+
+mod address;
+pub use address::{Address, FraAddress};

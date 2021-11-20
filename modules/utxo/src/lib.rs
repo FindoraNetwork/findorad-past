@@ -8,10 +8,7 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
-use libfindora::utxo::{
-    GetOwnedUtxoReq, GetOwnedUtxoResp, Output, OutputId, OwnedOutput, UtxoTransacrion,
-    ValidateTransaction,
-};
+use libfindora::utxo::{Address, GetOwnedUtxoReq, GetOwnedUtxoResp, Output, OutputId, OwnedOutput, UtxoTransacrion, ValidateTransaction};
 use rand_chacha::ChaChaRng;
 use zei::{setup::PublicParams, xfr::sig::XfrPublicKey};
 
@@ -25,7 +22,7 @@ pub struct UtxoModule {
     #[stateful]
     pub output_set: Map<OutputId, Output>,
     #[stateless]
-    pub owned_outputs: Map<XfrPublicKey, Vec<OutputId>>,
+    pub owned_outputs: Map<Address, Vec<OutputId>>,
 }
 
 #[abcf::rpcs]
@@ -102,7 +99,7 @@ impl Application for UtxoModule {
                             };
                             let output = args.output;
 
-                            let owner = output.core.public_key;
+                            let owner = output.address;
                             match context.stateless.owned_outputs.get_mut(&owner)? {
                                 Some(v) => {
                                     v.push(output_id.clone());

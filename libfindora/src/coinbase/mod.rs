@@ -6,11 +6,12 @@ use crate::{
 };
 
 mod rpc;
+use primitive_types::H512;
 pub use rpc::{GetAssetOwnerReq, GetAssetOwnerResp};
 
 #[derive(Debug, Default)]
 pub struct CoinbaseTransaction {
-    pub txid: Vec<u8>,
+    pub txid: H512,
     pub outputs: Vec<(u32, Output)>,
 }
 
@@ -31,10 +32,7 @@ impl TryFrom<&Transaction> for CoinbaseTransaction {
                             format!("convert index error, {}", e),
                         )
                     })?,
-                    Output {
-                        core: output.core.clone(),
-                        owner_memo: output.owner_memo.clone(),
-                    },
+                    output.core.clone(),
                 ))
             }
         }

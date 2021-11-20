@@ -1,24 +1,29 @@
 use std::convert::TryFrom;
 
 use crate::transaction::Transaction;
+use primitive_types::H512;
 use serde::{Deserialize, Serialize};
-use zei::xfr::structs::{AssetTypeAndAmountProof, BlindAssetRecord, OwnerMemo};
+use zei::xfr::structs::{AssetTypeAndAmountProof, OwnerMemo, XfrAmount, XfrAssetType};
+
+use super::Address;
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Input {
-    pub txid: Vec<u8>,
+    pub txid: H512,
     pub n: u32,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Output {
-    pub core: BlindAssetRecord,
+    pub amount: XfrAmount,
+    pub asset: XfrAssetType,
+    pub address: Address,
     pub owner_memo: Option<OwnerMemo>,
 }
 
 #[derive(Debug)]
 pub struct UtxoTransacrion {
-    pub txid: Vec<u8>,
+    pub txid: H512,
     pub inputs: Vec<Input>,
     pub outputs: Vec<Output>,
     pub proof: AssetTypeAndAmountProof,
@@ -27,7 +32,7 @@ pub struct UtxoTransacrion {
 impl Default for UtxoTransacrion {
     fn default() -> Self {
         UtxoTransacrion {
-            txid: Vec::new(),
+            txid: H512::zero(),
             inputs: Vec::new(),
             outputs: Vec::new(),
             proof: AssetTypeAndAmountProof::NoProof,
@@ -42,7 +47,7 @@ impl TryFrom<&Transaction> for UtxoTransacrion {
         let mut inputs = Vec::new();
 
         for input in &tx.inputs {
-            if input.txid == Vec::<u8>::new() {
+            if input.txid == H512::zero() {
                 inputs.push(Input {
                     txid: tx.txid.clone(),
                     n: input.n,
@@ -59,10 +64,7 @@ impl TryFrom<&Transaction> for UtxoTransacrion {
         let mut outputs = Vec::new();
 
         for output in &tx.outputs {
-            outputs.push(Output {
-                core: output.core.clone(),
-                owner_memo: output.owner_memo.clone(),
-            });
+            outputs.push(output.core.clone());
         }
 
         Ok(Self {

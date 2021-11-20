@@ -1,7 +1,6 @@
-use zei::xfr::structs::{BlindAssetRecord, OwnerMemo};
-
 use crate::rewards;
 use crate::staking;
+use crate::utxo;
 
 #[derive(Debug, Clone)]
 pub enum Operation {
@@ -13,9 +12,8 @@ pub enum Operation {
     Undelegate(staking::Undelegate),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Output {
-    pub core: BlindAssetRecord,
+    pub core: utxo::Output,
     pub operation: Operation,
-    pub owner_memo: Option<OwnerMemo>,
 }

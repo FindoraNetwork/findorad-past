@@ -1,8 +1,9 @@
 use abcf::manager::CallEntry;
 use libfindora::utxo::Output;
+use primitive_types::H512;
 
 pub struct ArgAddUtxo {
-    pub txid: Vec<u8>,
+    pub txid: H512,
     pub n: u32,
     pub output: Output,
 }
