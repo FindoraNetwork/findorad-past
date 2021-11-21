@@ -32,6 +32,9 @@ pub struct Command {
 
     #[clap(short = 'i', long, group = "account_info")]
     account: Option<usize>,
+
+    #[clap(long)]
+    fra: bool,
 }
 
 impl Command {
@@ -57,7 +60,10 @@ impl Command {
 
         let mut prng = ChaChaRng::from_entropy();
         let mut asset_type = [0u8; ASSET_TYPE_LENGTH];
-        prng.fill_bytes(&mut asset_type);
+
+        if !self.fra {
+            prng.fill_bytes(&mut asset_type);
+        }
 
         println!("Asset Type is {}", base64::encode(&asset_type));
 

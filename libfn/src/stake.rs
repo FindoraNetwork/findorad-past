@@ -1,6 +1,7 @@
+use abcf::tm_protos::crypto;
 use abcf_sdk::providers::HttpGetProvider;
 use fm_utxo::utxo_module_rpc::get_owned_outputs;
-use libfindora::staking::{TendermintAddress, BLACK_HOLE_PUBKEY_STAKING};
+use libfindora::staking::{Delegate, TendermintAddress};
 use libfindora::utxo::GetOwnedUtxoReq;
 use libfindora::FRA_ASSET_TYPE;
 use rand_core::{CryptoRng, RngCore};
@@ -14,11 +15,35 @@ use zei::xfr::{
     structs::{AssetRecord, AssetRecordTemplate},
 };
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum TdPubkeyType {
+    PubKeyEd25519,
+    PubKeySecp256k1,
+}
+
+impl TdPubkeyType {
+    pub fn from_str(s: &str) -> Result<Self> {
+        return match s {
+            "PubKeyEd25519" => Ok(Self::PubKeyEd25519),
+            "PubKeySecp256k1" => Ok(Self::PubKeySecp256k1),
+            _ => Err(eg!("not match")),
+        };
+    }
+
+    pub fn to_sum(&self, bytes: Vec<u8>) -> Option<crypto::public_key::Sum> {
+        return match self {
+            TdPubkeyType::PubKeyEd25519 => Some(crypto::public_key::Sum::Ed25519(bytes)),
+            TdPubkeyType::PubKeySecp256k1 => Some(crypto::public_key::Sum::Secp256k1(bytes)),
+        };
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DelegationEntry {
     pub keypair: XfrKeyPair,
     pub amount: u64,
     pub validator_address: TendermintAddress,
+    pub validator_ty_pubkey: Option<(TdPubkeyType, Vec<u8>)>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -26,6 +51,38 @@ pub struct UnDelegationEntry {
     pub keypair: XfrKeyPair,
     pub amount: u64,
     pub validator_address: TendermintAddress,
+}
+
+impl DelegationEntry {
+    pub fn to_output_asset_record<R: CryptoRng + RngCore>(
+        &self,
+        prng: &mut R,
+    ) -> Result<(AssetRecord, Delegate)> {
+        let asset_record_type = AssetRecordType::from_flags(false, false);
+
+        let template = AssetRecordTemplate::with_no_asset_tracing(
+            self.amount,
+            FRA_ASSET_TYPE,
+            asset_record_type,
+            self.keypair.get_pk(),
+        );
+
+        let pubkey = if let Some((ty, bytes)) = &self.validator_ty_pubkey {
+            let sum = ty.to_sum(bytes.clone());
+            Some(crypto::PublicKey { sum })
+        } else {
+            None
+        };
+
+        let delegate = Delegate {
+            address: self.validator_address.clone(),
+            validator: pubkey,
+            memo: None,
+        };
+
+        let ar = AssetRecord::from_template_no_identity_tracing(prng, &template)?;
+        Ok((ar, delegate))
+    }
 }
 
 impl UnDelegationEntry {
@@ -98,49 +155,24 @@ pub async fn delegation_build_input_asset_record_and_id<R: CryptoRng + RngCore>(
         }
     }
 
-    // amount to be pledged for each public key
-    let mut to_matix: BTreeMap<XfrPublicKey, u64> = BTreeMap::new();
-
     for entry in entries {
-        let key = entry.keypair.get_pk();
-
-        if let Some(v) = to_matix.get_mut(&key) {
-            *v += entry.amount;
-        } else {
-            to_matix.insert(key, entry.amount);
-        }
-
-        let asset_record_type = AssetRecordType::from_flags(false, false);
-
-        let template = AssetRecordTemplate::with_no_asset_tracing(
-            entry.amount,
-            FRA_ASSET_TYPE,
-            asset_record_type,
-            BLACK_HOLE_PUBKEY_STAKING.clone(),
-        );
-
-        let asset_record = AssetRecord::from_template_no_identity_tracing(prng, &template)?;
-        outputs.push(asset_record);
-    }
-
-    for (k, v) in to_matix {
-        if let Some(amount) = from_matix.get(&k) {
-            if amount < &v {
-                // No enough amount.
-                return Err(eg!("target amount isn't enough"));
+        let pk = entry.keypair.get_pk();
+        let pk_base64 = base64::encode(&pk.as_bytes());
+        if let Some(a) = from_matix.get(&pk) {
+            if a < &entry.amount {
+                return Err(eg!(format!("target amount isn't enough:{}", pk_base64)));
             } else {
                 let template = AssetRecordTemplate::with_no_asset_tracing(
-                    amount - v,
+                    a - entry.amount,
                     FRA_ASSET_TYPE,
                     AssetRecordType::NonConfidentialAmount_NonConfidentialAssetType,
-                    k,
+                    pk.clone(),
                 );
-
                 let asset_record = AssetRecord::from_template_no_identity_tracing(prng, &template)?;
                 outputs.push(asset_record);
 
                 for (keypair, output_id, open_asset_record) in &open_input {
-                    if open_asset_record.blind_asset_record.public_key == k {
+                    if open_asset_record.blind_asset_record.public_key == pk {
                         let asset_record = AssetRecord::from_open_asset_record_no_asset_tracing(
                             open_asset_record.clone(),
                         );
@@ -155,7 +187,7 @@ pub async fn delegation_build_input_asset_record_and_id<R: CryptoRng + RngCore>(
                 }
             }
         } else {
-            return Err(eg!("no xfr asset for this user"));
+            return Err(eg!(format!("no xfr asset for this user:{}", pk_base64)));
         }
     }
 

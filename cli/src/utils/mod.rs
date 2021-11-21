@@ -1,6 +1,5 @@
 pub mod obj;
 
-use abcf_sdk::jsonrpc::Response;
 use std::collections::BTreeMap;
 
 use abcf_sdk::providers::{HttpGetProvider, Provider};
@@ -54,50 +53,52 @@ pub async fn query_validators() -> Result<()> {
 
     loop {
         let req = serde_json::to_value(&params).map_err(|e| eg!(e.to_string()))?;
-        let r = provider
-            .request::<Value, Response<Value>>("validators", &req)
+        let r: Option<Value> = provider
+            .request("validators", &req)
             .await
             .map_err(|e| eg!(format!("{:?}", e)))?;
 
         if let Some(resp) = r {
-            if let Some(result) = resp.result {
-                if let Some(map) = result.as_object() {
-                    // safe
-                    let c = map
-                        .get("count")
-                        .unwrap()
-                        .as_str()
-                        .unwrap()
-                        .parse::<u64>()
-                        .unwrap();
-                    // safe
-                    let t = map
-                        .get("total")
-                        .unwrap()
-                        .as_str()
-                        .unwrap()
-                        .parse::<u64>()
-                        .unwrap();
+            if let Some(map) = resp.as_object() {
+                // safe
+                let c = map
+                    .get("count")
+                    .unwrap()
+                    .as_str()
+                    .unwrap()
+                    .parse::<u64>()
+                    .unwrap();
+                // safe
+                let t = map
+                    .get("total")
+                    .unwrap()
+                    .as_str()
+                    .unwrap()
+                    .parse::<u64>()
+                    .unwrap();
 
-                    let list = map.get("validators").unwrap().as_array().unwrap();
+                let list = map.get("validators").unwrap().as_array().unwrap();
 
-                    for v in list.iter() {
-                        let qv = serde_json::from_value::<QueryValidator>(v.clone()).unwrap();
-                        qvs.validators.push(qv);
-                    }
-
-                    if t > c {
-                        // safe
-                        let page = params.get_mut("page").unwrap();
-                        let mut p = page.as_u64().unwrap();
-                        p = p + 1;
-                        *page = json!(p);
-                    } else {
-                        qvs.total = t;
-                        break;
-                    }
+                for v in list.iter() {
+                    let qv = serde_json::from_value::<QueryValidator>(v.clone()).unwrap();
+                    qvs.validators.push(qv);
                 }
+
+                if t > c {
+                    // safe
+                    let page = params.get_mut("page").unwrap();
+                    let mut p = page.as_u64().unwrap();
+                    p = p + 1;
+                    *page = json!(p);
+                } else {
+                    qvs.total = t;
+                    break;
+                }
+            } else {
+                break;
             }
+        } else {
+            break;
         }
     }
 

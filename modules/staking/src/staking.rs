@@ -85,11 +85,15 @@ impl StakingModule {
                     return error.into();
                 }
                 Ok(v) => match v {
-                    None => {}
+                    None => {
+                        let error: abcf::Error =
+                            abcf::Error::RPCApplicationError(1111, "none".to_string());
+                        return error.into();
+                    }
                     Some(map) => {
                         for (address, amount) in map.iter() {
                             if let Ok(Some(power)) = context.stateful.powers.get(address) {
-                                let address_base64 = base64::encode(&address.to_byte());
+                                let address_base64 = hex::encode(address.to_byte());
                                 let info = GDIEntry {
                                     validator: address_base64,
                                     amount: *amount,

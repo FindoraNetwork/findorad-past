@@ -13,7 +13,7 @@ use libfindora::staking::Undelegate;
 mod stake;
 mod transfer;
 mod wallet;
-pub use stake::{DelegationEntry, UnDelegationEntry};
+pub use stake::{DelegationEntry, TdPubkeyType, UnDelegationEntry};
 
 pub use wallet::AccountEntry;
 
@@ -59,7 +59,12 @@ pub async fn build_transaction<R: CryptoRng + RngCore>(
                 transfer_entry.push(e);
             }
             Entry::Delegation(e) => {
-                delegation_entry.push(e);
+                // delegator -> black
+                delegation_entry.push(e.clone());
+                // add delegation output
+                let output = e.to_output_asset_record(prng)?;
+                output_ids.push(OutputOperation::Delegate(output.1));
+                outputs.push(output.0);
             }
             Entry::UnDelegation(e) => {
                 keypairs.push(e.keypair.clone());
