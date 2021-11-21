@@ -30,6 +30,19 @@ impl Output {
             asset_type: self.asset,
         }
     }
+
+    pub fn from_blind_asset_record(
+        ar: BlindAssetRecord,
+        address: Address,
+        owner_memo: Option<OwnerMemo>,
+    ) -> Self {
+        Self {
+            amount: ar.amount,
+            asset: ar.asset_type,
+            address,
+            owner_memo,
+        }
+    }
 }
 
 #[derive(Debug)]

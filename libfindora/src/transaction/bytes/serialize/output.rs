@@ -24,7 +24,7 @@ pub fn build_output(output: &Output, builder: output::Builder) -> abcf::Result<(
 
                 match a.public_key {
                     Some(key) => builder.set_some(key.zei_to_bytes().as_ref()),
-                    None => builder.set_none(())
+                    None => builder.set_none(()),
                 }
             }
         }

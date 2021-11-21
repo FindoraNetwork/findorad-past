@@ -1,4 +1,8 @@
-use libfindora::transaction::{Input, InputOperation, Output, OutputOperation, Transaction};
+use libfindora::{
+    transaction::{Input, InputOperation, Output, OutputOperation, Transaction},
+    utxo,
+};
+use primitive_types::H512;
 use rand_core::{CryptoRng, RngCore};
 use ruc::*;
 use serde::{Deserialize, Serialize};
@@ -29,6 +33,7 @@ pub async fn build_transaction<R: CryptoRng + RngCore>(
     let mut inputs = Vec::new();
     let mut output_ids = Vec::new();
     let mut outputs = Vec::new();
+    let mut output_pks = Vec::new();
     let mut keypairs = Vec::new();
 
     let mut transfer_entry = Vec::new();
@@ -39,8 +44,9 @@ pub async fn build_transaction<R: CryptoRng + RngCore>(
         match entry {
             Entry::Issue(e) => {
                 keypairs.push(e.keypair.clone());
+                output_pks.push(e.keypair.get_pk_ref().clone().into());
                 let output = e.to_output_asset_record(prng)?;
-                input_ids.push((Vec::new(), index, InputOperation::IssueAsset));
+                input_ids.push((H512::zero(), index, InputOperation::IssueAsset));
                 output_ids.push(OutputOperation::IssueAsset);
                 inputs.push(output.clone());
                 outputs.push(output);
@@ -62,7 +68,8 @@ pub async fn build_transaction<R: CryptoRng + RngCore>(
 
     for output in ios.1 {
         output_ids.push(OutputOperation::TransferAsset);
-        outputs.push(output);
+        outputs.push(output.0);
+        output_pks.push(output.1);
     }
 
     log::debug!("Inputs is : {:?}", inputs);
@@ -85,15 +92,20 @@ pub async fn build_transaction<R: CryptoRng + RngCore>(
         let operation = &output_ids[i];
         let owner_memo = &zei_body.owners_memos[i];
         let core = &zei_body.outputs[i];
+        let address = &output_pks[i];
         tx_outputs.push(Output {
-            core: core.clone(),
+            core: utxo::Output {
+                address: address.clone(),
+                amount: core.amount.clone(),
+                asset: core.asset_type.clone(),
+                owner_memo: owner_memo.clone(),
+            },
             operation: operation.clone(),
-            owner_memo: owner_memo.clone(),
         });
     }
 
     let mut tx = Transaction {
-        txid: Vec::new(),
+        txid: H512::zero(),
         inputs: tx_inputs,
         outputs: tx_outputs,
         proof: zei_body.proofs.asset_type_and_amount_proof,

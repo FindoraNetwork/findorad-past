@@ -1,12 +1,13 @@
 use abcf_sdk::providers::HttpGetProvider;
 use fm_utxo::utxo_module_rpc::get_owned_outputs;
 use libfindora::utxo::{Address, GetOwnedUtxoReq};
+use primitive_types::H512;
 use rand_core::{CryptoRng, RngCore};
 use ruc::*;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use zei::xfr::asset_record::{open_blind_asset_record, AssetRecordType};
-use zei::xfr::structs::AssetType;
+use zei::xfr::structs::{AssetType, BlindAssetRecord};
 use zei::xfr::{
     sig::{XfrKeyPair, XfrPublicKey},
     structs::{AssetRecord, AssetRecordTemplate},
@@ -29,11 +30,21 @@ impl TransferEntry {
     ) -> Result<AssetRecord> {
         let asset_record_type = AssetRecordType::from_flags(self.confidential_amount, false);
 
+        let to = match self.to {
+            // If to ETH address, It only a placeholder to fit zei.
+            // We need a zeilite.
+            Address::Eth(e) => self.from.get_pk_ref().clone(),
+            Address::Fra(e) => match e.public_key {
+                Some(pk) => pk,
+                None => return Err(eg!("If transfer to FRA address, target public key must be set.")),
+            }
+        };
+
         let template = AssetRecordTemplate::with_no_asset_tracing(
             self.amount,
             self.asset_type,
             asset_record_type,
-            self.to,
+            to,
         );
 
         AssetRecord::from_template_no_identity_tracing(prng, &template)
@@ -44,8 +55,8 @@ pub async fn build_input_asset_record_and_id<R: CryptoRng + RngCore>(
     prng: &mut R,
     entries: Vec<TransferEntry>,
 ) -> Result<(
-    Vec<(XfrKeyPair, Vec<u8>, u32, AssetRecord)>,
-    Vec<AssetRecord>,
+    Vec<(XfrKeyPair, H512, u32, AssetRecord)>,
+    Vec<(AssetRecord, Address)>,
 )> {
     let mut inputs = Vec::new();
     let mut outputs = Vec::new();
@@ -56,7 +67,7 @@ pub async fn build_input_asset_record_and_id<R: CryptoRng + RngCore>(
     let wallets: Vec<XfrKeyPair> = entries.iter().map(|e| e.from.clone()).collect();
 
     let params = GetOwnedUtxoReq {
-        owners: wallets.iter().map(|w| w.get_pk()).collect(),
+        owners: wallets.iter().map(|w| w.get_pk().into()).collect(),
     };
 
     let provider = HttpGetProvider {};
@@ -73,7 +84,12 @@ pub async fn build_input_asset_record_and_id<R: CryptoRng + RngCore>(
         let output = oai.1.output;
         let output_id = oai.1.output_id;
 
-        let open_asset_record = open_blind_asset_record(&output.core, &output.owner_memo, keypair)?;
+        let core = BlindAssetRecord {
+            amount: output.amount.clone(),
+            asset_type: output.asset.clone(),
+        };
+
+        let open_asset_record = open_blind_asset_record(&core, &output.owner_memo, keypair)?;
 
         open_input.push((keypair.clone(), output_id, open_asset_record.clone()));
 
