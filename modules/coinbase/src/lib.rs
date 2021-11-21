@@ -9,10 +9,11 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
-use libfindora::{coinbase::{CoinbaseTransaction, GetAssetOwnerReq, GetAssetOwnerResp}, utxo::Address};
-use zei::xfr::{
-    structs::{AssetType, XfrAssetType},
+use libfindora::{
+    coinbase::{CoinbaseTransaction, GetAssetOwnerReq, GetAssetOwnerResp},
+    utxo::Address,
 };
+use zei::xfr::structs::{AssetType, XfrAssetType};
 
 #[abcf::module(
     name = "coinbase",

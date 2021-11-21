@@ -7,8 +7,11 @@ use abcf::{
     tm_protos::abci::ValidatorUpdate,
     Error,
 };
-use libfindora::{staking::voting::{Amount, Power}, utxo::Address};
 use libfindora::staking::TendermintAddress;
+use libfindora::{
+    staking::voting::{Amount, Power},
+    utxo::Address,
+};
 use std::collections::BTreeMap;
 
 /// un-delegate operation

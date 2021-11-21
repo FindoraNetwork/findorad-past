@@ -19,7 +19,13 @@ pub fn build_output(output: &Output, builder: output::Builder) -> abcf::Result<(
             Address::Fra(a) => {
                 let mut builder = builder.init_fra();
                 builder.set_address(a.address.0.as_ref());
-                builder.set_public_key(a.public_key.zei_to_bytes().as_ref());
+
+                let mut builder = builder.init_public_key();
+
+                match a.public_key {
+                    Some(key) => builder.set_some(key.zei_to_bytes().as_ref()),
+                    None => builder.set_none(())
+                }
             }
         }
     }

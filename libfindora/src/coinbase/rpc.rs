@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use zei::xfr::{structs::AssetType};
+use zei::xfr::structs::AssetType;
 
 use crate::utxo::Address;
 

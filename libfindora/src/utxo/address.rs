@@ -6,7 +6,7 @@ use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrPublicKey};
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, PartialOrd, Ord)]
 pub struct FraAddress {
     pub address: H160,
-    pub public_key: XfrPublicKey,
+    pub public_key: Option<XfrPublicKey>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, PartialOrd, Ord)]
@@ -30,8 +30,7 @@ impl From<XfrPublicKey> for Address {
         let address = &result[0..20];
         Address::Fra(FraAddress {
             address: H160(address.try_into().expect("")),
-            public_key
+            public_key: Some(public_key),
         })
     }
 }
-

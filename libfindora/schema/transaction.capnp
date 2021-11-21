@@ -53,7 +53,10 @@ struct ClaimData {
 
 struct FraAddress {
     address @0: Data;
-    publicKey @1: Data;
+    publicKey :union {
+        none @1: Void;
+        some @2: Data;
+    }
 }
 
 struct Output {

@@ -19,3 +19,4 @@ ed25519-dalek-bip32 = { git = "https://github.com/FindoraNetwork/ed25519-dalek-b
 bip0039 = "0.8.0"
 bech32 = "0.8.1"
 base64 = "0.10"
+primitive-types = { version = "0.10.1", features = ["serde_no_std"] }

@@ -47,15 +47,20 @@ pub fn penalty_amount_power<'a>(
 ) {
     for (validator, bk) in penalty_list.iter() {
         // let v_addr = TendermintAddress::new_from_vec(&validator.address);
-        let inner = validator.address.as_slice().try_into().expect("Tendermint error");
+        let inner = validator
+            .address
+            .as_slice()
+            .try_into()
+            .expect("Tendermint error");
         let v_addr = TendermintAddress(inner);
 
-        let v_xfr_pk = if let Some(pub_key) = validator_staker.get(&v_addr).expect("read storage error.") {
-            pub_key
-        } else {
-            log::error!("there is no matching xfr pubkey for this address");
-            return;
-        };
+        let v_xfr_pk =
+            if let Some(pub_key) = validator_staker.get(&v_addr).expect("read storage error.") {
+                pub_key
+            } else {
+                log::error!("there is no matching xfr pubkey for this address");
+                return;
+            };
 
         let pr = bk.penalty_rate();
         // penalty amount
@@ -70,7 +75,10 @@ pub fn penalty_amount_power<'a>(
         }
 
         // penalize the total pledge amount of this verifier
-        if let Some(delegation_amount) = delegation_amount.get_mut(&*v_xfr_pk).expect("read storage error.") {
+        if let Some(delegation_amount) = delegation_amount
+            .get_mut(&*v_xfr_pk)
+            .expect("read storage error.")
+        {
             *delegation_amount = delegation_amount.saturating_sub(pa);
         }
 

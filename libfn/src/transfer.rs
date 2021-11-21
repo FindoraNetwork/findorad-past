@@ -1,10 +1,10 @@
-use std::collections::BTreeMap;
 use abcf_sdk::providers::HttpGetProvider;
 use fm_utxo::utxo_module_rpc::get_owned_outputs;
-use libfindora::utxo::GetOwnedUtxoReq;
+use libfindora::utxo::{Address, GetOwnedUtxoReq};
 use rand_core::{CryptoRng, RngCore};
 use ruc::*;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use zei::xfr::asset_record::{open_blind_asset_record, AssetRecordType};
 use zei::xfr::structs::AssetType;
 use zei::xfr::{
@@ -15,7 +15,7 @@ use zei::xfr::{
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TransferEntry {
     pub from: XfrKeyPair,
-    pub to: XfrPublicKey,
+    pub to: Address,
     pub amount: u64,
     pub asset_type: AssetType,
     pub confidential_amount: bool,

@@ -14,10 +14,13 @@ use abcf::{
     tm_protos::abci::ValidatorUpdate,
     Error,
 };
-use libfindora::{staking::{
-    voting::{Amount, Power, MAX_POWER_PERCENT_PER_VALIDATOR, MAX_TOTAL_POWER},
-    Operation, StakingInfo, TendermintAddress,
-}, utxo::Address};
+use libfindora::{
+    staking::{
+        voting::{Amount, Power, MAX_POWER_PERCENT_PER_VALIDATOR, MAX_TOTAL_POWER},
+        Operation, StakingInfo, TendermintAddress,
+    },
+    utxo::Address,
+};
 use std::collections::BTreeMap;
 
 pub fn execute_staking(

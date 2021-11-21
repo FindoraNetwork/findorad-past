@@ -10,10 +10,13 @@ use abcf::{
     tm_protos::abci::ValidatorUpdate,
     Error,
 };
-use libfindora::{staking::voting::{
-    Amount, Power, MAX_DELEGATION_AMOUNT, MIN_DELEGATION_AMOUNT, STAKING_VALIDATOR_MIN_POWER,
-}, utxo::Address};
 use libfindora::staking::TendermintAddress;
+use libfindora::{
+    staking::voting::{
+        Amount, Power, MAX_DELEGATION_AMOUNT, MIN_DELEGATION_AMOUNT, STAKING_VALIDATOR_MIN_POWER,
+    },
+    utxo::Address,
+};
 use std::collections::BTreeMap;
 
 /// delegation operation
