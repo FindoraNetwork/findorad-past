@@ -194,6 +194,14 @@ impl abcf::module::FromBytes for Transaction {
                         memo: None,
                     })
                 }
+                operation::Which::Undelegate(a) => {
+                    let reader = a.map_err(convert_capnp_error)?;
+                    let address = reader.get_address().map_err(convert_capnp_error)?;
+                    let td_address = TendermintAddress::new_from_vec(&address.to_vec());
+                    OutputOperation::Undelegate(staking::Undelegate {
+                        address: td_address,
+                    })
+                }
                 _ => OutputOperation::IssueAsset,
             };
 

@@ -8,19 +8,8 @@ pub mod rpc;
 pub mod voting;
 
 use crate::{transaction, FRA_XFR_ASSET_TYPE};
-use lazy_static::lazy_static;
-use ruc::{pnk, RucResult};
 use std::convert::TryFrom;
-use zei::{
-    serialization::ZeiFromToBytes,
-    xfr::{sig::XfrPublicKey, structs::XfrAmount},
-};
-
-lazy_static! {
-    pub static ref BLACK_HOLE_PUBKEY_STAKING: XfrPublicKey = pnk!(XfrPublicKey::zei_from_bytes(
-        &[1; ed25519_dalek::PUBLIC_KEY_LENGTH][..]
-    ));
-}
+use zei::xfr::{sig::XfrPublicKey, structs::XfrAmount};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TendermintAddress([u8; 20]);
