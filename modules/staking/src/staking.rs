@@ -16,8 +16,8 @@ use libfindora::staking::{
     self,
     voting::{Amount, Power},
 };
+use libfindora::utxo::Address;
 use std::{collections::BTreeMap, mem};
-use zei::xfr::sig::XfrPublicKey;
 
 #[abcf::module(
     name = "staking",
@@ -36,7 +36,7 @@ pub struct StakingModule {
     pub vote_updaters: Vec<ValidatorUpdate>,
 
     #[stateful]
-    pub validator_staker: Map<TendermintAddress, XfrPublicKey>,
+    pub validator_staker: Map<TendermintAddress, Address>,
 
     /// Global delegation amount.
     #[stateful]
@@ -44,11 +44,11 @@ pub struct StakingModule {
 
     /// Delegation amount by wallet address.
     #[stateful]
-    pub delegation_amount: Map<XfrPublicKey, Amount>,
+    pub delegation_amount: Map<Address, Amount>,
 
     /// Who delegate to which validator.
     #[stateful]
-    pub delegators: Map<TendermintAddress, BTreeMap<XfrPublicKey, Amount>>,
+    pub delegators: Map<TendermintAddress, BTreeMap<Address, Amount>>,
 
     /// TendermintAddress to validatorPublicKey
     #[stateful]
@@ -80,23 +80,12 @@ impl Application for StakingModule {
         _context: &mut AContext<Stateless<Self>, Stateful<Self>>,
         _req: &RequestBeginBlock,
     ) {
-        let mut penalty_list = vec![];
+        let mut penalty_list = Vec::new();
 
         // get the list of validators to be punished
         for eve in _req.byzantine_validators.iter() {
             if let Some(validator) = &eve.validator {
                 let bk = ByzantineKind::from_evidence_type(eve.r#type);
-                if bk.is_err() {
-                    log::debug!(
-                        "height: {}, type: {}, msg: {}",
-                        eve.height,
-                        eve.r#type,
-                        bk.unwrap_err()
-                    );
-                    return;
-                }
-                let bk = bk.unwrap();
-
                 penalty_list.push((validator.clone(), bk));
             }
         }

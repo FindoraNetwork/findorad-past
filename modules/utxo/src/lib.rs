@@ -13,10 +13,10 @@ use libfindora::utxo::{
     ValidateTransaction,
 };
 use rand_chacha::ChaChaRng;
-use zei::{setup::PublicParams, xfr::sig::XfrPublicKey};
+use zei::setup::PublicParams;
 
 pub mod calls;
-mod event;
+// mod event;
 
 #[abcf::module(name = "utxo", version = 1, impl_version = "0.1.1", target_height = 0)]
 pub struct UtxoModule {
@@ -102,7 +102,7 @@ impl Application for UtxoModule {
                             };
                             let output = args.output;
 
-                            let owner = output.address;
+                            let owner = output.address.clone();
                             match context.stateless.owned_outputs.get_mut(&owner)? {
                                 Some(v) => {
                                     v.push(output_id.clone());
@@ -132,7 +132,7 @@ impl Application for UtxoModule {
         for input in &tx.inputs {
             let record = context.stateful.output_set.remove(input)?;
             if let Some(r) = record {
-                validate_tx.inputs.push(r.core.clone());
+                validate_tx.inputs.push(r.clone().to_blind_asset_record());
                 if let Some(owned_outputs) = context.stateless.owned_outputs.get_mut(&r.address)? {
                     if let Some(index) = owned_outputs
                         .iter()
@@ -150,7 +150,9 @@ impl Application for UtxoModule {
         }
 
         for output in &tx.outputs {
-            validate_tx.outputs.push(output.core.clone());
+            validate_tx
+                .outputs
+                .push(output.clone().to_blind_asset_record());
         }
 
         let result = validate_tx.verify(&mut self.prng, &mut self.params);
@@ -174,7 +176,7 @@ impl Application for UtxoModule {
                         .output_set
                         .insert(output_id.clone(), output.clone())?;
 
-                    let owner = output.core.public_key;
+                    let owner = output.address.clone();
                     match context.stateless.owned_outputs.get_mut(&owner)? {
                         Some(v) => {
                             v.push(output_id);
@@ -193,16 +195,16 @@ impl Application for UtxoModule {
             }
         }
 
-        // 1. recv events
-        for input in validate_tx.inputs {
-            let e = event::SendEvent::new_from_record(&input);
-            context.events.emmit(e)?;
-        }
-        // 2. send events
-        for output in validate_tx.outputs {
-            let e = event::RecvEvent::new_from_record(&output);
-            context.events.emmit(e)?;
-        }
+        //         // 1. recv events
+        // for input in validate_tx.inputs {
+        //     let e = event::SendEvent::new_from_record(&input);
+        //     context.events.emmit(e)?;
+        // }
+        // // 2. send events
+        // for output in validate_tx.outputs {
+        //     let e = event::RecvEvent::new_from_record(&output);
+        //     context.events.emmit(e)?;
+        //         }
 
         Ok(Default::default())
     }

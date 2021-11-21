@@ -10,30 +10,29 @@ use abcf::{
     tm_protos::abci::ValidatorUpdate,
     Error,
 };
-use libfindora::staking::voting::{
+use libfindora::{staking::voting::{
     Amount, Power, MAX_DELEGATION_AMOUNT, MIN_DELEGATION_AMOUNT, STAKING_VALIDATOR_MIN_POWER,
-};
+}, utxo::Address};
 use libfindora::staking::TendermintAddress;
 use std::collections::BTreeMap;
-use zei::xfr::sig::XfrPublicKey;
 
 /// delegation operation
 pub struct DelegateOp {
-    pub delegator: XfrPublicKey,
+    pub delegator: Address,
     pub validator_address: TendermintAddress,
     pub validator_pubkey: Option<ValidatorPublicKey>,
     pub amount: Amount,
-    pub memo: Option<String>,
+    pub memo: Option<Vec<u8>>,
 }
 
 /// execute delegate operation
 pub fn execute_delegate<'a>(
     op: DelegateOp,
     global_power: &mut impl ValueStore<Power>,
-    delegation_amount: &mut impl MapStore<XfrPublicKey, Amount>,
-    delegators: &mut impl MapStore<TendermintAddress, BTreeMap<XfrPublicKey, Amount>>,
+    delegation_amount: &mut impl MapStore<Address, Amount>,
+    delegators: &mut impl MapStore<TendermintAddress, BTreeMap<Address, Amount>>,
     powers: &mut impl MapStore<TendermintAddress, Power>,
-    validator_staker: &mut impl MapStore<TendermintAddress, XfrPublicKey>,
+    validator_staker: &mut impl MapStore<TendermintAddress, Address>,
     validator_addr_pubkey: &mut impl MapStore<TendermintAddress, ValidatorPublicKey>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
     // op.validator exists && has done self-delegate operation
@@ -85,7 +84,7 @@ pub fn execute_delegate<'a>(
                 } else {
                     // add new delegation amount
                     actual_amount = op.amount;
-                    delegation_amount.insert(op.delegator, op.amount)?;
+                    delegation_amount.insert(op.delegator.clone(), op.amount)?;
                 }
 
                 // update delegators

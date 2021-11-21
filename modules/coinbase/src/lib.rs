@@ -9,9 +9,8 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
-use libfindora::coinbase::{CoinbaseTransaction, GetAssetOwnerReq, GetAssetOwnerResp};
+use libfindora::{coinbase::{CoinbaseTransaction, GetAssetOwnerReq, GetAssetOwnerResp}, utxo::Address};
 use zei::xfr::{
-    sig::XfrPublicKey,
     structs::{AssetType, XfrAssetType},
 };
 
@@ -23,7 +22,7 @@ use zei::xfr::{
 )]
 pub struct CoinbaseModule {
     #[stateful]
-    pub asset_owner: Map<AssetType, XfrPublicKey>,
+    pub asset_owner: Map<AssetType, Address>,
     // Only a placeholder, will remove when abcf update.
     #[stateless]
     pub sl_value: Value<u32>,
@@ -74,8 +73,8 @@ impl Application for CoinbaseModule {
         println!("{:?}", req.tx);
         for output in &req.tx.outputs {
             log::debug!("Receive coinbase tx: {:?}", &output);
-            let owner: XfrPublicKey = output.1.core.public_key;
-            let asset_type = match output.1.core.asset_type {
+            let owner = output.1.address.clone();
+            let asset_type = match output.1.asset {
                 XfrAssetType::Confidential(_) => {
                     return Err(abcf::Error::ABCIApplicationError(
                         90001,

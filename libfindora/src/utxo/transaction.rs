@@ -24,11 +24,11 @@ pub struct Output {
 }
 
 impl Output {
-    pub fn to_blind_asset_record(self) -> Option<BlindAssetRecord> {
-        Some(BlindAssetRecord {
+    pub fn to_blind_asset_record(self) -> BlindAssetRecord {
+        BlindAssetRecord {
             amount: self.amount,
             asset_type: self.asset,
-        })
+        }
     }
 }
 
