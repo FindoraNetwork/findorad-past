@@ -50,33 +50,33 @@ impl abcf::module::FromBytes for Transaction {
 }
 
 // impl Transaction {
-    // pub fn signature(&mut self, keypairs: Vec<XfrKeyPair>) -> Result<()> {
-    //     if self.signatures.len() != 0 {
-    //         return Err(eg!("this tx is signed."));
-    //     }
-    //
-    //     if self.inputs.len() != keypairs.len() {
-    //         return Err(eg!("please give right keypair for inputs."));
-    //     }
-    //
-    //     let bytes = self.to_bytes().map_err(|e| eg!(format!("{:?}", e)))?;
-    //
-    //     for i in 0..keypairs.len() {
-    //         let keypair = &keypairs[i];
-    //
-    //         let signature = keypair.sign(&bytes);
-    //
-    //         self.signatures.push(signature);
-    //     }
-    //
-    //     let bytes = self.to_bytes().map_err(|e| eg!(format!("{:?}", e)))?;
-    //
-    //     let tx_hash = Sha3_512::digest(&bytes).as_slice();
-    //
-    //     self.txid = H512(Sha3_512::digest(&bytes).try_into()?);
-    //
-    //     Ok(())
-    // }
+// pub fn signature(&mut self, keypairs: Vec<XfrKeyPair>) -> Result<()> {
+//     if self.signatures.len() != 0 {
+//         return Err(eg!("this tx is signed."));
+//     }
+//
+//     if self.inputs.len() != keypairs.len() {
+//         return Err(eg!("please give right keypair for inputs."));
+//     }
+//
+//     let bytes = self.to_bytes().map_err(|e| eg!(format!("{:?}", e)))?;
+//
+//     for i in 0..keypairs.len() {
+//         let keypair = &keypairs[i];
+//
+//         let signature = keypair.sign(&bytes);
+//
+//         self.signatures.push(signature);
+//     }
+//
+//     let bytes = self.to_bytes().map_err(|e| eg!(format!("{:?}", e)))?;
+//
+//     let tx_hash = Sha3_512::digest(&bytes).as_slice();
+//
+//     self.txid = H512(Sha3_512::digest(&bytes).try_into()?);
+//
+//     Ok(())
+// }
 // }
 
 impl ToBytes for Transaction {

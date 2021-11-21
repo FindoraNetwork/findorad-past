@@ -8,7 +8,10 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
-use libfindora::utxo::{Address, GetOwnedUtxoReq, GetOwnedUtxoResp, Output, OutputId, OwnedOutput, UtxoTransacrion, ValidateTransaction};
+use libfindora::utxo::{
+    Address, GetOwnedUtxoReq, GetOwnedUtxoResp, Output, OutputId, OwnedOutput, UtxoTransacrion,
+    ValidateTransaction,
+};
 use rand_chacha::ChaChaRng;
 use zei::{setup::PublicParams, xfr::sig::XfrPublicKey};
 
@@ -130,11 +133,7 @@ impl Application for UtxoModule {
             let record = context.stateful.output_set.remove(input)?;
             if let Some(r) = record {
                 validate_tx.inputs.push(r.core.clone());
-                if let Some(owned_outputs) = context
-                    .stateless
-                    .owned_outputs
-                    .get_mut(&r.core.public_key)?
-                {
+                if let Some(owned_outputs) = context.stateless.owned_outputs.get_mut(&r.address)? {
                     if let Some(index) = owned_outputs
                         .iter()
                         .position(|x| x.txid == input.txid && x.n == input.n)

@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
-use zei::xfr::sig::XfrPublicKey;
 
-use super::{Address, OutputId, transaction::Output};
+use super::{transaction::Output, Address, OutputId};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetOwnedUtxoReq {

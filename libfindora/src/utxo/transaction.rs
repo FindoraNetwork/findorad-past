@@ -3,7 +3,9 @@ use std::convert::TryFrom;
 use crate::transaction::Transaction;
 use primitive_types::H512;
 use serde::{Deserialize, Serialize};
-use zei::xfr::structs::{AssetTypeAndAmountProof, OwnerMemo, XfrAmount, XfrAssetType};
+use zei::xfr::structs::{
+    AssetTypeAndAmountProof, BlindAssetRecord, OwnerMemo, XfrAmount, XfrAssetType,
+};
 
 use super::Address;
 
@@ -19,6 +21,15 @@ pub struct Output {
     pub asset: XfrAssetType,
     pub address: Address,
     pub owner_memo: Option<OwnerMemo>,
+}
+
+impl Output {
+    pub fn to_blind_asset_record(self) -> Option<BlindAssetRecord> {
+        Some(BlindAssetRecord {
+            amount: self.amount,
+            asset_type: self.asset,
+        })
+    }
 }
 
 #[derive(Debug)]
