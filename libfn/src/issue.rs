@@ -18,7 +18,7 @@ pub struct IssueEntry {
 
 impl IssueEntry {
     pub fn to_output_asset_record<R: CryptoRng + RngCore>(
-        self,
+        &self,
         prng: &mut R,
     ) -> Result<AssetRecord> {
         let asset_record_type = AssetRecordType::from_flags(self.confidential_amount, false);

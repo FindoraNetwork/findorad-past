@@ -37,7 +37,7 @@ impl SecretKey {
 
     pub fn to_public(&self) -> PublicKey {
         PublicKey {
-            key: self.key.into_keypair().pub_key,
+            key: self.key.clone().into_keypair().pub_key,
         }
     }
 }

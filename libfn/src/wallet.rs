@@ -10,9 +10,9 @@ pub struct WalletEntry {
 
 impl WalletEntry {
     pub fn build_wallet(&self) -> Result<Wallet> {
-        match self.mnemonic {
+        match &self.mnemonic {
             None => Wallet::generate(),
-            Some(s) => Wallet::from_mnemonic(&s)
+            Some(s) => Wallet::from_mnemonic(&s),
         }
     }
 }
