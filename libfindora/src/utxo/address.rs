@@ -4,17 +4,11 @@ use serde::{Deserialize, Serialize};
 use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrPublicKey};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, PartialOrd, Ord)]
-pub struct FraAddress {
-    pub address: H160,
-    pub public_key: Option<XfrPublicKey>,
-}
-
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, PartialOrd, Ord)]
 pub enum Address {
     /// ETH address
     Eth(H160),
     /// Fra address
-    Fra(FraAddress),
+    Fra(H160),
 }
 
 impl From<H160> for Address {
@@ -28,9 +22,6 @@ impl From<XfrPublicKey> for Address {
         let bytes = public_key.zei_to_bytes();
         let result = sha3::Sha3_256::digest(bytes.as_slice());
         let address = &result[0..20];
-        Address::Fra(FraAddress {
-            address: H160(address.try_into().expect("")),
-            public_key: Some(public_key),
-        })
+        Address::Fra(H160(address.try_into().expect("")))
     }
 }

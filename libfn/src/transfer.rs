@@ -16,7 +16,8 @@ use zei::xfr::{
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TransferEntry {
     pub from: XfrKeyPair,
-    pub to: Address,
+    pub to: Option<XfrPublicKey>,
+    pub address: Address,
     pub amount: u64,
     pub asset_type: AssetType,
     pub confidential_amount: bool,
@@ -24,29 +25,40 @@ pub struct TransferEntry {
 }
 
 impl TransferEntry {
+    pub fn get_pk(&self) -> XfrPublicKey {
+        match self.address {
+            Address::Eth(_) => self.from.get_pk(),
+            Address::Fra(_) => self.to.expect("PublicKey must be set."),
+        }
+    }
+
     pub fn to_output_asset_record<R: CryptoRng + RngCore>(
         self,
         prng: &mut R,
     ) -> Result<AssetRecord> {
-        let asset_record_type = AssetRecordType::from_flags(self.confidential_amount, false);
-
-        let to = match self.to {
-            // If to ETH address, It only a placeholder to fit zei.
-            // We need a zeilite.
-            Address::Eth(e) => self.from.get_pk_ref().clone(),
-            Address::Fra(e) => match e.public_key {
-                Some(pk) => pk,
-                None => return Err(eg!("If transfer to FRA address, target public key must be set.")),
+        let (pk, asset_record_type) = match self.address {
+            Address::Eth(e) => {
+                // If to ETH address, It only a placeholder to fit zei.
+                // We need a zeilite.
+                if self.confidential_amount == false && self.confidential_asset == false {
+                    let asset_record_type = AssetRecordType::from_flags(false, false);
+                    (self.get_pk(), asset_record_type)
+                } else {
+                    return Err(eg!("If transfer to ETH adress, must be non-confidential asset and non-confidential amount"));
+                }
+            }
+            Address::Fra(e) => {
+                let asset_record_type =
+                    AssetRecordType::from_flags(self.confidential_amount, self.confidential_asset);
+                (self.to.expect("PublicKey must be set."), asset_record_type)
             }
         };
-
         let template = AssetRecordTemplate::with_no_asset_tracing(
             self.amount,
             self.asset_type,
             asset_record_type,
-            to,
+            pk,
         );
-
         AssetRecord::from_template_no_identity_tracing(prng, &template)
     }
 }

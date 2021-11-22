@@ -16,17 +16,7 @@ pub fn build_output(output: &Output, builder: output::Builder) -> abcf::Result<(
         let mut builder = builder.reborrow().init_address();
         match &output.core.address {
             Address::Eth(a) => builder.set_eth(a.0.as_ref()),
-            Address::Fra(a) => {
-                let mut builder = builder.init_fra();
-                builder.set_address(a.address.0.as_ref());
-
-                let mut builder = builder.init_public_key();
-
-                match a.public_key {
-                    Some(key) => builder.set_some(key.zei_to_bytes().as_ref()),
-                    None => builder.set_none(()),
-                }
-            }
+            Address::Fra(a) => builder.set_fra(a.0.as_ref()),
         }
     }
 

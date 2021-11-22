@@ -9,16 +9,13 @@ use crate::{
     staking::{self, TendermintAddress},
     transaction::{Output, OutputOperation},
     transaction_capnp::output,
-    utxo::{self, Address, FraAddress},
+    utxo::{self, Address},
 };
 use zei::{
     hybrid_encryption::{XPublicKey, ZeiHybridCipher},
     ristretto::{CompressedEdwardsY, CompressedRistretto},
     serialization::ZeiFromToBytes,
-    xfr::{
-        sig::XfrPublicKey,
-        structs::{AssetType, OwnerMemo, XfrAmount, XfrAssetType, ASSET_TYPE_LENGTH},
-    },
+    xfr::structs::{AssetType, OwnerMemo, XfrAmount, XfrAssetType, ASSET_TYPE_LENGTH},
 };
 
 pub fn from_output(reader: output::Reader) -> abcf::Result<Output> {
@@ -204,8 +201,6 @@ fn from_amount(reader: output::amount::Reader) -> abcf::Result<XfrAmount> {
 }
 
 fn from_address(reader: output::address::Reader) -> abcf::Result<Address> {
-    use crate::transaction_capnp::fra_address;
-
     Ok(match reader.which().map_err(convert_capnp_noinschema)? {
         output::address::Eth(a) => {
             let reader = a.map_err(convert_capnp_error)?;
@@ -214,28 +209,8 @@ fn from_address(reader: output::address::Reader) -> abcf::Result<Address> {
         }
         output::address::Fra(a) => {
             let reader = a.map_err(convert_capnp_error)?;
-            let address_reader = reader.get_address().map_err(convert_capnp_error)?;
-            let inner = address_reader.try_into().map_err(convert_try_slice_error)?;
-            let address = H160(inner);
-
-            let public_key = match reader
-                .get_public_key()
-                .which()
-                .map_err(convert_capnp_noinschema)?
-            {
-                fra_address::public_key::Which::None(_) => None,
-                fra_address::public_key::Which::Some(a) => {
-                    let reader = a.map_err(convert_capnp_error)?;
-                    let public_key =
-                        XfrPublicKey::zei_from_bytes(reader).map_err(convert_ruc_error)?;
-                    Some(public_key)
-                }
-            };
-
-            Address::Fra(FraAddress {
-                address,
-                public_key,
-            })
+            let inner = reader.try_into().map_err(convert_try_slice_error)?;
+            Address::Fra(H160(inner))
         }
     })
 }

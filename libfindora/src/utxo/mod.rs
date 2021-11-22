@@ -8,4 +8,4 @@ mod rpc;
 pub use rpc::{GetOwnedUtxoReq, GetOwnedUtxoResp, OwnedOutput};
 
 mod address;
-pub use address::{Address, FraAddress};
+pub use address::Address;

@@ -3,7 +3,7 @@ members = [
     "findorad",
     "libfindora",
     "libfn",
-    "cli",
+    # "cli",
     "modules/utxo",
     "modules/coinbase",
     "modules/staking",

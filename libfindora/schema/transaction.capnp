@@ -51,18 +51,10 @@ struct ClaimData {
     validator @0: Data;
 }
 
-struct FraAddress {
-    address @0: Data;
-    publicKey :union {
-        none @1: Void;
-        some @2: Data;
-    }
-}
-
 struct Output {
     address :union {
         eth @0: Data;
-        fra @1: FraAddress;
+        fra @1: Data;
     }
 
     amount :union {

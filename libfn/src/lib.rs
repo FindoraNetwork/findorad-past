@@ -8,14 +8,18 @@ use ruc::*;
 use serde::{Deserialize, Serialize};
 use zei::xfr::lib::gen_xfr_body;
 
+mod utils;
+
+pub mod types;
+
 mod issue;
 pub use issue::IssueEntry;
 
 mod transfer;
-mod wallet;
-pub use wallet::AccountEntry;
-
 pub use transfer::TransferEntry;
+
+mod wallet;
+pub use wallet::WalletEntry;
 
 use transfer::build_input_asset_record_and_id;
 

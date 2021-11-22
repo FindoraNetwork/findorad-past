@@ -51,7 +51,7 @@ impl abcf::module::FromBytes for Transaction {
 
 impl Transaction {
     pub fn signature(&mut self, _keypairs: Vec<XfrKeyPair>) -> ruc::Result<()> {
-//         if self.signatures.len() != 0 {
+        //         if self.signatures.len() != 0 {
         //     return Err(eg!("this tx is signed."));
         // }
         //
@@ -74,7 +74,7 @@ impl Transaction {
         // let tx_hash = Sha3_512::digest(&bytes).as_slice();
         //
         // self.txid = H512(Sha3_512::digest(&bytes).try_into()?);
-//
+        //
         Ok(())
     }
 }
