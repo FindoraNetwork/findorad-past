@@ -145,10 +145,8 @@ pub fn execute_delegate<'a>(
             return Err(Error::ABCIApplicationError(90001, msg));
         }
     } else {
-        println!("into self delegation");
         //execute self delegation
         if op.amount >= STAKING_VALIDATOR_MIN_POWER && op.amount <= MAX_DELEGATION_AMOUNT {
-            println!("into self delegation2");
             let mut current_global_power = 0;
             if let Some(p) = global_power.get()? {
                 let power = p
@@ -170,10 +168,6 @@ pub fn execute_delegate<'a>(
                 // add address->xfr_pubkey, address->validator_pubkey
                 validator_staker.insert(op.validator_address.clone(), op.delegator)?;
 
-                // must safe ,this field must be present when self-delegation
-                let validator_pk = op.validator_pubkey.clone().unwrap();
-                validator_addr_pubkey.insert(op.validator_address.clone(), validator_pk)?;
-
                 // update delegation_info
                 if let Some(map) = delegation_info.get_mut(&op.delegator)? {
                     if let Some(amount) = map.get_mut(&op.validator_address) {
@@ -188,24 +182,28 @@ pub fn execute_delegate<'a>(
                     delegation_info.insert(op.delegator.clone(), td_addr_amount_map)?;
                 }
 
-                let pub_key = if let Some(pubkey) = &op.validator_pubkey {
-                    pubkey.to_crypto_publickey()
+                let mut delegator = BTreeMap::new();
+                delegator.insert(op.delegator, op.amount);
+                delegators.insert(op.validator_address.clone(), delegator)?;
+
+                // must safe ,this field must be present when self-delegation
+                let validator_pk =  if let Some(validator_pk)= op.validator_pubkey.clone() {
+                    validator_pk
                 } else {
-                    if let Some(pub_key) = validator_addr_pubkey.get(&op.validator_address)? {
-                        pub_key.to_crypto_publickey()
-                    } else {
-                        return Err(abcf::Error::ABCIApplicationError(
-                            90003,
-                            "there is no matching public key for this address".to_string(),
-                        ));
-                    }
+                    return Err(abcf::Error::ABCIApplicationError(
+                        90004,
+                        "must contain a validator pubkey".to_string(),
+                    ));
                 };
 
+                validator_addr_pubkey.insert(op.validator_address.clone(), validator_pk.clone())?;
+
+
+                // validator pubkey must be exist when self-delegation
                 let validator_update = ValidatorUpdate {
-                    pub_key,
+                    pub_key: validator_pk.to_crypto_publickey(),
                     power: op.amount as i64,
                 };
-
                 return Ok(vec![validator_update]);
             }
         } else {
