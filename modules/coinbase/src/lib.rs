@@ -104,7 +104,7 @@ impl Application for CoinbaseModule {
 
             // TODO: this code used to module call, modify in next version of abcf.
             let call_arg = fm_utxo::calls::ArgAddUtxo {
-                txid: req.tx.txid.clone(),
+                txid: req.tx.txid,
                 n: output.0,
                 output: output.1.clone(),
             };

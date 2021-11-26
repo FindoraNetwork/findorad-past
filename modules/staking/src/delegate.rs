@@ -39,7 +39,7 @@ pub fn execute_delegate<'a>(
     validator_addr_pubkey: &mut impl MapStore<TendermintAddress, ValidatorPublicKey>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
     // op.validator exists && has done self-delegate operation
-    if let Some(_) = validator_addr_pubkey.get(&op.validator_address)? {
+    if validator_addr_pubkey.get(&op.validator_address)?.is_some() {
         let mut power = 0;
         if let Some(p) = powers.get(&op.validator_address)? {
             power = *p;
@@ -105,15 +105,13 @@ pub fn execute_delegate<'a>(
 
                 let pub_key = if let Some(pubkey) = &op.validator_pubkey {
                     pubkey.to_crypto_publickey()
+                } else if let Some(pub_key) = validator_addr_pubkey.get(&op.validator_address)? {
+                    pub_key.to_crypto_publickey()
                 } else {
-                    if let Some(pub_key) = validator_addr_pubkey.get(&op.validator_address)? {
-                        pub_key.to_crypto_publickey()
-                    } else {
-                        return Err(abcf::Error::ABCIApplicationError(
-                            90003,
-                            "there is no matching public key for this address".to_string(),
-                        ));
-                    }
+                    return Err(abcf::Error::ABCIApplicationError(
+                        90003,
+                        "there is no matching public key for this address".to_string(),
+                    ));
                 };
 
                 let validator_update = ValidatorUpdate {
@@ -162,15 +160,13 @@ pub fn execute_delegate<'a>(
 
                 let pub_key = if let Some(pubkey) = &op.validator_pubkey {
                     pubkey.to_crypto_publickey()
+                } else if let Some(pub_key) = validator_addr_pubkey.get(&op.validator_address)? {
+                    pub_key.to_crypto_publickey()
                 } else {
-                    if let Some(pub_key) = validator_addr_pubkey.get(&op.validator_address)? {
-                        pub_key.to_crypto_publickey()
-                    } else {
-                        return Err(abcf::Error::ABCIApplicationError(
-                            90003,
-                            "there is no matching public key for this address".to_string(),
-                        ));
-                    }
+                    return Err(abcf::Error::ABCIApplicationError(
+                        90003,
+                        "there is no matching public key for this address".to_string(),
+                    ));
                 };
 
                 let validator_update = ValidatorUpdate {

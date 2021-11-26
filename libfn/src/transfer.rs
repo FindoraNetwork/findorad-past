@@ -1,12 +1,12 @@
-use fm_utxo::utxo_module_rpc::get_owned_outputs;
-use libfindora::utxo::{Address, GetOwnedUtxoReq};
-use primitive_types::H512;
+
+use libfindora::utxo::{Address};
+
 use rand_core::{CryptoRng, RngCore};
 use ruc::*;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
-use zei::xfr::asset_record::{open_blind_asset_record, AssetRecordType};
-use zei::xfr::structs::{AssetType, BlindAssetRecord};
+
+use zei::xfr::asset_record::{AssetRecordType};
+use zei::xfr::structs::{AssetType};
 use zei::xfr::{
     sig::{XfrKeyPair, XfrPublicKey},
     structs::{AssetRecord, AssetRecordTemplate},
@@ -36,17 +36,17 @@ impl TransferEntry {
         prng: &mut R,
     ) -> Result<AssetRecord> {
         let (pk, asset_record_type) = match self.address {
-            Address::Eth(e) => {
+            Address::Eth(_e) => {
                 // If to ETH address, It only a placeholder to fit zei.
                 // We need a zeilite.
-                if self.confidential_amount == false && self.confidential_asset == false {
+                if !self.confidential_amount && !self.confidential_asset {
                     let asset_record_type = AssetRecordType::from_flags(false, false);
                     (self.get_pk(), asset_record_type)
                 } else {
                     return Err(eg!("If transfer to ETH adress, must be non-confidential asset and non-confidential amount"));
                 }
             }
-            Address::Fra(e) => {
+            Address::Fra(_e) => {
                 let asset_record_type =
                     AssetRecordType::from_flags(self.confidential_amount, self.confidential_asset);
                 (self.to.expect("PublicKey must be set."), asset_record_type)

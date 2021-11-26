@@ -62,11 +62,11 @@ pub fn build_output(output: &Output, builder: output::Builder) -> abcf::Result<(
             OutputOperation::Fee => operation.set_fee(()),
             OutputOperation::Undelegate(a) => {
                 let mut undelegate = operation.init_undelegate();
-                undelegate.reborrow().set_address(&a.address.0.as_ref());
+                undelegate.reborrow().set_address(a.address.0.as_ref());
             }
             OutputOperation::Delegate(a) => {
                 let mut delegation = operation.init_delegate();
-                delegation.reborrow().set_address(&a.address.0.as_ref());
+                delegation.reborrow().set_address(a.address.0.as_ref());
 
                 let mut validator = delegation.reborrow().init_validator();
 

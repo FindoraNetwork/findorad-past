@@ -1,5 +1,5 @@
 use libfindora::{
-    transaction::{InputOperation, OutputOperation, Transaction},
+    transaction::{InputOperation, OutputOperation},
     utxo::Address,
 };
 use rand_core::{CryptoRng, RngCore};
@@ -40,7 +40,7 @@ impl Builder {
                     });
 
                     outputs.push(Output {
-                        record: record,
+                        record,
                         operation: OutputOperation::IssueAsset,
                         address: Address::from(e.keypair.get_pk()),
                     });

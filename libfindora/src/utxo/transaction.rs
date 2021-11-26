@@ -73,12 +73,12 @@ impl TryFrom<&Transaction> for UtxoTransacrion {
         for input in &tx.inputs {
             if input.txid == H512::zero() {
                 inputs.push(Input {
-                    txid: tx.txid.clone(),
+                    txid: tx.txid,
                     n: input.n,
                 })
             } else {
                 inputs.push(Input {
-                    txid: input.txid.clone(),
+                    txid: input.txid,
 
                     n: input.n,
                 })
@@ -92,7 +92,7 @@ impl TryFrom<&Transaction> for UtxoTransacrion {
         }
 
         Ok(Self {
-            txid: tx.txid.clone(),
+            txid: tx.txid,
             inputs,
             outputs,
             proof: tx.proof.clone(),

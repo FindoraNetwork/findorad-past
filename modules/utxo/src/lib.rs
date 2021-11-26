@@ -48,7 +48,7 @@ impl UtxoModule {
                     Some(s) => {
                         let output_ids = s.as_ref();
                         for output_id in output_ids {
-                            if let Ok(Some(output)) = context.stateful.output_set.get(&output_id) {
+                            if let Ok(Some(output)) = context.stateful.output_set.get(output_id) {
                                 outputs.push((
                                     owner_id,
                                     OwnedOutput {
@@ -167,7 +167,7 @@ impl Application for UtxoModule {
                         .map_err(|e| abcf::Error::ABCIApplicationError(90003, format!("{}", e)))?;
 
                     let output_id = OutputId {
-                        txid: txid.clone(),
+                        txid: *txid,
                         n,
                     };
 

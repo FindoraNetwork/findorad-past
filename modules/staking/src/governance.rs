@@ -16,12 +16,12 @@ pub enum ByzantineKind {
 
 impl ByzantineKind {
     pub fn penalty_rate(&self) -> [u64; 2] {
-        return match self {
+        match self {
             ByzantineKind::DuplicateVote => [5, 100],
             ByzantineKind::LightClientAttack => [1, 100],
             ByzantineKind::OffLine => [1, 1000_0000],
             ByzantineKind::Unknown => [30, 100],
-        };
+        }
     }
 
     pub fn from_evidence_type(ty: i32) -> Self {
