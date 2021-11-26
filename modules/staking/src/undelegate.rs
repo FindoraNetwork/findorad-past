@@ -22,7 +22,7 @@ pub struct UnDelegateOp {
 }
 
 /// execute un-delegate operation
-pub fn execute_undelegate<'a>(
+pub fn execute_undelegate(
     op: UnDelegateOp,
     global_power: &mut impl ValueStore<Power>,
     delegation_amount: &mut impl MapStore<Address, Amount>,
@@ -30,7 +30,7 @@ pub fn execute_undelegate<'a>(
     powers: &mut impl MapStore<TendermintAddress, Power>,
     validator_addr_pubkey: &mut impl MapStore<TendermintAddress, ValidatorPublicKey>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
-    if let Some(_) = validator_addr_pubkey.get(&op.validator_address)? {
+    if validator_addr_pubkey.get(&op.validator_address)?.is_some() {
         let mut power = 0;
         if let Some(p) = powers.get(&op.validator_address)? {
             power = *p;

@@ -147,7 +147,7 @@ impl Application for StakingModule {
     ) -> ResponseEndBlock {
         let mut res = ResponseEndBlock::default();
 
-        res.validator_updates = mem::replace(&mut self.vote_updaters, Vec::new());
+        res.validator_updates = mem::take(&mut self.vote_updaters);
 
         res
     }

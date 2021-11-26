@@ -54,7 +54,7 @@ pub fn execute_staking(
                 }
             };
 
-            return execute_delegate(
+            execute_delegate(
                 op,
                 global_power,
                 delegation_amount,
@@ -62,7 +62,7 @@ pub fn execute_staking(
                 powers,
                 validator_staker,
                 validator_addr_pubkey,
-            );
+            )
         }
         Operation::Undelegate(ud) => {
             let op = UnDelegateOp {
@@ -71,14 +71,14 @@ pub fn execute_staking(
                 amount: info.amount,
             };
 
-            return execute_undelegate(
+            execute_undelegate(
                 op,
                 global_power,
                 delegation_amount,
                 delegators,
                 powers,
                 validator_addr_pubkey,
-            );
+            )
         }
     }
 }

@@ -129,7 +129,7 @@ fn from_operation(reader: output::operation::Reader) -> abcf::Result<OutputOpera
             OutputOperation::Delegate(staking::Delegate {
                 address: td_address,
                 validator,
-                memo: memo,
+                memo,
             })
         }
         operation::Which::Undelegate(a) => {

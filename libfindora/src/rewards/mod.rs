@@ -19,15 +19,9 @@ pub struct RewardInfo {
     pub operation: Operation,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Transaction {
     pub infos: Vec<RewardInfo>,
-}
-
-impl Default for Transaction {
-    fn default() -> Self {
-        Transaction { infos: Vec::new() }
-    }
 }
 
 impl TryFrom<&transaction::Transaction> for Transaction {

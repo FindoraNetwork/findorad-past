@@ -38,7 +38,7 @@ impl TryFrom<&Transaction> for CoinbaseTransaction {
         }
 
         Ok(Self {
-            txid: tx.txid.clone(),
+            txid: tx.txid,
             outputs,
         })
     }

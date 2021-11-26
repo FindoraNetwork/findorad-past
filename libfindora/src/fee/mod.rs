@@ -2,14 +2,9 @@ pub mod constant;
 
 use crate::transaction::Transaction;
 
+#[derive(Default, Debug)]
 pub struct FeeTransaction {
     pub amount: u64,
-}
-
-impl Default for FeeTransaction {
-    fn default() -> Self {
-        FeeTransaction { amount: 0 }
-    }
 }
 
 impl TryFrom<&Transaction> for FeeTransaction {
