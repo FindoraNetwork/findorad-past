@@ -3,7 +3,7 @@
 use std::convert::TryInto;
 
 use abcf::{
-    bs3::{model::Map, MapStore},
+    bs3::{merkle::append_only::AppendOnlyMerkle, model::Map, MapStore},
     manager::TContext,
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
@@ -22,7 +22,7 @@ mod event;
 pub struct UtxoModule {
     params: PublicParams,
     prng: ChaChaRng,
-    #[stateful]
+    #[stateful(merkle = "AppendOnlyMerkle")]
     pub output_set: Map<OutputId, Output>,
     #[stateless]
     pub owned_outputs: Map<XfrPublicKey, Vec<OutputId>>,

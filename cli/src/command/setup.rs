@@ -1,5 +1,5 @@
 use clap::{ArgGroup, Parser};
-use ruc::*;
+// use ruc::*;
 
 use crate::config::Config;
 
@@ -16,7 +16,7 @@ pub struct Command {
 }
 
 impl Command {
-    pub async fn execute(&self, config: Config) -> Result<()> {
+    pub async fn execute(&self, config: Config) -> ruc::Result<()> {
         let mut config = config;
 
         if self.get_server_address {

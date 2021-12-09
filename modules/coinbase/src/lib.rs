@@ -2,6 +2,7 @@
 
 use abcf::{
     bs3::{
+        merkle::append_only::AppendOnlyMerkle,
         model::{Map, Value},
         MapStore,
     },
@@ -22,7 +23,7 @@ use zei::xfr::{
     target_height = 0
 )]
 pub struct CoinbaseModule {
-    #[stateful]
+    #[stateful(merkle = "AppendOnlyMerkle")]
     pub asset_owner: Map<AssetType, XfrPublicKey>,
     // Only a placeholder, will remove when abcf update.
     #[stateless]
