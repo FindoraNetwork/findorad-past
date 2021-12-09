@@ -1,7 +1,7 @@
 #![feature(generic_associated_types)]
 
 use abcf::{
-    bs3::model::Value,
+    bs3::{merkle::empty::EmptyMerkle, model::Value},
     manager::TContext,
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, StatefulBatch, StatelessBatch,
@@ -15,7 +15,7 @@ use libfindora::rewards;
     target_height = 0
 )]
 pub struct Module {
-    #[stateful]
+    #[stateful(merkle = "EmptyMerkle")]
     pub sf_value: Value<u32>,
     // Only a placeholder, will remove when abcf update.
     #[stateless]

@@ -3,7 +3,7 @@ use std::convert::TryInto;
 use clap::{ArgGroup, Parser};
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
-use ruc::*;
+use ruc::{d, eg};
 use zei::{
     serialization::ZeiFromToBytes,
     xfr::{
@@ -49,7 +49,9 @@ pub struct Command {
 }
 
 impl Command {
-    pub async fn execute(&self, config: Config) -> Result<()> {
+    pub async fn execute(&self, config: Config) -> ruc::Result<()> {
+        use ruc::*;
+
         let from = if let Some(from_secret_key) = self.from_secret_key.as_ref() {
             let from_sk_bytes = base64::decode(from_secret_key).c(d!())?;
             let from_sk = XfrSecretKey::zei_from_bytes(&from_sk_bytes)?;

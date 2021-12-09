@@ -1,5 +1,5 @@
 use clap::{ArgGroup, Parser};
-use ruc::*;
+use ruc::d;
 use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrSecretKey};
 
 use crate::{
@@ -42,7 +42,9 @@ pub struct Command {
 }
 
 impl Command {
-    pub async fn execute(&self, config: Config) -> Result<()> {
+    pub async fn execute(&self, config: Config) -> ruc::Result<()> {
+        use ruc::*;
+
         if self.generate {
             let entry = AccountEntry::generate_keypair()?;
             println!("{:#?}", entry);

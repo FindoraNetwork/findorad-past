@@ -47,7 +47,7 @@ fn main() {
     let utxo_backend = bs3::backend::sled_db_open(Some("./target/findorad/utxo")).unwrap();
 
     let stateful = abcf::Stateful::<Findorad<SledBackend>> {
-        staking: abcf::Stateful::<StakingModule<SledBackend>> {
+        staking: abcf::Stateful::<StakingModule<SledBackend, Sha3_512>> {
             global_power: bs3::SnapshotableStorage::new(
                 Default::default(),
                 SledBackend::open_tree(&staking_backend, "global_power").unwrap(),
@@ -79,49 +79,55 @@ fn main() {
             )
             .unwrap(),
             __marker_s: PhantomData,
+            __marker_d: PhantomData,
         },
-        coinbase: abcf::Stateful::<CoinbaseModule<SledBackend>> {
+        coinbase: abcf::Stateful::<CoinbaseModule<SledBackend, Sha3_512>> {
             asset_owner: bs3::SnapshotableStorage::new(
                 Default::default(),
                 SledBackend::open_tree(&coinbase_backend, "asset_owner").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,
+            __marker_d: PhantomData,
         },
-        utxo: abcf::Stateful::<UtxoModule<SledBackend>> {
+        utxo: abcf::Stateful::<UtxoModule<SledBackend, Sha3_512>> {
             output_set: bs3::SnapshotableStorage::new(
                 Default::default(),
                 SledBackend::open_tree(&coinbase_backend, "output_set").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,
+            __marker_d: PhantomData,
         },
     };
 
     let stateless = abcf::Stateless::<Findorad<SledBackend>> {
-        staking: abcf::Stateless::<StakingModule<SledBackend>> {
+        staking: abcf::Stateless::<StakingModule<SledBackend, Sha3_512>> {
             sl_value: abcf::bs3::SnapshotableStorage::new(
                 Default::default(),
                 SledBackend::open_tree(&staking_backend, "sl_value").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,
+            __marker_d: PhantomData,
         },
-        coinbase: abcf::Stateless::<CoinbaseModule<SledBackend>> {
+        coinbase: abcf::Stateless::<CoinbaseModule<SledBackend, Sha3_512>> {
             sl_value: abcf::bs3::SnapshotableStorage::new(
                 Default::default(),
                 SledBackend::open_tree(&utxo_backend, "sl_value").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,
+            __marker_d: PhantomData,
         },
-        utxo: abcf::Stateless::<UtxoModule<SledBackend>> {
+        utxo: abcf::Stateless::<UtxoModule<SledBackend, Sha3_512>> {
             owned_outputs: abcf::bs3::SnapshotableStorage::new(
                 Default::default(),
                 SledBackend::open_tree(&utxo_backend, "owned_outputs").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,
+            __marker_d: PhantomData,
         },
     };
 

@@ -2,7 +2,10 @@ use crate::governance::{penalty_amount_power, ByzantineKind};
 use crate::{validator_keys::ValidatorPublicKey, voting};
 use abcf::module::types::RequestBeginBlock;
 use abcf::{
-    bs3::model::{Map, Value},
+    bs3::{
+        merkle::append_only::AppendOnlyMerkle,
+        model::{Map, Value},
+    },
     manager::{AContext, TContext},
     module::types::{
         RequestCheckTx, RequestDeliverTx, RequestEndBlock, ResponseCheckTx, ResponseDeliverTx,
@@ -35,27 +38,27 @@ pub struct StakingModule {
     /// This field will send to tendermint when end block.
     pub vote_updaters: Vec<ValidatorUpdate>,
 
-    #[stateful]
+    #[stateful(merkle = "AppendOnlyMerkle")]
     pub validator_staker: Map<TendermintAddress, Address>,
 
     /// Global delegation amount.
-    #[stateful]
+    #[stateful(merkle = "AppendOnlyMerkle")]
     pub global_power: Value<Power>,
 
     /// Delegation amount by wallet address.
-    #[stateful]
+    #[stateful(merkle = "AppendOnlyMerkle")]
     pub delegation_amount: Map<Address, Amount>,
 
     /// Who delegate to which validator.
-    #[stateful]
+    #[stateful(merkle = "AppendOnlyMerkle")]
     pub delegators: Map<TendermintAddress, BTreeMap<Address, Amount>>,
 
     /// TendermintAddress to validatorPublicKey
-    #[stateful]
+    #[stateful(merkle = "AppendOnlyMerkle")]
     pub validator_addr_pubkey: Map<TendermintAddress, ValidatorPublicKey>,
 
     /// Validator power.
-    #[stateful]
+    #[stateful(merkle = "AppendOnlyMerkle")]
     pub powers: Map<TendermintAddress, Power>,
 }
 

@@ -1,7 +1,7 @@
 #![feature(generic_associated_types)]
 
 use abcf::{
-    bs3::model::Value,
+    bs3::{merkle::empty::EmptyMerkle, model::Value},
     manager::TContext,
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, StatefulBatch, StatelessBatch,
@@ -10,7 +10,7 @@ use libfindora::fee::{constant::FRA_FEE_AMOUNT, FeeTransaction};
 
 #[abcf::module(name = "fee", version = 1, impl_version = "0.1.1", target_height = 0)]
 pub struct FeeModule {
-    #[stateful]
+    #[stateful(merkle = "EmptyMerkle")]
     pub sf_value: Value<u32>,
     // Only a placeholder, will remove when abcf update.
     #[stateless]

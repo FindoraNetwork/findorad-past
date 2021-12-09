@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, ValueHint};
-use ruc::*;
+// use ruc::*;
 
 use crate::config::Config;
 
@@ -15,16 +15,16 @@ mod wallet;
 #[derive(Parser, Debug)]
 #[clap(author, about, version)]
 pub struct Opts {
-    #[clap(short, long, env = "FN_HOME", default_value = concat!(env!("HOME"), "/.findora/fn"), value_hint = ValueHint::DirPath)]
+    #[clap(short, long, default_value = concat!(env!("HOME"), "/.findora/fn"), value_hint = ValueHint::DirPath)]
     pub home: PathBuf,
-    #[clap(short, long, env = "FN_CONFIG", default_value = concat!(env!("HOME"), "/.findora/fn/config.toml"), value_hint = ValueHint::FilePath)]
+    #[clap(short, long, default_value = concat!(env!("HOME"), "/.findora/fn/config.toml"), value_hint = ValueHint::FilePath)]
     pub config: PathBuf,
     #[clap(subcommand)]
     subcmd: SubCommand,
 }
 
 impl Opts {
-    pub async fn execute(&self) -> Result<()> {
+    pub async fn execute(&self) -> ruc::Result<()> {
         let config = Config::load(&self.home, &self.config)?;
 
         match &self.subcmd {

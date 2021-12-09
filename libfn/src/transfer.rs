@@ -1,12 +1,11 @@
-
-use libfindora::utxo::{Address};
+use libfindora::utxo::Address;
 
 use rand_core::{CryptoRng, RngCore};
 use ruc::*;
 use serde::{Deserialize, Serialize};
 
-use zei::xfr::asset_record::{AssetRecordType};
-use zei::xfr::structs::{AssetType};
+use zei::xfr::asset_record::AssetRecordType;
+use zei::xfr::structs::AssetType;
 use zei::xfr::{
     sig::{XfrKeyPair, XfrPublicKey},
     structs::{AssetRecord, AssetRecordTemplate},

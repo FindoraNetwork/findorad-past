@@ -1,7 +1,7 @@
 use clap::Parser;
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
-use ruc::*;
+// use ruc::*;
 
 use crate::{
     config::Config,
@@ -19,7 +19,7 @@ pub struct Command {
 }
 
 impl Command {
-    pub async fn execute(&self, config: Config) -> Result<()> {
+    pub async fn execute(&self, config: Config) -> ruc::Result<()> {
         let mut prng = ChaChaRng::from_entropy();
 
         let list = read_list(&config, &self.batch_name).await?;

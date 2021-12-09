@@ -1,7 +1,7 @@
 use clap::{ArgGroup, Parser};
 use rand_chacha::ChaChaRng;
 use rand_core::{RngCore, SeedableRng};
-use ruc::*;
+use ruc::{d, err::RucResult};
 use zei::{
     serialization::ZeiFromToBytes,
     xfr::{
@@ -35,7 +35,7 @@ pub struct Command {
 }
 
 impl Command {
-    pub async fn execute(&self, config: Config) -> Result<()> {
+    pub async fn execute(&self, config: Config) -> ruc::Result<()> {
         let keypair = if let Some(secret_key) = self.secret_key.as_ref() {
             let sk_bytes = base64::decode(secret_key).c(d!())?;
             let sk = XfrSecretKey::zei_from_bytes(&sk_bytes)?;

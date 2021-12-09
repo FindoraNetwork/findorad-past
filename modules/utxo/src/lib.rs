@@ -3,7 +3,7 @@
 use std::convert::TryInto;
 
 use abcf::{
-    bs3::{model::Map, MapStore},
+    bs3::{merkle::append_only::AppendOnlyMerkle, model::Map, MapStore},
     manager::TContext,
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
@@ -22,7 +22,7 @@ pub mod calls;
 pub struct UtxoModule {
     params: PublicParams,
     prng: ChaChaRng,
-    #[stateful]
+    #[stateful(merkle = "AppendOnlyMerkle")]
     pub output_set: Map<OutputId, Output>,
     #[stateless]
     pub owned_outputs: Map<Address, Vec<OutputId>>,
@@ -166,10 +166,7 @@ impl Application for UtxoModule {
                         .try_into()
                         .map_err(|e| abcf::Error::ABCIApplicationError(90003, format!("{}", e)))?;
 
-                    let output_id = OutputId {
-                        txid: *txid,
-                        n,
-                    };
+                    let output_id = OutputId { txid: *txid, n };
 
                     context
                         .stateful
