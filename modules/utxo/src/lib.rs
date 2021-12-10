@@ -8,9 +8,12 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
-use libfindora::utxo::{
-    Address, GetOwnedUtxoReq, GetOwnedUtxoResp, Output, OutputId, OwnedOutput, UtxoTransacrion,
-    ValidateTransaction,
+use libfindora::{
+    utxo::{
+        GetOwnedUtxoReq, GetOwnedUtxoResp, Output, OutputId, OwnedOutput, UtxoTransacrion,
+        ValidateTransaction,
+    },
+    Address,
 };
 use rand_chacha::ChaChaRng;
 use zei::setup::PublicParams;

@@ -11,6 +11,11 @@ pub mod utxo;
 pub const FRA_ASSET_TYPE: AssetType = AssetType([0; ASSET_TYPE_LENGTH]);
 pub const FRA_XFR_ASSET_TYPE: XfrAssetType = XfrAssetType::NonConfidential(FRA_ASSET_TYPE);
 
+pub type Amount = u64;
+
+mod address;
+pub use address::Address;
+
 pub mod transaction_capnp {
     include!(concat!(env!("OUT_DIR"), "/transaction_capnp.rs"));
 }

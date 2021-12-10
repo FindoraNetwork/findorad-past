@@ -1,8 +1,9 @@
 use abcf::bs3::{MapStore, ValueStore};
 use abcf::tm_protos::abci::Validator;
-use libfindora::staking::voting::{Amount, Power};
-use libfindora::staking::TendermintAddress;
-use libfindora::utxo::Address;
+use libfindora::{
+    staking::{voting::Power, TendermintAddress},
+    Address, Amount,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 

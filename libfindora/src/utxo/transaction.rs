@@ -7,7 +7,7 @@ use zei::xfr::structs::{
     AssetTypeAndAmountProof, BlindAssetRecord, OwnerMemo, XfrAmount, XfrAssetType,
 };
 
-use super::Address;
+use crate::Address;
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Input {

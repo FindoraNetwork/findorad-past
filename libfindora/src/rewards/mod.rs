@@ -5,7 +5,7 @@ use zei::xfr::structs::XfrAmount;
 mod claim;
 pub use claim::Claim;
 
-use crate::{transaction, utxo::Address, FRA_XFR_ASSET_TYPE};
+use crate::{transaction, Address, FRA_XFR_ASSET_TYPE};
 
 #[derive(Debug, Clone)]
 pub enum Operation {

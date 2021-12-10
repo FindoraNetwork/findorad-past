@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use super::{transaction::Output, Address, OutputId};
+use crate::Address;
+
+use super::{transaction::Output, OutputId};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetOwnedUtxoReq {

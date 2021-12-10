@@ -19,7 +19,7 @@ use libfindora::{
         voting::{Amount, Power, MAX_POWER_PERCENT_PER_VALIDATOR, MAX_TOTAL_POWER},
         Operation, StakingInfo, TendermintAddress,
     },
-    utxo::Address,
+    Address,
 };
 use std::collections::BTreeMap;
 

@@ -15,7 +15,7 @@ use libfindora::{
     staking::voting::{
         Amount, Power, MAX_DELEGATION_AMOUNT, MIN_DELEGATION_AMOUNT, STAKING_VALIDATOR_MIN_POWER,
     },
-    utxo::Address,
+    Address,
 };
 use std::collections::BTreeMap;
 

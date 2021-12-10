@@ -6,7 +6,7 @@ pub use undelegate::Undelegate;
 
 pub mod voting;
 
-use crate::{transaction, utxo::Address, FRA_XFR_ASSET_TYPE};
+use crate::{transaction, Address, FRA_XFR_ASSET_TYPE};
 use std::convert::TryFrom;
 use zei::xfr::structs::XfrAmount;
 

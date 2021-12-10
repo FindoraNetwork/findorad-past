@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use zei::xfr::structs::AssetType;
 
-use crate::utxo::Address;
+use crate::Address;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetAssetOwnerReq {

@@ -9,7 +9,7 @@ use crate::{
     staking::{self, TendermintAddress},
     transaction::{Output, OutputOperation},
     transaction_capnp::output,
-    utxo::{self, Address},
+    utxo, Address,
 };
 use zei::{
     hybrid_encryption::{XPublicKey, ZeiHybridCipher},

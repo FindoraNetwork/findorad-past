@@ -12,7 +12,7 @@ use abcf::{
 };
 use libfindora::{
     coinbase::{CoinbaseTransaction, GetAssetOwnerReq, GetAssetOwnerResp},
-    utxo::Address,
+    Address,
 };
 use zei::xfr::structs::{AssetType, XfrAssetType};
 

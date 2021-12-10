@@ -7,10 +7,12 @@ use abcf::{
     tm_protos::abci::ValidatorUpdate,
     Error,
 };
-use libfindora::staking::TendermintAddress;
 use libfindora::{
-    staking::voting::{Amount, Power},
-    utxo::Address,
+    staking::{
+        voting::{Amount, Power},
+        TendermintAddress,
+    },
+    Address,
 };
 use std::collections::BTreeMap;
 

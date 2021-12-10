@@ -1,7 +1,7 @@
 use crate::{
     transaction::{Output, OutputOperation},
     transaction_capnp::output,
-    utxo::Address,
+    Address,
 };
 use abcf::tm_protos::crypto;
 use zei::{

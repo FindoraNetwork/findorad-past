@@ -1,4 +1,4 @@
-use libfindora::utxo::Address;
+use libfindora::{Address, Amount};
 
 use rand_core::{CryptoRng, RngCore};
 use ruc::*;
@@ -14,22 +14,22 @@ use zei::xfr::{
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TransferEntry {
     pub from: XfrKeyPair,
-    pub to: Option<XfrPublicKey>,
+
+    /// Zei's public key, if you want to receive confidential transaction, this field must provide.
+    pub public_key: Option<XfrPublicKey>,
+
     pub address: Address,
+
     pub amount: u64,
+
     pub asset_type: AssetType,
+
     pub confidential_amount: bool,
+
     pub confidential_asset: bool,
 }
 
 impl TransferEntry {
-    pub fn get_pk(&self) -> XfrPublicKey {
-        match self.address {
-            Address::Eth(_) => self.from.get_pk(),
-            Address::Fra(_) => self.to.expect("PublicKey must be set."),
-        }
-    }
-
     pub fn to_output_asset_record<R: CryptoRng + RngCore>(
         self,
         prng: &mut R,
@@ -40,7 +40,7 @@ impl TransferEntry {
                 // We need a zeilite.
                 if !self.confidential_amount && !self.confidential_asset {
                     let asset_record_type = AssetRecordType::from_flags(false, false);
-                    (self.get_pk(), asset_record_type)
+                    (self.from.get_pk(), asset_record_type)
                 } else {
                     return Err(eg!("If transfer to ETH adress, must be non-confidential asset and non-confidential amount"));
                 }
@@ -48,7 +48,10 @@ impl TransferEntry {
             Address::Fra(_e) => {
                 let asset_record_type =
                     AssetRecordType::from_flags(self.confidential_amount, self.confidential_asset);
-                (self.to.expect("PublicKey must be set."), asset_record_type)
+                (
+                    self.public_key.c(d!("Public key must be set."))?,
+                    asset_record_type,
+                )
             }
         };
         let template = AssetRecordTemplate::with_no_asset_tracing(
@@ -58,6 +61,14 @@ impl TransferEntry {
             pk,
         );
         AssetRecord::from_template_no_identity_tracing(prng, &template)
+    }
+
+    pub fn to_input_address(&self) -> Address {
+        Address::from(self.from.get_pk())
+    }
+
+    pub fn to_output_amount(&self) -> (AssetType, Amount) {
+        (self.asset_type, self.amount)
     }
 }
 

@@ -14,12 +14,14 @@ use abcf::{
     tm_protos::abci::ValidatorUpdate,
     Application, Stateful, StatefulBatch, Stateless, StatelessBatch,
 };
-use libfindora::staking::TendermintAddress;
-use libfindora::staking::{
-    self,
-    voting::{Amount, Power},
+use libfindora::{
+    staking::{
+        self,
+        voting::{Amount, Power},
+        TendermintAddress,
+    },
+    Address,
 };
-use libfindora::utxo::Address;
 use std::{collections::BTreeMap, mem};
 
 #[abcf::module(
