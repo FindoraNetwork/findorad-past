@@ -24,7 +24,7 @@ use zei::xfr::structs::{AssetType, XfrAssetType};
 )]
 pub struct CoinbaseModule {
     #[stateful(merkle = "AppendOnlyMerkle")]
-    pub asset_owner: Map<AssetType, XfrPublicKey>,
+    pub asset_owner: Map<AssetType, Address>,
     // Only a placeholder, will remove when abcf update.
     #[stateless]
     pub sl_value: Value<u32>,

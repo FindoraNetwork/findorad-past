@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor" }
+zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor-address-v1" }
 ed25519-dalek = "1"
 curve25519-dalek = { version =  "3" }
 abcf = { git = "https://github.com/FindoraNetwork/abcf.git" }
