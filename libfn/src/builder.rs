@@ -72,6 +72,7 @@ impl Builder {
                 }
                 Entry::Transfer(t) => {
                     let address = t.to_input_address();
+
                 }
             }
         }
