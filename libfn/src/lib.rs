@@ -59,7 +59,6 @@ pub async fn build_transaction<R: CryptoRng + RngCore>(
                 transfer_entry.push(e);
             }
             Entry::Delegation(e) => {
-                // delegator -> black
                 delegation_entry.push(e.clone());
                 // add delegation output
                 let output = e.to_output_asset_record(prng)?;

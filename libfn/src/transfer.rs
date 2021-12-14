@@ -117,9 +117,6 @@ pub async fn transfer_build_input_asset_record_and_id<R: CryptoRng + RngCore>(
         outputs.push(asset_record);
     }
 
-    //     println!("{:?}", from_matix);
-    //     println!("{:?}", to_matix);
-
     for (k, v) in to_matix {
         if let Some(amount) = from_matix.get(&k) {
             if amount < &v {

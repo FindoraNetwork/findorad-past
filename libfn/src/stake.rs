@@ -3,6 +3,7 @@ use abcf_sdk::providers::HttpGetProvider;
 use fm_utxo::utxo_module_rpc::get_owned_outputs;
 use libfindora::staking::{Delegate, TendermintAddress};
 use libfindora::utxo::GetOwnedUtxoReq;
+use libfindora::BLACK_HOLE_PUBKEY_STAKING;
 use libfindora::FRA_ASSET_TYPE;
 use rand_core::{CryptoRng, RngCore};
 use ruc::*;
@@ -114,6 +115,7 @@ pub async fn delegation_build_input_asset_record_and_id<R: CryptoRng + RngCore>(
     let mut outputs = Vec::new();
     let mut open_input = Vec::new();
 
+    // total amount per available utxo per account
     let mut from_matix: BTreeMap<XfrPublicKey, u64> = BTreeMap::new();
 
     // xfr utxo available for each pubkey
@@ -125,12 +127,14 @@ pub async fn delegation_build_input_asset_record_and_id<R: CryptoRng + RngCore>(
 
     let provider = HttpGetProvider {};
 
+    // get available utxo
     let result = get_owned_outputs(provider, params)
         .await
         .map_err(|e| eg!(format!("{:?}", e)))?;
 
     let from_outputs = result.data.c(d!())?.outputs;
 
+    // traversal utxo to open_input
     for oai in from_outputs {
         let keypair = &wallets[oai.0];
 
@@ -155,21 +159,34 @@ pub async fn delegation_build_input_asset_record_and_id<R: CryptoRng + RngCore>(
         }
     }
 
+    // traversal
     for entry in entries {
         let pk = entry.keypair.get_pk();
         let pk_base64 = base64::encode(&pk.as_bytes());
         if let Some(a) = from_matix.get(&pk) {
+            // balance judgement
             if a < &entry.amount {
                 return Err(eg!(format!("target amount isn't enough:{}", pk_base64)));
             } else {
-                let template = AssetRecordTemplate::with_no_asset_tracing(
-                    a - entry.amount,
+                let balance_template = AssetRecordTemplate::with_no_asset_tracing(
+                    a - (entry.amount * 2), // because delegation output + transfer black_pk output
                     FRA_ASSET_TYPE,
                     AssetRecordType::NonConfidentialAmount_NonConfidentialAssetType,
                     pk.clone(),
                 );
-                let asset_record = AssetRecord::from_template_no_identity_tracing(prng, &template)?;
-                outputs.push(asset_record);
+                let balance_asset_record =
+                    AssetRecord::from_template_no_identity_tracing(prng, &balance_template)?;
+                outputs.push(balance_asset_record);
+
+                let to_black_template = AssetRecordTemplate::with_no_asset_tracing(
+                    entry.amount,
+                    FRA_ASSET_TYPE,
+                    AssetRecordType::NonConfidentialAmount_NonConfidentialAssetType,
+                    *BLACK_HOLE_PUBKEY_STAKING,
+                );
+                let to_black_asset_record =
+                    AssetRecord::from_template_no_identity_tracing(prng, &to_black_template)?;
+                outputs.push(to_black_asset_record);
 
                 for (keypair, output_id, open_asset_record) in &open_input {
                     if open_asset_record.blind_asset_record.public_key == pk {

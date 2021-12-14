@@ -187,7 +187,7 @@ pub fn execute_delegate<'a>(
                 delegators.insert(op.validator_address.clone(), delegator)?;
 
                 // must safe ,this field must be present when self-delegation
-                let validator_pk =  if let Some(validator_pk)= op.validator_pubkey.clone() {
+                let validator_pk = if let Some(validator_pk) = op.validator_pubkey.clone() {
                     validator_pk
                 } else {
                     return Err(abcf::Error::ABCIApplicationError(
@@ -197,7 +197,6 @@ pub fn execute_delegate<'a>(
                 };
 
                 validator_addr_pubkey.insert(op.validator_address.clone(), validator_pk.clone())?;
-
 
                 // validator pubkey must be exist when self-delegation
                 let validator_update = ValidatorUpdate {

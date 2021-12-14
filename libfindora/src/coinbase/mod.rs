@@ -22,9 +22,24 @@ impl TryFrom<&Transaction> for CoinbaseTransaction {
 
         for i in 0..tx.outputs.len() {
             let output = &tx.outputs[i];
-            if let OutputOperation::IssueAsset = output.operation {
-                // safety unwrap
-                outputs.push((
+
+            match &output.operation {
+                OutputOperation::IssueAsset => {
+                    // safety unwrap
+                    outputs.push((
+                        i.try_into().map_err(|e| {
+                            abcf::Error::ABCIApplicationError(
+                                90001,
+                                format!("convert index error, {}", e),
+                            )
+                        })?,
+                        Output {
+                            core: output.core.clone(),
+                            owner_memo: output.owner_memo.clone(),
+                        },
+                    ))
+                }
+                OutputOperation::Undelegate(_) => outputs.push((
                     i.try_into().map_err(|e| {
                         abcf::Error::ABCIApplicationError(
                             90001,
@@ -35,7 +50,8 @@ impl TryFrom<&Transaction> for CoinbaseTransaction {
                         core: output.core.clone(),
                         owner_memo: output.owner_memo.clone(),
                     },
-                ))
+                )),
+                _ => {}
             }
         }
 

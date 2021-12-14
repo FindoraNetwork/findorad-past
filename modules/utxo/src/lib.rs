@@ -8,7 +8,6 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCResponse, StatefulBatch, StatelessBatch,
 };
-use libfindora::event;
 use libfindora::utxo::{
     GetOwnedUtxoReq, GetOwnedUtxoResp, Output, OutputId, OwnedOutput, UtxoTransacrion,
     ValidateTransaction,
@@ -123,7 +122,6 @@ impl Application for UtxoModule {
         }
 
         let tx: &UtxoTransacrion = &req.tx;
-
         let mut validate_tx = ValidateTransaction {
             inputs: Vec::new(),
             outputs: Vec::new(),
