@@ -43,7 +43,7 @@ struct Create {
 #[derive(Parser, Debug)]
 struct Show {
     /// Findora wallet address (fra1rkv...)
-    #[clap(forbid_empty_values = true, value_name = "WALLET ADDRESS")]
+    #[clap(forbid_empty_values = true, value_name = "ADDRESS")]
     addr: String,
 }
 
@@ -56,7 +56,7 @@ struct Issue {
     #[clap(short, long)]
     code: Option<String>,
     /// Amount when issuing an asset
-    #[clap(short, long, default_value = "0")]
+    #[clap(short, long, forbid_empty_values = true)]
     amount: u64,
     /// Is hidden the amount when issuing an asset
     #[clap(long)]

@@ -4,7 +4,6 @@ use clap::{Parser, ValueHint};
 
 use crate::config::Config;
 
-mod account;
 mod asset;
 mod claim;
 mod contract;
@@ -35,7 +34,6 @@ impl Opts {
         let config = Config::load(&self.home, &self.config)?;
 
         match &self.subcmd {
-            SubCommand::Account(c) => c.execute(config).await?,
             SubCommand::Asset(c) => c.execute(config).await?,
             SubCommand::Claim(c) => c.execute(config).await?,
             SubCommand::Contract(c) => c.execute(config).await?,
@@ -56,8 +54,6 @@ impl Opts {
 
 #[derive(Parser, Debug)]
 enum SubCommand {
-    /// Return user contract account information
-    Account(account::Command),
     /// Manipulate custom asset
     Asset(asset::Command),
     /// Claim accumulated FRA rewards
