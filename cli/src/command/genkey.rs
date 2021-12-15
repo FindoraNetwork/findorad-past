@@ -1,14 +1,27 @@
-use clap::{ArgGroup, Parser};
-use ruc::Result;
+use clap::Parser;
 
 use crate::config::Config;
 
 #[derive(Parser, Debug)]
-#[clap(group = ArgGroup::new("genkey"))]
-pub struct Command {}
+pub struct Command {
+    #[clap(subcommand)]
+    typ: KeyType,
+}
+
+#[derive(Parser, Debug)]
+enum KeyType {
+    /// Generate a random Findora public and private key pair
+    Findora,
+    /// Generate an Ethereum public and private key pair from??? and memo too???
+    Ethereum,
+}
 
 impl Command {
-    pub async fn execute(&self, config: Config) -> ruc::Result<()> {
+    pub async fn execute(&self, _config: Config) -> ruc::Result<()> {
+        match &self.typ {
+            KeyType::Findora => {}
+            KeyType::Ethereum => {}
+        }
         Ok(())
     }
 }
