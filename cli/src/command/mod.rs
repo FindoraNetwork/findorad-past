@@ -22,9 +22,9 @@ mod wallet;
 #[derive(Parser, Debug)]
 #[clap(author, about, version)]
 pub struct Opts {
-    #[clap(short, long, default_value = concat!(env!("HOME"), "/.findora/fn"), value_hint = ValueHint::DirPath)]
+    #[clap(long, default_value = concat!(env!("HOME"), "/.findora/fn"),value_name = "FOLDER", value_hint = ValueHint::DirPath)]
     pub home: PathBuf,
-    #[clap(short, long, default_value = concat!(env!("HOME"), "/.findora/fn/config.toml"), value_hint = ValueHint::FilePath)]
+    #[clap(long, default_value = concat!(env!("HOME"), "/.findora/fn/config.toml"), value_name = "FILE", value_hint = ValueHint::FilePath)]
     pub config: PathBuf,
     #[clap(subcommand)]
     subcmd: SubCommand,

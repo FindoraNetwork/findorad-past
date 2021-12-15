@@ -1,16 +1,15 @@
-use clap::{ArgGroup, Parser};
+use clap::Parser;
 
 use crate::config::Config;
 
 #[derive(Parser, Debug)]
-#[clap(group = ArgGroup::new("claim"))]
 pub struct Command {
-    /// how many FRA units to claim [ default: all ]
+    /// Amount of the FRA tokens to claim [default: all]
     #[clap(short, long)]
     amount: Option<u64>,
-    /// the file path which contains base64-formatted XfrPrivateKey of an existing wallet
-    #[clap(value_name = "PATH")]
-    private_key: std::path::PathBuf,
+    /// File path of Findora wallet which contains base64-formatted XfrPrivateKey
+    #[clap(value_name = "FILE")]
+    secret_key: std::path::PathBuf,
 }
 
 impl Command {
