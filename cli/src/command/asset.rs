@@ -1,5 +1,4 @@
 use clap::{ArgGroup, Parser};
-use ruc::Result;
 
 use crate::config::Config;
 
@@ -8,7 +7,7 @@ use crate::config::Config;
 pub struct Command {}
 
 impl Command {
-    pub async fn execute(&self, config: Config) -> ruc::Result<()> {
+    pub async fn execute(&self, _config: Config) -> ruc::Result<()> {
         Ok(())
     }
 }

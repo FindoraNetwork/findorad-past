@@ -6,7 +6,7 @@ use crate::config::Config;
 #[clap(group = ArgGroup::new("account").required(true).args(&["addr"]))]
 pub struct Command {
     /// Findora account(fra1rkv...) or Ethereum address(0xd3Bf...)
-    #[clap(value_name = "address")]
+    #[clap(value_name = "ADDRESS")]
     addr: String,
 }
 
