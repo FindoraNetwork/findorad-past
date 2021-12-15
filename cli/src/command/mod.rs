@@ -56,38 +56,30 @@ impl Opts {
 
 #[derive(Parser, Debug)]
 enum SubCommand {
-    #[clap(version, author, about = "Return user contract account information")]
+    /// Return user contract account information
     Account(account::Command),
-    #[clap(version, author, about = "Manipulate custom asset")]
+    /// Manipulate custom asset
     Asset(asset::Command),
-    #[clap(version, author, about = "Claim accumulated FRA rewards")]
+    /// Claim accumulated FRA rewards
     Claim(claim::Command),
-    #[clap(version, author, about = "Manipulate contract")]
+    /// Manipulate contract
     Contract(contract::Command),
-    #[clap(version, author, about = "Delegating operations")]
+    /// Delegating operations
     Delegate(delegate::Command),
-    #[clap(
-        version,
-        author,
-        about = "Generating key pair and Ethereum address operations"
-    )]
+    /// Generating key pair and Ethereum address operations
     Genkey(genkey::Command),
-    #[clap(
-        version,
-        author,
-        about = "View validator status and accumulated rewards"
-    )]
+    /// View validator status and accumulated rewards
     Show(show::Command),
-    #[clap(version, author, about = "Staking operations")]
+    /// Staking operations
     Stake(stake::Command),
-    #[clap(version, author, about = "Setup configuration entry.")]
+    /// Setup configuration entry
     Setup(setup::Command),
-    #[clap(version, author, about = "Execute batch of transaction.")]
+    /// Execute batch of transaction
     Execute(execute::Command),
-    #[clap(version, author, about = "Transfer asset to other user.")]
+    /// Transfer asset to other user
     Transfer(transfer::Command),
-    #[clap(version, author, about = "Issue asset.")]
+    /// Issue asset
     Issue(issue::Command),
-    #[clap(version, author, about = "Manage wallet")]
+    /// Manage wallet
     Wallet(wallet::Command),
 }
