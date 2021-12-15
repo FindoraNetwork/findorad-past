@@ -1,13 +1,20 @@
 use std::path::PathBuf;
 
 use clap::{Parser, ValueHint};
-// use ruc::*;
 
 use crate::config::Config;
 
+mod account;
+mod asset;
+mod claim;
+mod contract;
+mod delegate;
 mod execute;
+mod genkey;
 mod issue;
 mod setup;
+mod show;
+mod stake;
 mod transfer;
 mod tx;
 mod wallet;
@@ -28,6 +35,14 @@ impl Opts {
         let config = Config::load(&self.home, &self.config)?;
 
         match &self.subcmd {
+            SubCommand::Account(c) => c.execute(config).await?,
+            SubCommand::Asset(c) => c.execute(config).await?,
+            SubCommand::Claim(c) => c.execute(config).await?,
+            SubCommand::Contract(c) => c.execute(config).await?,
+            SubCommand::Delegate(c) => c.execute(config).await?,
+            SubCommand::Genkey(c) => c.execute(config).await?,
+            SubCommand::Show(c) => c.execute(config).await?,
+            SubCommand::Stake(c) => c.execute(config).await?,
             SubCommand::Setup(c) => c.execute(config).await?,
             SubCommand::Execute(c) => c.execute(config).await?,
             SubCommand::Transfer(c) => c.execute(config).await?,
@@ -41,6 +56,30 @@ impl Opts {
 
 #[derive(Parser, Debug)]
 enum SubCommand {
+    #[clap(version, author, about = "Return user contract account information")]
+    Account(account::Command),
+    #[clap(version, author, about = "Manipulate custom asset")]
+    Asset(asset::Command),
+    #[clap(version, author, about = "Claim accumulated FRA rewards")]
+    Claim(claim::Command),
+    #[clap(version, author, about = "Manipulate contract")]
+    Contract(contract::Command),
+    #[clap(version, author, about = "Delegating operations")]
+    Delegate(delegate::Command),
+    #[clap(
+        version,
+        author,
+        about = "Generating key pair and Ethereum address operations"
+    )]
+    Genkey(genkey::Command),
+    #[clap(
+        version,
+        author,
+        about = "View validator status and accumulated rewards"
+    )]
+    Show(show::Command),
+    #[clap(version, author, about = "Staking operations")]
+    Stake(stake::Command),
     #[clap(version, author, about = "Setup configuration entry.")]
     Setup(setup::Command),
     #[clap(version, author, about = "Execute batch of transaction.")]
