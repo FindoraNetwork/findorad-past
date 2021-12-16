@@ -43,8 +43,8 @@ struct Create {
 #[derive(Parser, Debug)]
 struct Show {
     /// Findora wallet address (fra1rkv...)
-    #[clap(forbid_empty_values = true, value_name = "ADDRESS")]
-    addr: String,
+    #[clap(forbid_empty_values = true)]
+    address: String,
 }
 
 #[derive(Parser, Debug)]
