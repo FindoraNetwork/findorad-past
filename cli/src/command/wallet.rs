@@ -1,4 +1,4 @@
-use clap::{ArgGroup, Parser};
+use clap::Parser;
 // use ruc::d;
 // use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrSecretKey};
 //
@@ -14,37 +14,74 @@ use clap::{ArgGroup, Parser};
 use crate::config::Config;
 
 #[derive(Parser, Debug)]
-#[clap(group = ArgGroup::new("account"))]
 pub struct Command {
-    #[clap(short, long, group = "account")]
-    /// Add account by mnemonic.
-    add_mnemonic: Option<String>,
+    // #[clap(short, long)]
+    // /// Add account by mnemonic.
+    // add_mnemonic: Option<String>,
 
-    #[clap(short, long, group = "account")]
-    /// List account.
-    list: bool,
+    // #[clap(short, long)]
+    // /// List account.
+    // list: bool,
 
-    #[clap(short, long, group = "account")]
-    /// List account.
-    delete: Option<usize>,
+    // #[clap(short, long)]
+    // /// List account.
+    // delete: Option<usize>,
 
-    #[clap(short, long, group = "account")]
-    /// List account.
-    generate: bool,
+    // #[clap(short, long)]
+    // /// List account.
+    // generate: bool,
 
-    #[clap(short, long, group = "account")]
-    /// Show account info.
-    show: bool,
+    // #[clap(short, long)]
+    // /// Show account info.
+    // show: bool,
 
-    wallet: Option<String>,
+    // wallet: Option<String>,
 
-    #[clap(short = 'i', long)]
-    /// Designated account
-    account_index: Option<usize>,
+    // #[clap(short = 'i', long)]
+    // /// Designated account
+    // account_index: Option<usize>,
+    #[clap(subcommand)]
+    subcmd: SubCommand,
+}
+
+#[derive(Parser, Debug)]
+enum SubCommand {
+    /// Show all wallets information
+    Show(Show),
+    /// Create a new wallet or create a new wallet from Mnemonic phrase
+    Create(Create),
+    /// Delete a wallet
+    Delete(Delete),
+}
+
+#[derive(Parser, Debug)]
+struct Show {
+    /// Wallet address to show the information of the specific one
+    #[clap(short, long, forbid_empty_values = true)]
+    address: Option<String>,
+}
+
+#[derive(Parser, Debug)]
+struct Create {
+    /// Specific to create a new wallet from Mnemonic phrase
+    #[clap(short, long, forbid_empty_values = true)]
+    mnemonic: Option<String>,
+}
+
+#[derive(Parser, Debug)]
+struct Delete {
+    /// Wallet address to do the deletion
+    #[clap(forbid_empty_values = true)]
+    address: String,
 }
 
 impl Command {
-    pub async fn execute(&self, config: Config) -> ruc::Result<()> {
+    pub async fn execute(&self, _config: Config) -> ruc::Result<()> {
+        match &self.subcmd {
+            SubCommand::Show(_show) => {}
+            SubCommand::Create(_create) => {}
+            SubCommand::Delete(_delete) => {}
+        }
         // use ruc::*;
 
         // if self.generate {
