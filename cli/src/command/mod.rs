@@ -6,11 +6,8 @@ use crate::config::Config;
 
 mod asset;
 mod claim;
-mod contract;
 mod delegate;
 mod execute;
-mod genkey;
-mod issue;
 mod setup;
 mod show;
 mod stake;
@@ -36,15 +33,12 @@ impl Opts {
         match &self.subcmd {
             SubCommand::Asset(c) => c.execute(config).await?,
             SubCommand::Claim(c) => c.execute(config).await?,
-            SubCommand::Contract(c) => c.execute(config).await?,
             SubCommand::Delegate(c) => c.execute(config).await?,
-            SubCommand::Genkey(c) => c.execute(config).await?,
             SubCommand::Show(c) => c.execute(config).await?,
             SubCommand::Stake(c) => c.execute(config).await?,
             SubCommand::Setup(c) => c.execute(config).await?,
             SubCommand::Execute(c) => c.execute(config).await?,
             SubCommand::Transfer(c) => c.execute(config).await?,
-            SubCommand::Issue(c) => c.execute(config).await?,
             SubCommand::Wallet(c) => c.execute(config).await?,
         }
 
@@ -58,12 +52,8 @@ enum SubCommand {
     Asset(asset::Command),
     /// Claim accumulated FRA rewards
     Claim(claim::Command),
-    /// Manipulate contract
-    Contract(contract::Command),
     /// Delegating operations
     Delegate(delegate::Command),
-    /// Generating key pair and Ethereum address operations
-    Genkey(genkey::Command),
     /// View validator status and accumulated rewards
     Show(show::Command),
     /// Staking operations
@@ -74,8 +64,6 @@ enum SubCommand {
     Execute(execute::Command),
     /// Transfer asset to other user
     Transfer(transfer::Command),
-    /// Issue asset
-    Issue(issue::Command),
     /// Manage wallet
     Wallet(wallet::Command),
 }
