@@ -8,7 +8,6 @@ mod asset;
 mod delegate;
 mod execute;
 mod setup;
-mod show;
 mod transfer;
 mod tx;
 mod wallet;
@@ -31,7 +30,6 @@ impl Opts {
         match &self.subcmd {
             SubCommand::Asset(c) => c.execute(config).await?,
             SubCommand::Delegate(c) => c.execute(config).await?,
-            SubCommand::Show(c) => c.execute(config).await?,
             SubCommand::Setup(c) => c.execute(config).await?,
             SubCommand::Execute(c) => c.execute(config).await?,
             SubCommand::Transfer(c) => c.execute(config).await?,
@@ -48,8 +46,6 @@ enum SubCommand {
     Asset(asset::Command),
     /// Delegating operations
     Delegate(delegate::Command),
-    /// View validator status and accumulated rewards
-    Show(show::Command),
     /// Setup configuration entry
     Setup(setup::Command),
     /// Execute batch of transaction
