@@ -12,7 +12,7 @@ pub struct Command {
 enum SubCommand {
     /// Create a new asset
     Create(Create),
-    /// Show list of assets
+    /// Show a list of asset addresses or specific one for detail information
     Show(Show),
     /// Issue an asset on ledger
     Issue(Issue),
@@ -42,9 +42,9 @@ struct Create {
 
 #[derive(Parser, Debug)]
 struct Show {
-    /// Findora wallet address (fra1rkv...)
-    #[clap(forbid_empty_values = true)]
-    address: String,
+    /// Wallet address to show the asset information of the specific one
+    #[clap(short, long, forbid_empty_values = true)]
+    address: Option<String>,
 }
 
 #[derive(Parser, Debug)]

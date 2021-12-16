@@ -48,7 +48,7 @@ enum SubCommand {
     Delegate(delegate::Command),
     /// Setup configuration entry
     Setup(setup::Command),
-    /// Execute batch of transaction
+    /// Execute batch of transactions
     Execute(execute::Command),
     /// Transfer asset to other user
     Transfer(transfer::Command),

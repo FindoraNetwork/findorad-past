@@ -21,7 +21,7 @@ pub struct Command {
 
 #[derive(Parser, Debug)]
 enum SubCommand {
-    /// Show all wallets information
+    /// Show a list of wallet addresses or specific one for detail information
     Show(Show),
     /// Create a new wallet or create a new wallet from Mnemonic phrase
     Create(Create),
@@ -31,7 +31,7 @@ enum SubCommand {
 
 #[derive(Parser, Debug)]
 struct Show {
-    /// Wallet address to show the information of the specific one
+    /// Wallet address to show the wallet information of the specific one
     #[clap(short, long, forbid_empty_values = true)]
     address: Option<String>,
 }
