@@ -1,7 +1,7 @@
 #![feature(generic_associated_types)]
 
-mod utxo;
-pub use utxo::UtxoModule;
+mod module;
+pub use module::UtxoModule;
 
 pub mod utils;
 

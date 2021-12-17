@@ -9,4 +9,5 @@ members = [
     "modules/staking",
     "modules/rewards",
     "modules/fee",
+    "modules/asset",
 ]

@@ -49,25 +49,25 @@ impl Builder {
                 Entry::Issue(e) => {
                     let record = e.to_output_asset_record(prng)?;
 
-                    inputs.push(Input {
-                        id: OutputId {
-                            txid: H512::zero(),
-                            n: u32::try_from(inputs.len()).c(d!())?,
-                        },
-                        record: record.clone(),
-                        operation: InputOperation::IssueAsset,
-                    });
-
-                    outputs.push(Output {
-                        record,
-                        operation: OutputOperation::IssueAsset,
-                        address: Address::from(e.keypair.get_pk()),
-                    });
-
-                    let am = e.to_input_amount()?;
-
-                    inputs_amount.insert(am.0, am.1);
-
+                    //                     inputs.push(Input {
+                    //     id: OutputId {
+                    //         txid: H512::zero(),
+                    //         n: u32::try_from(inputs.len()).c(d!())?,
+                    //     },
+                    //     record: record.clone(),
+                    //     operation: InputOperation::IssueAsset,
+                    // });
+                    //
+                    // outputs.push(Output {
+                    //     record,
+                    //     operation: OutputOperation::IssueAsset,
+                    //     address: Address::from(e.keypair.get_pk()),
+                    // });
+                    //
+                    // let am = e.to_input_amount()?;
+                    //
+                    // inputs_amount.insert(am.0, am.1);
+                    //
                     // TODO: Add public key for signature.
                 }
                 Entry::Transfer(t) => {

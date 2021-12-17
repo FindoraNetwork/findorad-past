@@ -74,13 +74,21 @@ struct Output {
 
     operation :union {
         transferAsset @8: Void;
-        issueAsset @9: Void;
+        issueAsset @9: IssueAsset;
         fee @10: Void;
         undelegate @11: UndelegateData;
         claimReward @12: ClaimData;
         delegate @13: DelegateData;
     }
 
+}
+
+struct IssueAsset {
+    transferable @0: Bool;
+    maximum :union {
+        none @1: Void;
+        some @2: Data;
+    }
 }
 
 struct RangeProof {

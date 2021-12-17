@@ -5,7 +5,7 @@ use zei::xfr::structs::XfrAmount;
 mod claim;
 pub use claim::Claim;
 
-use crate::{transaction, Address, FRA_XFR_ASSET_TYPE};
+use crate::{asset::FRA_ASSET_TYPE, transaction, Address};
 
 #[derive(Debug, Clone)]
 pub enum Operation {
@@ -33,7 +33,7 @@ impl TryFrom<&transaction::Transaction> for Transaction {
         for output in &tx.outputs {
             match &output.operation {
                 transaction::OutputOperation::ClaimReward(op) => {
-                    if output.core.asset != FRA_XFR_ASSET_TYPE {
+                    if output.core.asset != FRA_ASSET_TYPE {
                         return Err(abcf::Error::ABCIApplicationError(
                             90001,
                             String::from("Undelegate asset type must be FRA"),

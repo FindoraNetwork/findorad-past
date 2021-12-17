@@ -1,7 +1,7 @@
-use crate::{transaction::Signature, transaction_capnp::signature};
+use crate::{transaction::Signature, transaction_capnp::signature, Result};
 use zei::serialization::ZeiFromToBytes;
 
-pub fn build_signature(signature: &Signature, builder: signature::Builder) -> abcf::Result<()> {
+pub fn build_signature(signature: &Signature, builder: signature::Builder) -> Result<()> {
     match signature {
         Signature::Fra(s) => {
             let mut b = builder.init_fra();

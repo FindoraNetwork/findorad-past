@@ -1,7 +1,7 @@
 use crate::{
     transaction::{Output, OutputOperation},
     transaction_capnp::output,
-    Address,
+    Address, Result,
 };
 use abcf::tm_protos::crypto;
 use zei::{
@@ -9,7 +9,7 @@ use zei::{
     xfr::structs::{XfrAmount, XfrAssetType},
 };
 
-pub fn build_output(output: &Output, builder: output::Builder) -> abcf::Result<()> {
+pub fn build_output(output: &Output, builder: output::Builder) -> Result<()> {
     let mut builder = builder;
 
     {
@@ -57,7 +57,21 @@ pub fn build_output(output: &Output, builder: output::Builder) -> abcf::Result<(
     {
         let mut operation = builder.init_operation();
         match &output.operation {
-            OutputOperation::IssueAsset => operation.set_issue_asset(()),
+            OutputOperation::IssueAsset(a) => {
+                let mut asset_meta = operation.init_issue_asset();
+                asset_meta.set_transferable(a.transferable);
+
+                let mut maximum = asset_meta.init_maximum();
+
+                match a.maximum {
+                    Some(v) => {
+                        let mut bytes = [0u8; 32];
+                        v.to_big_endian(&mut bytes);
+                        maximum.set_some(&bytes);
+                    }
+                    None => maximum.set_none(()),
+                }
+            }
             OutputOperation::TransferAsset => operation.set_transfer_asset(()),
             OutputOperation::Fee => operation.set_fee(()),
             OutputOperation::Undelegate(a) => {

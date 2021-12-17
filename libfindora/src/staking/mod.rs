@@ -6,7 +6,7 @@ pub use undelegate::Undelegate;
 
 pub mod voting;
 
-use crate::{transaction, Address, FRA_XFR_ASSET_TYPE};
+use crate::{asset::FRA_ASSET_TYPE, transaction, Address};
 use std::convert::TryFrom;
 use zei::xfr::structs::XfrAmount;
 
@@ -56,7 +56,7 @@ impl TryFrom<&transaction::Transaction> for Transaction {
     fn try_from(tx: &transaction::Transaction) -> Result<Transaction, Self::Error> {
         macro_rules! insert_info {
             ($infos:ident, $output:ident, $op:ident, $ty:ident) => {
-                if $output.core.asset != FRA_XFR_ASSET_TYPE {
+                if $output.core.asset != FRA_ASSET_TYPE {
                     return Err(abcf::Error::ABCIApplicationError(
                         90001,
                         String::from("Undelegate asset type must be FRA"),

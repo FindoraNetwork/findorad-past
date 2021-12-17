@@ -1,9 +1,10 @@
 use crate::{
     transaction::{Input, InputOperation},
     transaction_capnp::input,
+    Result,
 };
 
-pub fn build_input(input: &Input, builder: input::Builder) -> abcf::Result<()> {
+pub fn build_input(input: &Input, builder: input::Builder) -> Result<()> {
     let mut builder = builder;
 
     builder.set_txid(input.txid.0.as_ref());

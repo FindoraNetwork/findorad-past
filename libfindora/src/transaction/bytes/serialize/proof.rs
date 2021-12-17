@@ -1,8 +1,8 @@
 use zei::{serialization::ZeiFromToBytes, xfr::structs::AssetTypeAndAmountProof};
 
-use crate::transaction_capnp::transaction::proof;
+use crate::{transaction_capnp::transaction::proof, Result};
 
-pub fn build_proof(proof: &AssetTypeAndAmountProof, builder: proof::Builder) -> abcf::Result<()> {
+pub fn build_proof(proof: &AssetTypeAndAmountProof, builder: proof::Builder) -> Result<()> {
     let mut builder = builder;
 
     match proof {

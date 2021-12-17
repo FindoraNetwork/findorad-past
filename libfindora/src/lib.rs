@@ -1,20 +1,19 @@
-use zei::xfr::structs::{AssetType, XfrAssetType, ASSET_TYPE_LENGTH};
-
+pub mod asset;
 pub mod coinbase;
-pub mod error;
 pub mod fee;
 pub mod rewards;
 pub mod staking;
-pub mod transaction;
 pub mod utxo;
 
-pub const FRA_ASSET_TYPE: AssetType = AssetType([0; ASSET_TYPE_LENGTH]);
-pub const FRA_XFR_ASSET_TYPE: XfrAssetType = XfrAssetType::NonConfidential(FRA_ASSET_TYPE);
+pub mod transaction;
 
 pub type Amount = u64;
 
 mod address;
 pub use address::Address;
+
+pub mod error;
+pub use error::{Error, Result};
 
 pub mod transaction_capnp {
     include!(concat!(env!("OUT_DIR"), "/transaction_capnp.rs"));
