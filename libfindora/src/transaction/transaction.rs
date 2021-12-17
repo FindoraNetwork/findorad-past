@@ -3,7 +3,7 @@ use capnp::{message::ReaderOptions, serialize_packed};
 use primitive_types::H512;
 use zei::xfr::{sig::XfrKeyPair, structs::AssetTypeAndAmountProof};
 
-use crate::{error::convert_capnp_error, transaction_capnp};
+use crate::{transaction_capnp, Result};
 
 use super::{
     bytes::{deserialize, serialize},
@@ -39,13 +39,14 @@ impl abcf::module::FromBytes for Transaction {
     where
         Self: Sized,
     {
-        let reader = serialize_packed::read_message(bytes, ReaderOptions::new())
-            .map_err(convert_capnp_error)?;
-        let root = reader
-            .get_root::<transaction_capnp::transaction::Reader>()
-            .map_err(convert_capnp_error)?;
+        fn inner(bytes: &[u8]) -> Result<Transaction> {
+            let reader = serialize_packed::read_message(bytes, ReaderOptions::new())?;
+            let root = reader.get_root::<transaction_capnp::transaction::Reader>()?;
 
-        deserialize::from_root(root)
+            deserialize::from_root(root)
+        }
+
+        Ok(inner(bytes)?)
     }
 }
 
@@ -81,13 +82,18 @@ impl Transaction {
 
 impl ToBytes for Transaction {
     fn to_bytes(&self) -> abcf::Result<Vec<u8>> {
-        let mut result = Vec::new();
+        fn inner(t: &Transaction) -> Result<Vec<u8>> {
+            let mut result = Vec::new();
 
-        let mut message = capnp::message::Builder::new_default();
-        let transaction = message.init_root::<transaction_capnp::transaction::Builder>();
+            let mut message = capnp::message::Builder::new_default();
+            let transaction = message.init_root::<transaction_capnp::transaction::Builder>();
 
-        serialize::build_transaction(self, transaction)?;
-        serialize_packed::write_message(&mut result, &message).map_err(convert_capnp_error)?;
-        Ok(result)
+            serialize::build_transaction(t, transaction)?;
+            serialize_packed::write_message(&mut result, &message)?;
+
+            Ok(result)
+        }
+
+        Ok(inner(self)?)
     }
 }
