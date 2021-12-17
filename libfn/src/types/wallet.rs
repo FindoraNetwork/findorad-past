@@ -5,6 +5,7 @@ use super::{Address, PublicKey, SecretKey};
 use ruc::*;
 
 pub struct Wallet {
+    pub mnemonic: String,
     pub address: Address,
     pub public: PublicKey,
     pub secret: SecretKey,
@@ -18,6 +19,7 @@ impl Wallet {
         let address = public.to_address()?;
 
         Ok(Wallet {
+            mnemonic,
             address,
             public,
             secret,
@@ -30,6 +32,7 @@ impl Wallet {
         let address = public.to_address()?;
 
         Ok(Wallet {
+            mnemonic: s.to_string(),
             address,
             public,
             secret,
