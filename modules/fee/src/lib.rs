@@ -2,9 +2,8 @@
 
 use abcf::{
     bs3::{merkle::empty::EmptyMerkle, model::Value},
-    manager::TContext,
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
-    Application, StatefulBatch, StatelessBatch,
+    Application, TxnContext,
 };
 use libfindora::fee::{constant::FRA_FEE_AMOUNT, FeeTransaction};
 
@@ -27,7 +26,7 @@ impl Application for FeeModule {
 
     async fn check_tx(
         &mut self,
-        _context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        _context: &mut TxnContext<'_, Self>,
         req: &RequestCheckTx<Self::Transaction>,
     ) -> abcf::Result<ResponseCheckTx> {
         let tx = &req.tx;
@@ -45,7 +44,7 @@ impl Application for FeeModule {
     /// Execute transaction on state.
     async fn deliver_tx(
         &mut self,
-        _context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        _context: &mut TxnContext<'_, Self>,
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
         let tx = &req.tx;

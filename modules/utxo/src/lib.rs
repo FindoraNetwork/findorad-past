@@ -4,21 +4,17 @@ use std::convert::TryInto;
 
 use abcf::{
     bs3::{merkle::append_only::AppendOnlyMerkle, model::Map, MapStore},
-    manager::TContext,
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
-    Application, RPCResponse, StatefulBatch, StatelessBatch,
+    Application, TxnContext,
 };
 use libfindora::{
-    utxo::{
-        GetOwnedUtxoReq, GetOwnedUtxoResp, Output, OutputId, OwnedOutput, UtxoTransacrion,
-        ValidateTransaction,
-    },
+    utxo::{Output, OutputId, UtxoTransacrion, ValidateTransaction},
     Address,
 };
 use rand_chacha::ChaChaRng;
 use zei::setup::PublicParams;
 
-pub mod calls;
+// pub mod calls;
 // mod event;
 
 #[abcf::module(name = "utxo", version = 1, impl_version = "0.1.1", target_height = 0)]
@@ -33,42 +29,42 @@ pub struct UtxoModule {
 
 #[abcf::rpcs]
 impl UtxoModule {
-    pub async fn get_owned_outputs(
-        &mut self,
-        context: &mut abcf::manager::RContext<'_, abcf::Stateless<Self>, abcf::Stateful<Self>>,
-        request: GetOwnedUtxoReq,
-    ) -> RPCResponse<GetOwnedUtxoResp> {
-        let mut outputs = Vec::new();
-
-        for owner_id in 0..request.owners.len() {
-            let owner = &request.owners[owner_id];
-            match context.stateless.owned_outputs.get(owner) {
-                Err(e) => {
-                    let error: abcf::Error = e.into();
-                    return error.into();
-                }
-                Ok(v) => match v {
-                    Some(s) => {
-                        let output_ids = s.as_ref();
-                        for output_id in output_ids {
-                            if let Ok(Some(output)) = context.stateful.output_set.get(output_id) {
-                                outputs.push((
-                                    owner_id,
-                                    OwnedOutput {
-                                        output_id: output_id.clone(),
-                                        output: output.clone(),
-                                    },
-                                ))
-                            }
-                        }
-                    }
-                    None => {}
-                },
-            };
-        }
-        let resp = GetOwnedUtxoResp { outputs };
-        RPCResponse::new(resp)
-    }
+    //     pub async fn get_owned_outputs(
+    //     &mut self,
+    //     context: &mut abcf::manager::RContext<'_, abcf::Stateless<Self>, abcf::Stateful<Self>>,
+    //     request: GetOwnedUtxoReq,
+    // ) -> RPCResponse<GetOwnedUtxoResp> {
+    //     let mut outputs = Vec::new();
+    //
+    //     for owner_id in 0..request.owners.len() {
+    //         let owner = &request.owners[owner_id];
+    //         match context.stateless.owned_outputs.get(owner) {
+    //             Err(e) => {
+    //                 let error: abcf::Error = e.into();
+    //                 return error.into();
+    //             }
+    //             Ok(v) => match v {
+    //                 Some(s) => {
+    //                     let output_ids = s.as_ref();
+    //                     for output_id in output_ids {
+    //                         if let Ok(Some(output)) = context.stateful.output_set.get(output_id) {
+    //                             outputs.push((
+    //                                 owner_id,
+    //                                 OwnedOutput {
+    //                                     output_id: output_id.clone(),
+    //                                     output: output.clone(),
+    //                                 },
+    //                             ))
+    //                         }
+    //                     }
+    //                 }
+    //                 None => {}
+    //             },
+    //         };
+    //     }
+    //     let resp = GetOwnedUtxoResp { outputs };
+    //     RPCResponse::new(resp)
+    //     }
 }
 
 /// Module's block logic.
@@ -78,7 +74,7 @@ impl Application for UtxoModule {
 
     async fn check_tx(
         &mut self,
-        _context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        _context: &mut TxnContext<'_, Self>,
         _req: &RequestCheckTx<Self::Transaction>,
     ) -> abcf::Result<ResponseCheckTx> {
         Ok(Default::default())
@@ -87,43 +83,43 @@ impl Application for UtxoModule {
     /// Execute transaction on state.
     async fn deliver_tx(
         &mut self,
-        context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        context: &mut TxnContext<'_, Self>,
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
         // TODO: this code used to module call, modify in next version of abcf.
-        if let Some(calls) = context.calls.pop_module_calls("utxo") {
-            for entry in calls {
-                match entry.method.as_str() {
-                    "add_utxo" => {
-                        let args = entry.args.downcast::<calls::ArgAddUtxo>();
-
-                        if args.is_ok() {
-                            let args = *args.unwrap();
-                            let output_id = OutputId {
-                                txid: args.txid,
-                                n: args.n,
-                            };
-                            let output = args.output;
-
-                            let owner = output.address.clone();
-                            match context.stateless.owned_outputs.get_mut(&owner)? {
-                                Some(v) => {
-                                    v.push(output_id.clone());
-                                }
-                                None => {
-                                    let mut v = Vec::new();
-                                    v.push(output_id.clone());
-                                    context.stateless.owned_outputs.insert(owner, v)?;
-                                }
-                            }
-                            context.stateful.output_set.insert(output_id, output)?;
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        }
-
+        //         if let Some(calls) = context.calls.pop_module_calls("utxo") {
+        //     for entry in calls {
+        //         match entry.method.as_str() {
+        //             "add_utxo" => {
+        //                 let args = entry.args.downcast::<calls::ArgAddUtxo>();
+        //
+        //                 if args.is_ok() {
+        //                     let args = *args.unwrap();
+        //                     let output_id = OutputId {
+        //                         txid: args.txid,
+        //                         n: args.n,
+        //                     };
+        //                     let output = args.output;
+        //
+        //                     let owner = output.address.clone();
+        //                     match context.stateless.owned_outputs.get_mut(&owner)? {
+        //                         Some(v) => {
+        //                             v.push(output_id.clone());
+        //                         }
+        //                         None => {
+        //                             let mut v = Vec::new();
+        //                             v.push(output_id.clone());
+        //                             context.stateless.owned_outputs.insert(owner, v)?;
+        //                         }
+        //                     }
+        //                     context.stateful.output_set.insert(output_id, output)?;
+        //                 }
+        //             }
+        //             _ => {}
+        //         }
+        //     }
+        // }
+        //
         let tx: &UtxoTransacrion = &req.tx;
 
         let mut validate_tx = ValidateTransaction {
@@ -214,6 +210,6 @@ impl Application for UtxoModule {
 #[abcf::methods]
 impl UtxoModule {}
 
-pub mod utxo_module_rpc {
-    include!(concat!(env!("OUT_DIR"), "/utxomodule.rs"));
-}
+// pub mod utxo_module_rpc {
+    // include!(concat!(env!("OUT_DIR"), "/utxomodule.rs"));
+// }

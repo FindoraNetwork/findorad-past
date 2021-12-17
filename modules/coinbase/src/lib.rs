@@ -6,12 +6,11 @@ use abcf::{
         model::{Map, Value},
         MapStore,
     },
-    manager::TContext,
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
-    Application, RPCResponse, StatefulBatch, StatelessBatch,
+    Application, TxnContext,
 };
 use libfindora::{
-    coinbase::{CoinbaseTransaction, GetAssetOwnerReq, GetAssetOwnerResp},
+    coinbase::{CoinbaseTransaction},
     Address,
 };
 use zei::xfr::structs::{AssetType, XfrAssetType};
@@ -32,25 +31,25 @@ pub struct CoinbaseModule {
 
 #[abcf::rpcs]
 impl CoinbaseModule {
-    pub async fn get_asset_owner(
-        &mut self,
-        context: &mut abcf::manager::RContext<'_, abcf::Stateless<Self>, abcf::Stateful<Self>>,
-        request: GetAssetOwnerReq,
-    ) -> RPCResponse<GetAssetOwnerResp> {
-        let asset = request.asset_type;
-
-        let owner = match context.stateful.asset_owner.get(&asset) {
-            Err(e) => {
-                let error: abcf::Error = e.into();
-                return error.into();
-            }
-            Ok(v) => v.map(|i| i.clone()),
-        };
-
-        let resp = GetAssetOwnerResp { owner };
-
-        RPCResponse::new(resp)
-    }
+    //     pub async fn get_asset_owner(
+    //     &mut self,
+    //     context: &mut abcf::manager::RPCDependence,
+    //     request: GetAssetOwnerReq,
+    // ) -> RPCResponse<GetAssetOwnerResp> {
+    //     let asset = request.asset_type;
+    //
+    //     let owner = match context.stateful.asset_owner.get(&asset) {
+    //         Err(e) => {
+    //             let error: abcf::Error = e.into();
+    //             return error.into();
+    //         }
+    //         Ok(v) => v.map(|i| i.clone()),
+    //     };
+    //
+    //     let resp = GetAssetOwnerResp { owner };
+    //
+    //     RPCResponse::new(resp)
+    //     }
 }
 
 /// Module's block logic.
@@ -60,7 +59,7 @@ impl Application for CoinbaseModule {
 
     async fn check_tx(
         &mut self,
-        _context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        _context: &mut TxnContext<'_, Self>,
         _req: &RequestCheckTx<Self::Transaction>,
     ) -> abcf::Result<ResponseCheckTx> {
         Ok(Default::default())
@@ -69,7 +68,7 @@ impl Application for CoinbaseModule {
     /// Execute transaction on state.
     async fn deliver_tx(
         &mut self,
-        context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        context: &mut TxnContext<'_, Self>,
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
         println!("{:?}", req.tx);
@@ -102,16 +101,6 @@ impl Application for CoinbaseModule {
                     context.stateful.asset_owner.insert(asset_type, owner)?;
                 }
             }
-
-            // TODO: this code used to module call, modify in next version of abcf.
-            let call_arg = fm_utxo::calls::ArgAddUtxo {
-                txid: req.tx.txid,
-                n: output.0,
-                output: output.1.clone(),
-            };
-            context
-                .calls
-                .push_module_call("utxo", call_arg.to_call_entry());
         }
 
         Ok(Default::default())

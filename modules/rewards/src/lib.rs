@@ -2,9 +2,8 @@
 
 use abcf::{
     bs3::{merkle::empty::EmptyMerkle, model::Value},
-    manager::TContext,
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
-    Application, StatefulBatch, StatelessBatch,
+    Application, TxnContext,
 };
 use libfindora::rewards;
 
@@ -32,7 +31,7 @@ impl Application for Module {
 
     async fn check_tx(
         &mut self,
-        _context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        _context: &mut TxnContext<'_, Self>,
         _req: &RequestCheckTx<Self::Transaction>,
     ) -> abcf::Result<ResponseCheckTx> {
         Ok(Default::default())
@@ -41,7 +40,7 @@ impl Application for Module {
     /// Execute transaction on state.
     async fn deliver_tx(
         &mut self,
-        _context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        _context: &mut TxnContext<'_, Self>,
         _req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
         Ok(Default::default())

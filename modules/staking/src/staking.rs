@@ -14,6 +14,7 @@ use abcf::{
     tm_protos::abci::ValidatorUpdate,
     Application, Stateful, StatefulBatch, Stateless, StatelessBatch,
 };
+use abcf::{AppContext, TxnContext};
 use libfindora::{
     staking::{
         self,
@@ -74,17 +75,13 @@ impl Application for StakingModule {
 
     async fn check_tx(
         &mut self,
-        _context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        _context: &mut TxnContext<'_, Self>,
         _req: &RequestCheckTx<Self::Transaction>,
     ) -> abcf::Result<ResponseCheckTx> {
         Ok(Default::default())
     }
 
-    async fn begin_block(
-        &mut self,
-        _context: &mut AContext<Stateless<Self>, Stateful<Self>>,
-        _req: &RequestBeginBlock,
-    ) {
+    async fn begin_block(&mut self, _context: &mut AppContext<'_, Self>, _req: &RequestBeginBlock) {
         let mut penalty_list = Vec::new();
 
         // get the list of validators to be punished
@@ -120,7 +117,7 @@ impl Application for StakingModule {
 
     async fn deliver_tx(
         &mut self,
-        context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        context: &mut TxnContext<'_, Self>,
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
         let infos = &req.tx.infos;
@@ -147,7 +144,7 @@ impl Application for StakingModule {
 
     async fn end_block(
         &mut self,
-        _context: &mut AContext<Stateless<Self>, Stateful<Self>>,
+        _context: &mut AppContext<'_, Self>,
         _req: &RequestEndBlock,
     ) -> ResponseEndBlock {
         let mut res = ResponseEndBlock::default();
