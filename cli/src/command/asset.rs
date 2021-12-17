@@ -20,8 +20,8 @@ enum SubCommand {
 
 #[derive(Parser, Debug)]
 struct Create {
-    /// File path to the Findora wallet which contains base64-formatted XfrPrivateKey
-    #[clap(short, long, value_name = "PATH", value_hint = ValueHint::FilePath)]
+    /// To specific a file path to the Findora wallet which contains base64-formatted XfrPrivateKey
+    #[clap(short, long, value_name = "PATH", forbid_empty_values = true, value_hint = ValueHint::FilePath)]
     secret_key: Option<std::path::PathBuf>,
     /// Mnemonic phrase of the new asset
     #[clap(forbid_empty_values = true)]
@@ -49,14 +49,14 @@ struct Show {
 
 #[derive(Parser, Debug)]
 struct Issue {
-    /// File path to the Findora wallet which contains base64-formatted XfrPrivateKey
+    /// To specific a file path to the Findora wallet which contains base64-formatted XfrPrivateKey
     #[clap(short, long, value_name = "PATH", value_hint = ValueHint::FilePath)]
     secret_key: Option<std::path::PathBuf>,
     /// Custom code of the new asset
     #[clap(short, long)]
     code: Option<String>,
     /// Amount when issuing an asset
-    #[clap(short, long, forbid_empty_values = true)]
+    #[clap(short, long, required = true, forbid_empty_values = true)]
     amount: u64,
     /// Is hidden the amount when issuing an asset
     #[clap(long)]

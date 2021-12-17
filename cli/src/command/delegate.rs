@@ -18,7 +18,7 @@ enum SubCommand {
     StakeOther(StakeOther),
     /// Claim accumulated FRA rewards from a validator node
     Claim(Claim),
-    /// Show the validator status and accumulated rewards
+    /// Show a list of validator addresses or specific one for detail information
     Show(Show),
 }
 
@@ -55,7 +55,7 @@ struct StakeOther {
 #[derive(Parser, Debug)]
 pub struct Claim {
     /// File path to the Findora wallet which contains base64-formatted XfrPrivateKey
-    #[clap(short, long, value_name = "PATH", value_hint = ValueHint::FilePath)]
+    #[clap(short, long, value_name = "PATH", forbid_empty_values = true, value_hint = ValueHint::FilePath)]
     secret_key: Option<PathBuf>,
     /// Amount of FRA tokens to claim
     #[clap(long, required = true, forbid_empty_values = true)]
@@ -67,7 +67,7 @@ pub struct Claim {
 
 #[derive(Parser, Debug)]
 struct Show {
-    /// Address(1DE3EED...) of the validator node to show
+    /// Address of validator to show the status and accumulated rewards of the specific one
     #[clap(forbid_empty_values = true)]
     address: String,
 }

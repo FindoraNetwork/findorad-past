@@ -6,10 +6,8 @@ use crate::config::Config;
 
 mod asset;
 mod delegate;
-mod execute;
 mod setup;
 mod transfer;
-mod tx;
 mod wallet;
 
 #[derive(Parser, Debug)]
@@ -31,7 +29,6 @@ impl Opts {
             SubCommand::Asset(c) => c.execute(config).await?,
             SubCommand::Delegate(c) => c.execute(config).await?,
             SubCommand::Setup(c) => c.execute(config).await?,
-            SubCommand::Execute(c) => c.execute(config).await?,
             SubCommand::Transfer(c) => c.execute(config).await?,
             SubCommand::Wallet(c) => c.execute(config).await?,
         }
@@ -48,8 +45,6 @@ enum SubCommand {
     Delegate(delegate::Command),
     /// Setup configuration entry
     Setup(setup::Command),
-    /// Execute batch of transactions
-    Execute(execute::Command),
     /// Transfer asset to other user
     Transfer(transfer::Command),
     /// Manage wallet
