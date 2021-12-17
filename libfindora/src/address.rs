@@ -9,6 +9,7 @@ pub enum Address {
     Eth(H160),
     /// Fra address
     Fra(H160),
+    BlockHole,
 }
 
 impl From<H160> for Address {

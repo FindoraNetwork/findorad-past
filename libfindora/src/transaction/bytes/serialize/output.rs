@@ -17,6 +17,7 @@ pub fn build_output(output: &Output, builder: output::Builder) -> Result<()> {
         match &output.core.address {
             Address::Eth(a) => builder.set_eth(a.0.as_ref()),
             Address::Fra(a) => builder.set_fra(a.0.as_ref()),
+            Address::BlockHole => builder.set_block_hole(()),
         }
     }
 

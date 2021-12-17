@@ -1,4 +1,5 @@
-use libfindora::{Address, Amount};
+use libfindora::asset::Amount;
+use libfindora::{Address};
 
 use rand_core::{CryptoRng, RngCore};
 use ruc::*;
@@ -45,7 +46,7 @@ impl TransferEntry {
                     return Err(eg!("If transfer to ETH adress, must be non-confidential asset and non-confidential amount"));
                 }
             }
-            Address::Fra(_e) => {
+            Address::Fra(_) | Address::BlockHole => {
                 let asset_record_type =
                     AssetRecordType::from_flags(self.confidential_amount, self.confidential_asset);
                 (

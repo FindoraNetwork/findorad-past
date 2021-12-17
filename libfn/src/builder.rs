@@ -4,7 +4,7 @@ use abcf_sdk::providers::Provider;
 use libfindora::{
     transaction::{InputOperation, OutputOperation},
     utxo::OutputId,
-    Address, Amount,
+    Address, asset::Amount,
 };
 use primitive_types::H512;
 use rand_core::{CryptoRng, RngCore};

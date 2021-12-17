@@ -2,7 +2,7 @@ use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 use zei::xfr::structs::{AssetType, XfrAssetType};
 
-use crate::{transaction, Error};
+use crate::{transaction};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct AssetInfo {
@@ -18,7 +18,7 @@ pub struct Transaction {
 }
 
 impl TryFrom<&transaction::Transaction> for Transaction {
-    type Error = Error;
+    type Error = abcf::Error;
 
     fn try_from(t: &transaction::Transaction) -> Result<Self, Self::Error> {
         let infos = Vec::new();

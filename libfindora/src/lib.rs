@@ -7,8 +7,6 @@ pub mod utxo;
 
 pub mod transaction;
 
-pub type Amount = u64;
-
 mod address;
 pub use address::Address;
 

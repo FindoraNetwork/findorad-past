@@ -1,29 +1,5 @@
 use std::{array::TryFromSliceError, num::TryFromIntError};
 
-// pub fn convert_capnp_error(e: capnp::Error) -> abcf::Error {
-//     abcf::Error::ABCIApplicationError(80001, format!("{:?}", e))
-// }
-//
-// pub fn convert_capnp_noinschema(e: capnp::NotInSchema) -> abcf::Error {
-//     abcf::Error::ABCIApplicationError(80002, format!("{:?}", e))
-// }
-//
-// pub fn convert_ruc_error(e: Box<dyn ruc::RucError>) -> abcf::Error {
-//     abcf::Error::ABCIApplicationError(80003, format!("{:?}", e))
-// }
-//
-// pub fn convert_try_slice_error(e: TryFromSliceError) -> abcf::Error {
-//     abcf::Error::ABCIApplicationError(80004, format!("{:?}", e))
-// }
-//
-// pub fn convert_try_int_error(e: TryFromIntError) -> abcf::Error {
-//     abcf::Error::ABCIApplicationError(80004, format!("{:?}", e))
-// }
-//
-// pub fn placeholder_error() -> abcf::Error {
-//     abcf::Error::ABCIApplicationError(80005, String::from("Only a placeholder"))
-// }
-//
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug)]
@@ -34,6 +10,7 @@ pub enum Error {
     TryFromSliceError(TryFromSliceError),
     TryFromIntError(TryFromIntError),
     ChaumPedersenProofParseError,
+    OverflowAdd,
     Unknown,
 }
 
@@ -84,6 +61,10 @@ impl From<Error> for abcf::Error {
             Error::ChaumPedersenProofParseError => abcf::Error::ABCIApplicationError(
                 90006,
                 String::from("parse error, chaum_pedersen_proof_x must have 1 or 2 proof."),
+            ),
+            Error::OverflowAdd => abcf::Error::ABCIApplicationError(
+                90007,
+                String::from("add overflow"),
             ),
             Error::Unknown => {
                 abcf::Error::ABCIApplicationError(100001, String::from("Only placeholder"))

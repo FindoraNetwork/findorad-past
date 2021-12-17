@@ -1,4 +1,4 @@
-use libfindora::Amount;
+use libfindora::asset::Amount;
 use rand_core::{CryptoRng, RngCore};
 use ruc::*;
 use serde::{Deserialize, Serialize};

@@ -3,7 +3,7 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, TxnContext,
 };
-use libfindora::fee::{constant::FRA_FEE_AMOUNT, FeeTransaction};
+use libfindora::fee::{constant::FRA_FEE_AMOUNT, self};
 
 #[abcf::module(name = "fee", version = 1, impl_version = "0.1.1", target_height = 0)]
 pub struct Module {
@@ -20,7 +20,7 @@ impl Module {}
 /// Module's block logic.
 #[abcf::application]
 impl Application for Module {
-    type Transaction = FeeTransaction;
+    type Transaction = fee::Transaction;
 
     async fn check_tx(
         &mut self,

@@ -6,7 +6,7 @@ use crate::{
     rewards,
     staking::{self, TendermintAddress},
     transaction::{Output, OutputOperation},
-    transaction_capnp::output,
+    transaction_capnp::{output, address},
     utxo, Address, Result,
 };
 use zei::{
@@ -17,7 +17,7 @@ use zei::{
 };
 
 pub fn from_output(reader: output::Reader) -> Result<Output> {
-    let address = from_address(reader.get_address())?;
+    let address = from_address(reader.get_address()?)?;
     let amount = from_amount(reader.get_amount())?;
     let asset = from_asset(reader.get_asset())?;
     let operation = from_operation(reader.get_operation())?;
@@ -173,17 +173,18 @@ fn from_amount(reader: output::amount::Reader) -> Result<XfrAmount> {
     Ok(amount)
 }
 
-fn from_address(reader: output::address::Reader) -> Result<Address> {
+fn from_address(reader: address::Reader) -> Result<Address> {
     Ok(match reader.which()? {
-        output::address::Eth(a) => {
+        address::Which::Eth(a) => {
             let reader = a?;
             let inner = reader.try_into()?;
             Address::Eth(H160(inner))
         }
-        output::address::Fra(a) => {
+        address::Which::Fra(a) => {
             let reader = a?;
             let inner = reader.try_into()?;
             Address::Fra(H160(inner))
         }
+        address::Which::BlockHole(_) => Address::BlockHole,
     })
 }
