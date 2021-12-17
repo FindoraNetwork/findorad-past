@@ -23,6 +23,7 @@ use zei::setup::PublicParams;
 )]
 pub struct Findorad {
     pub staking: StakingModule,
+    #[dependence(utxo = "utxo")]
     pub coinbase: CoinbaseModule,
     pub utxo: UtxoModule,
 }

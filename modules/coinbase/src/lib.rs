@@ -21,6 +21,7 @@ use zei::xfr::structs::{AssetType, XfrAssetType};
     impl_version = "0.1.1",
     target_height = 0
 )]
+#[dependence(utxo = "fm_utxo::UtxoModule")]
 pub struct CoinbaseModule {
     #[stateful(merkle = "AppendOnlyMerkle")]
     pub asset_owner: Map<AssetType, Address>,
@@ -30,27 +31,7 @@ pub struct CoinbaseModule {
 }
 
 #[abcf::rpcs]
-impl CoinbaseModule {
-    //     pub async fn get_asset_owner(
-    //     &mut self,
-    //     context: &mut abcf::manager::RPCDependence,
-    //     request: GetAssetOwnerReq,
-    // ) -> RPCResponse<GetAssetOwnerResp> {
-    //     let asset = request.asset_type;
-    //
-    //     let owner = match context.stateful.asset_owner.get(&asset) {
-    //         Err(e) => {
-    //             let error: abcf::Error = e.into();
-    //             return error.into();
-    //         }
-    //         Ok(v) => v.map(|i| i.clone()),
-    //     };
-    //
-    //     let resp = GetAssetOwnerResp { owner };
-    //
-    //     RPCResponse::new(resp)
-    //     }
-}
+impl CoinbaseModule {}
 
 /// Module's block logic.
 #[abcf::application]

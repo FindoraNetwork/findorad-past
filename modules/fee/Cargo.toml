@@ -13,3 +13,4 @@ async-trait = "0.1.51"
 libfindora = { path = "../../libfindora" }
 log = "0.4.14"
 serde_json = "1.0.68"
+fm-utxo = { path = "../utxo" }

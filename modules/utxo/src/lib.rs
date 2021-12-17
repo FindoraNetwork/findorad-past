@@ -28,44 +28,7 @@ pub struct UtxoModule {
 }
 
 #[abcf::rpcs]
-impl UtxoModule {
-    //     pub async fn get_owned_outputs(
-    //     &mut self,
-    //     context: &mut abcf::manager::RContext<'_, abcf::Stateless<Self>, abcf::Stateful<Self>>,
-    //     request: GetOwnedUtxoReq,
-    // ) -> RPCResponse<GetOwnedUtxoResp> {
-    //     let mut outputs = Vec::new();
-    //
-    //     for owner_id in 0..request.owners.len() {
-    //         let owner = &request.owners[owner_id];
-    //         match context.stateless.owned_outputs.get(owner) {
-    //             Err(e) => {
-    //                 let error: abcf::Error = e.into();
-    //                 return error.into();
-    //             }
-    //             Ok(v) => match v {
-    //                 Some(s) => {
-    //                     let output_ids = s.as_ref();
-    //                     for output_id in output_ids {
-    //                         if let Ok(Some(output)) = context.stateful.output_set.get(output_id) {
-    //                             outputs.push((
-    //                                 owner_id,
-    //                                 OwnedOutput {
-    //                                     output_id: output_id.clone(),
-    //                                     output: output.clone(),
-    //                                 },
-    //                             ))
-    //                         }
-    //                     }
-    //                 }
-    //                 None => {}
-    //             },
-    //         };
-    //     }
-    //     let resp = GetOwnedUtxoResp { outputs };
-    //     RPCResponse::new(resp)
-    //     }
-}
+impl UtxoModule {}
 
 /// Module's block logic.
 #[abcf::application]
@@ -86,40 +49,6 @@ impl Application for UtxoModule {
         context: &mut TxnContext<'_, Self>,
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
-        // TODO: this code used to module call, modify in next version of abcf.
-        //         if let Some(calls) = context.calls.pop_module_calls("utxo") {
-        //     for entry in calls {
-        //         match entry.method.as_str() {
-        //             "add_utxo" => {
-        //                 let args = entry.args.downcast::<calls::ArgAddUtxo>();
-        //
-        //                 if args.is_ok() {
-        //                     let args = *args.unwrap();
-        //                     let output_id = OutputId {
-        //                         txid: args.txid,
-        //                         n: args.n,
-        //                     };
-        //                     let output = args.output;
-        //
-        //                     let owner = output.address.clone();
-        //                     match context.stateless.owned_outputs.get_mut(&owner)? {
-        //                         Some(v) => {
-        //                             v.push(output_id.clone());
-        //                         }
-        //                         None => {
-        //                             let mut v = Vec::new();
-        //                             v.push(output_id.clone());
-        //                             context.stateless.owned_outputs.insert(owner, v)?;
-        //                         }
-        //                     }
-        //                     context.stateful.output_set.insert(output_id, output)?;
-        //                 }
-        //             }
-        //             _ => {}
-        //         }
-        //     }
-        // }
-        //
         let tx: &UtxoTransacrion = &req.tx;
 
         let mut validate_tx = ValidateTransaction {
