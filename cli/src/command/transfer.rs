@@ -1,6 +1,7 @@
-use clap::{Parser, ValueHint};
-
 use crate::config::Config;
+
+use anyhow::Result;
+use clap::{Parser, ValueHint};
 
 #[derive(Parser, Debug)]
 pub struct Command {
@@ -71,7 +72,7 @@ struct Show {
 }
 
 impl Command {
-    pub async fn execute(&self, _config: Config) -> ruc::Result<()> {
+    pub fn execute(&self, _config: Config) -> Result<()> {
         match &self.subcmd {
             SubCommand::Send(_send) => {}
             SubCommand::Save(_save) => {}

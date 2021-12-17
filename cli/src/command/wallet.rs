@@ -1,7 +1,8 @@
+use crate::{config::Config, entry::wallet};
+
+use anyhow::Result;
 use clap::Parser;
 use libfn::types::Wallet;
-
-use crate::{config::Config, entry::wallet};
 
 #[derive(Parser, Debug)]
 pub struct Command {
@@ -41,7 +42,7 @@ struct Delete {
 }
 
 impl Command {
-    pub async fn execute(&self, _config: Config) -> ruc::Result<()> {
+    pub fn execute(&self, _config: Config) -> Result<()> {
         match &self.subcmd {
             SubCommand::Show(_show) => {}
             SubCommand::Create(_create) => {}
@@ -50,11 +51,11 @@ impl Command {
         Ok(())
     }
 
-    async fn create(&self, cfg: Config, opt: Create) -> ruc::Result<()> {
-        let w = match opt.mnemonic {
-            Some(m) => Wallet::from_mnemonic(&m)?,
-            None => Wallet::generate()?,
-        };
+    fn create(&self, cfg: Config, opt: Create) -> Result<()> {
+        // let w = match opt.mnemonic {
+        //     // Some(m) => Wallet::from_mnemonic(&m)?,
+        //     // None => Wallet::generate()?,
+        // };
 
         Ok(())
     }

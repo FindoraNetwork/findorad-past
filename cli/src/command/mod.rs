@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 
-use clap::{Parser, ValueHint};
-
 use crate::config::Config;
+
+use anyhow::Result;
+use clap::{Parser, ValueHint};
 
 mod asset;
 mod delegate;
@@ -22,15 +23,15 @@ pub struct Opts {
 }
 
 impl Opts {
-    pub async fn execute(&self) -> ruc::Result<()> {
-        let config = Config::load(&self.home, &self.config)?;
+    pub fn execute(&self) -> Result<()> {
+        let config = Config::new(&self.home, &self.config)?;
 
         match &self.subcmd {
-            SubCommand::Asset(c) => c.execute(config).await?,
-            SubCommand::Delegate(c) => c.execute(config).await?,
-            SubCommand::Setup(c) => c.execute(config).await?,
-            SubCommand::Transfer(c) => c.execute(config).await?,
-            SubCommand::Wallet(c) => c.execute(config).await?,
+            SubCommand::Asset(c) => c.execute(config)?,
+            SubCommand::Delegate(c) => c.execute(config)?,
+            SubCommand::Setup(c) => c.execute(config)?,
+            SubCommand::Transfer(c) => c.execute(config)?,
+            SubCommand::Wallet(c) => c.execute(config)?,
         }
 
         Ok(())
