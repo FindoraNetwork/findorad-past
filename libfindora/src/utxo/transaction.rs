@@ -46,16 +46,16 @@ impl Output {
 }
 
 #[derive(Debug)]
-pub struct UtxoTransacrion {
+pub struct UtxoTransaction {
     pub txid: H512,
     pub inputs: Vec<Input>,
     pub outputs: Vec<Output>,
     pub proof: AssetTypeAndAmountProof,
 }
 
-impl Default for UtxoTransacrion {
+impl Default for UtxoTransaction {
     fn default() -> Self {
-        UtxoTransacrion {
+        Self {
             txid: H512::zero(),
             inputs: Vec::new(),
             outputs: Vec::new(),
@@ -64,7 +64,7 @@ impl Default for UtxoTransacrion {
     }
 }
 
-impl TryFrom<&Transaction> for UtxoTransacrion {
+impl TryFrom<&Transaction> for UtxoTransaction {
     type Error = abcf::Error;
 
     fn try_from(tx: &Transaction) -> Result<Self, Self::Error> {

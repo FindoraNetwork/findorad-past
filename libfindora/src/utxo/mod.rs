@@ -1,5 +1,5 @@
 mod transaction;
-pub use transaction::{Input, Output, UtxoTransacrion};
+pub use transaction::{Input, Output, UtxoTransaction};
 
 pub type OutputId = Input;
 

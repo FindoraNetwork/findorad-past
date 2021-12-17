@@ -9,7 +9,7 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, TxnContext,
 };
-use libfindora::{coinbase::CoinbaseTransaction, Address, utxo::OutputId};
+use libfindora::{coinbase::CoinbaseTransaction, utxo::OutputId, Address};
 use zei::xfr::structs::{AssetType, XfrAssetType};
 
 #[abcf::module(
@@ -86,7 +86,9 @@ impl Application for CoinbaseModule {
                 n: output.0,
             };
 
-            utxo.stateful.output_set.insert(output_id, output.1.clone())?;
+            utxo.stateful
+                .outputs_set
+                .insert(output_id, output.1.clone())?;
             // utxo.stateless.owned_outputs.insert(output.1.address.clone(), output_id)?;
         }
 

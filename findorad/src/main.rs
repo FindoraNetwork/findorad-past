@@ -92,7 +92,7 @@ fn main() {
             __marker_d: PhantomData,
         },
         utxo: abcf::Stateful::<UtxoModule<SledBackend, Sha3_512>> {
-            output_set: bs3::SnapshotableStorage::new(
+            outputs_set: bs3::SnapshotableStorage::new(
                 Default::default(),
                 SledBackend::open_tree(&coinbase_backend, "output_set").unwrap(),
             )

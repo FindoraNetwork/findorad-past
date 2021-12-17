@@ -33,7 +33,7 @@ pub struct Builder {
 }
 
 impl Builder {
-    pub fn from_entries<R: RngCore + CryptoRng, P: Provider>(
+    pub async fn from_entries<R: RngCore + CryptoRng, P: Provider>(
         prng: &mut R,
         provider: P,
         v: Vec<Entry>,
