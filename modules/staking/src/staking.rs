@@ -11,7 +11,7 @@ use abcf::{
         ResponseEndBlock,
     },
     tm_protos::abci::ValidatorUpdate,
-    Application
+    Application,
 };
 use abcf::{AppContext, TxnContext};
 use libfindora::{

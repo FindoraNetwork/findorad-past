@@ -9,10 +9,7 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, TxnContext,
 };
-use libfindora::{
-    coinbase::{CoinbaseTransaction},
-    Address,
-};
+use libfindora::{coinbase::CoinbaseTransaction, Address, utxo::OutputId};
 use zei::xfr::structs::{AssetType, XfrAssetType};
 
 #[abcf::module(
@@ -52,7 +49,6 @@ impl Application for CoinbaseModule {
         context: &mut TxnContext<'_, Self>,
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
-        println!("{:?}", req.tx);
         for output in &req.tx.outputs {
             log::debug!("Receive coinbase tx: {:?}", &output);
             let owner = output.1.address.clone();
@@ -82,6 +78,16 @@ impl Application for CoinbaseModule {
                     context.stateful.asset_owner.insert(asset_type, owner)?;
                 }
             }
+
+            let utxo = &mut context.deps.utxo;
+
+            let output_id = OutputId {
+                txid: req.tx.txid,
+                n: output.0,
+            };
+
+            utxo.stateful.output_set.insert(output_id, output.1.clone())?;
+            // utxo.stateless.owned_outputs.insert(output.1.address.clone(), output_id)?;
         }
 
         Ok(Default::default())

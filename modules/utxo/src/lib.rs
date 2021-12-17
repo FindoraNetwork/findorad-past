@@ -120,7 +120,7 @@ impl Application for UtxoModule {
             }
         }
 
-        //         // 1. recv events
+        //                 // 1. recv events
         // for input in validate_tx.inputs {
         //     let e = event::SendEvent::new_from_record(&input);
         //     context.events.emmit(e)?;
@@ -129,7 +129,7 @@ impl Application for UtxoModule {
         // for output in validate_tx.outputs {
         //     let e = event::RecvEvent::new_from_record(&output);
         //     context.events.emmit(e)?;
-        //         }
+        //                 }
 
         Ok(Default::default())
     }
@@ -140,5 +140,5 @@ impl Application for UtxoModule {
 impl UtxoModule {}
 
 // pub mod utxo_module_rpc {
-    // include!(concat!(env!("OUT_DIR"), "/utxomodule.rs"));
+// include!(concat!(env!("OUT_DIR"), "/utxomodule.rs"));
 // }
