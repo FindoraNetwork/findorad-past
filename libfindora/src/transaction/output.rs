@@ -6,7 +6,8 @@ use crate::utxo;
 #[derive(Debug, Clone)]
 pub enum Operation {
     TransferAsset,
-    IssueAsset(AssetMeta),
+    DefineAsset(AssetMeta),
+    IssueAsset,
     Fee,
     Delegate(staking::Delegate),
     ClaimReward(rewards::Claim),

@@ -1,14 +1,19 @@
 use abcf::{
-    bs3::{merkle::append_only::AppendOnlyMerkle, model::{Value, Map}},
+    bs3::{
+        merkle::append_only::AppendOnlyMerkle,
+        model::{Map, Value},
+    },
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, TxnContext,
 };
-use libfindora::asset::{self, AssetType, AssetInfo};
+use libfindora::asset::{self, AssetInfo, AssetType};
+
+use crate::utils;
 
 #[abcf::module(name = "asset", version = 1, impl_version = "0.1.1", target_height = 0)]
 pub struct AssetModule {
     #[stateful(merkle = "AppendOnlyMerkle")]
-    pub sf_value: Map<AssetType, AssetInfo>,
+    pub asset_infos: Map<AssetType, AssetInfo>,
     // Only a placeholder, will remove when abcf update.
     #[stateless]
     pub sl_value: Value<u32>,
@@ -24,10 +29,14 @@ impl Application for AssetModule {
 
     async fn check_tx(
         &mut self,
-        _context: &mut TxnContext<'_, Self>,
+        context: &mut TxnContext<'_, Self>,
         req: &RequestCheckTx<Self::Transaction>,
     ) -> abcf::Result<ResponseCheckTx> {
         let tx = &req.tx;
+
+        utils::check_define(&mut context.stateful.asset_infos, &tx.define_asset)?;
+        utils::check_issue(&context.stateful.asset_infos, &tx.issue_asset)?;
+        utils::check_transfer(&context.stateful.asset_infos, &tx.transfer_asset)?;
 
         Ok(Default::default())
     }
@@ -35,10 +44,14 @@ impl Application for AssetModule {
     /// Execute transaction on state.
     async fn deliver_tx(
         &mut self,
-        _context: &mut TxnContext<'_, Self>,
+        context: &mut TxnContext<'_, Self>,
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
         let tx = &req.tx;
+
+        utils::check_define(&mut context.stateful.asset_infos, &tx.define_asset)?;
+        utils::check_issue(&context.stateful.asset_infos, &tx.issue_asset)?;
+        utils::check_transfer(&context.stateful.asset_infos, &tx.transfer_asset)?;
 
         Ok(Default::default())
     }

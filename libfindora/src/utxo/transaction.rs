@@ -71,24 +71,30 @@ impl TryFrom<&transaction::Transaction> for Transaction {
         let mut inputs = Vec::new();
 
         for input in &tx.inputs {
-            if input.txid == H512::zero() {
-                inputs.push(Input {
-                    txid: tx.txid,
-                    n: input.n,
-                })
-            } else {
-                inputs.push(Input {
-                    txid: input.txid,
+            match input.operation {
+                transaction::InputOperation::TransferAsset => {
+                    let txid = if input.txid == H512::default() {
+                        tx.txid
+                    } else {
+                        input.txid
+                    };
+                    inputs.push(Input {
+                        txid: txid,
+                        n: input.n,
+                    })
+                }
 
-                    n: input.n,
-                })
+                _ => {}
             }
         }
 
         let mut outputs = Vec::new();
 
         for output in &tx.outputs {
-            outputs.push(output.core.clone());
+            match output.operation {
+                transaction::OutputOperation::TransferAsset => outputs.push(output.core.clone()),
+                _ => {}
+            }
         }
 
         Ok(Self {

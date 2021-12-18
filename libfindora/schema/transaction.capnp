@@ -7,9 +7,8 @@ struct Input {
 
     enum Operation {
         transferAsset @0;
-        issueAsset @1;
-        undelegate @2;
-        claimReward @3;
+        undelegate @1;
+        claimReward @2;
     }
 }
 
@@ -79,16 +78,17 @@ struct Output {
 
     operation :union {
         transferAsset @7: Void;
-        issueAsset @8: IssueAsset;
-        fee @9: Void;
-        undelegate @10: UndelegateData;
-        claimReward @11: ClaimData;
-        delegate @12: DelegateData;
+        defineAsset @8: DefineAsset;
+        issueAsset @9: Void;
+        fee @10: Void;
+        undelegate @11: UndelegateData;
+        claimReward @12: ClaimData;
+        delegate @13: DelegateData;
     }
 
 }
 
-struct IssueAsset {
+struct DefineAsset {
     transferable @0: Bool;
     maximum :union {
         none @1: Void;

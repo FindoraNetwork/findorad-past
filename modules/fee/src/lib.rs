@@ -5,7 +5,7 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, TxnContext,
 };
-use libfindora::fee::{constant::FRA_FEE_AMOUNT, self};
+use libfindora::fee::{self, constant::FRA_FEE_AMOUNT};
 
 #[abcf::module(name = "fee", version = 1, impl_version = "0.1.1", target_height = 0)]
 pub struct FeeModule {

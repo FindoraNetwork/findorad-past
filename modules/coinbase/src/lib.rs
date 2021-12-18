@@ -3,7 +3,5 @@
 mod module;
 pub use module::CoinbaseModule;
 
-mod utils;
-
 mod error;
 pub use error::{Error, Result};

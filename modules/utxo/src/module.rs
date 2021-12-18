@@ -4,7 +4,7 @@ use abcf::{
     Application, TxnContext,
 };
 use libfindora::{
-    utxo::{Output, OutputId, self},
+    utxo::{self, Output, OutputId},
     Address,
 };
 use rand_chacha::ChaChaRng;

@@ -1,5 +1,5 @@
 use libfindora::asset::Amount;
-use libfindora::{Address};
+use libfindora::Address;
 
 use rand_core::{CryptoRng, RngCore};
 use ruc::*;

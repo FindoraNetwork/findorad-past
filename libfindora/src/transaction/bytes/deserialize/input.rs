@@ -15,7 +15,6 @@ pub fn from_input(input: input::Reader) -> Result<Input> {
 
     let n = input.get_n();
     let operation = match input.get_operation()? {
-        input::Operation::IssueAsset => InputOperation::IssueAsset,
         input::Operation::TransferAsset => InputOperation::TransferAsset,
         input::Operation::Undelegate => InputOperation::Undelegate,
         input::Operation::ClaimReward => InputOperation::ClaimReward,

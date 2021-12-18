@@ -6,3 +6,4 @@ pub use module::AssetModule;
 mod error;
 pub use error::{Error, Result};
 
+mod utils;

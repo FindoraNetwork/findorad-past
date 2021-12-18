@@ -12,6 +12,7 @@ pub enum Error {
     ChaumPedersenProofParseError,
     OverflowAdd,
     Unknown,
+    MustBeNonConfidentialAsset,
 }
 
 impl From<capnp::Error> for Error {
@@ -49,25 +50,28 @@ impl From<Error> for abcf::Error {
         match e {
             Error::CapnpError(e) => abcf::Error::ABCIApplicationError(90001, format!("{:?}", e)),
             Error::CapnpNotInSchema(e) => {
-                abcf::Error::ABCIApplicationError(90002, format!("{:?}", e))
+                abcf::Error::ABCIApplicationError(80002, format!("{:?}", e))
             }
             Error::RucError(e) => abcf::Error::ABCIApplicationError(90003, format!("{:?}", e)),
             Error::TryFromSliceError(e) => {
-                abcf::Error::ABCIApplicationError(90004, format!("{:?}", e))
+                abcf::Error::ABCIApplicationError(80004, format!("{:?}", e))
             }
             Error::TryFromIntError(e) => {
-                abcf::Error::ABCIApplicationError(90005, format!("{:?}", e))
+                abcf::Error::ABCIApplicationError(80005, format!("{:?}", e))
             }
             Error::ChaumPedersenProofParseError => abcf::Error::ABCIApplicationError(
                 90006,
                 String::from("parse error, chaum_pedersen_proof_x must have 1 or 2 proof."),
             ),
-            Error::OverflowAdd => abcf::Error::ABCIApplicationError(
-                90007,
-                String::from("add overflow"),
+            Error::OverflowAdd => {
+                abcf::Error::ABCIApplicationError(80007, String::from("add overflow"))
+            }
+            Error::MustBeNonConfidentialAsset => abcf::Error::ABCIApplicationError(
+                80008,
+                String::from("mustbe nonconfidential asset type."),
             ),
             Error::Unknown => {
-                abcf::Error::ABCIApplicationError(100001, String::from("Only placeholder"))
+                abcf::Error::ABCIApplicationError(81000, String::from("Only placeholder"))
             }
         }
     }

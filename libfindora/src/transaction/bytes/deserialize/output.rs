@@ -6,7 +6,7 @@ use crate::{
     rewards,
     staking::{self, TendermintAddress},
     transaction::{Output, OutputOperation},
-    transaction_capnp::{output, address},
+    transaction_capnp::{address, output},
     utxo, Address, Result,
 };
 use zei::{
@@ -60,31 +60,32 @@ fn from_owner_memo(reader: output::owner_memo::Reader) -> Result<Option<OwnerMem
 }
 
 fn from_operation(reader: output::operation::Reader) -> Result<OutputOperation> {
+    use crate::transaction_capnp::define_asset;
     use crate::transaction_capnp::delegate_data::memo;
     use crate::transaction_capnp::delegate_data::validator;
-    use crate::transaction_capnp::issue_asset;
     use crate::transaction_capnp::validator_key;
     use output::operation;
 
     let operation = match reader.which()? {
-        operation::Which::IssueAsset(e) => {
+        operation::Which::DefineAsset(e) => {
             let reader = e?;
 
             let transferable = reader.get_transferable();
 
             let maximum = match reader.get_maximum().which()? {
-                issue_asset::maximum::Which::None(_) => None,
-                issue_asset::maximum::Which::Some(a) => {
+                define_asset::maximum::Which::None(_) => None,
+                define_asset::maximum::Which::Some(a) => {
                     let reader = a?;
                     Some(U256::from_big_endian(reader))
                 }
             };
 
-            OutputOperation::IssueAsset(AssetMeta {
+            OutputOperation::DefineAsset(AssetMeta {
                 transferable,
                 maximum,
             })
         }
+        operation::Which::IssueAsset(_) => OutputOperation::IssueAsset,
         operation::Which::TransferAsset(_) => OutputOperation::TransferAsset,
         operation::Which::Fee(_) => OutputOperation::Fee,
         operation::Which::Delegate(a) => {

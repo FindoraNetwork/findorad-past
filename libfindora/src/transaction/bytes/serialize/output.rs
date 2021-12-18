@@ -58,8 +58,8 @@ pub fn build_output(output: &Output, builder: output::Builder) -> Result<()> {
     {
         let mut operation = builder.init_operation();
         match &output.operation {
-            OutputOperation::IssueAsset(a) => {
-                let mut asset_meta = operation.init_issue_asset();
+            OutputOperation::DefineAsset(a) => {
+                let mut asset_meta = operation.init_define_asset();
                 asset_meta.set_transferable(a.transferable);
 
                 let mut maximum = asset_meta.init_maximum();
@@ -73,6 +73,7 @@ pub fn build_output(output: &Output, builder: output::Builder) -> Result<()> {
                     None => maximum.set_none(()),
                 }
             }
+            OutputOperation::IssueAsset => operation.set_issue_asset(()),
             OutputOperation::TransferAsset => operation.set_transfer_asset(()),
             OutputOperation::Fee => operation.set_fee(()),
             OutputOperation::Undelegate(a) => {

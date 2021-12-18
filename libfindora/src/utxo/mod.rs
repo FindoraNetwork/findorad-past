@@ -5,4 +5,3 @@ pub type OutputId = Input;
 
 mod validate;
 pub use validate::ValidateTransaction;
-

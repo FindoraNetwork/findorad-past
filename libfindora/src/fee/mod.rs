@@ -2,7 +2,10 @@ pub mod constant;
 
 use zei::xfr::structs::XfrAmount;
 
-use crate::{transaction, Error, asset::{Amount, FRA_ASSET_TYPE}, Address};
+use crate::{
+    asset::{Amount, FRA_ASSET_TYPE},
+    transaction, Address, Error,
+};
 
 #[derive(Default, Debug)]
 pub struct Transaction {
@@ -13,7 +16,6 @@ impl TryFrom<&transaction::Transaction> for Transaction {
     type Error = abcf::Error;
 
     fn try_from(tx: &transaction::Transaction) -> Result<Self, Self::Error> {
-
         let mut amount: Amount = 0;
 
         for output in &tx.outputs {
