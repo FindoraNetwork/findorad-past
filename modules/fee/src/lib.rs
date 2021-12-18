@@ -31,7 +31,7 @@ impl Application for FeeModule {
     ) -> abcf::Result<ResponseCheckTx> {
         let tx = &req.tx;
 
-        if tx.amount == FRA_FEE_AMOUNT {
+        if tx.amount >= FRA_FEE_AMOUNT {
             Ok(Default::default())
         } else {
             Err(abcf::Error::ABCIApplicationError(
@@ -49,7 +49,7 @@ impl Application for FeeModule {
     ) -> abcf::Result<ResponseDeliverTx> {
         let tx = &req.tx;
 
-        if tx.amount == FRA_FEE_AMOUNT {
+        if tx.amount >= FRA_FEE_AMOUNT {
             Ok(Default::default())
         } else {
             Err(abcf::Error::ABCIApplicationError(

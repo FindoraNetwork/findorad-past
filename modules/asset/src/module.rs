@@ -3,9 +3,9 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, TxnContext,
 };
-use libfindora::fee::{constant::FRA_FEE_AMOUNT, self};
+use libfindora::asset;
 
-#[abcf::module(name = "fee", version = 1, impl_version = "0.1.1", target_height = 0)]
+#[abcf::module(name = "asset", version = 1, impl_version = "0.1.1", target_height = 0)]
 pub struct Module {
     #[stateful(merkle = "EmptyMerkle")]
     pub sf_value: Value<u32>,
@@ -20,7 +20,7 @@ impl Module {}
 /// Module's block logic.
 #[abcf::application]
 impl Application for Module {
-    type Transaction = fee::Transaction;
+    type Transaction = asset::Transaction;
 
     async fn check_tx(
         &mut self,
@@ -29,14 +29,7 @@ impl Application for Module {
     ) -> abcf::Result<ResponseCheckTx> {
         let tx = &req.tx;
 
-        if tx.amount == FRA_FEE_AMOUNT {
-            Ok(Default::default())
-        } else {
-            Err(abcf::Error::ABCIApplicationError(
-                90001,
-                String::from("Fee Error"),
-            ))
-        }
+        Ok(Default::default())
     }
 
     /// Execute transaction on state.
@@ -47,14 +40,7 @@ impl Application for Module {
     ) -> abcf::Result<ResponseDeliverTx> {
         let tx = &req.tx;
 
-        if tx.amount == FRA_FEE_AMOUNT {
-            Ok(Default::default())
-        } else {
-            Err(abcf::Error::ABCIApplicationError(
-                90001,
-                String::from("Fee Error"),
-            ))
-        }
+        Ok(Default::default())
     }
 }
 
