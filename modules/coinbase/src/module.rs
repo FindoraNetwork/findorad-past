@@ -9,6 +9,7 @@ use abcf::{
 };
 use libfindora::{coinbase::CoinbaseTransaction, utxo::OutputId, Address};
 use zei::xfr::structs::{AssetType, XfrAssetType};
+use fm_utxo::UtxoModule;
 
 #[abcf::module(
     name = "coinbase",
@@ -16,7 +17,7 @@ use zei::xfr::structs::{AssetType, XfrAssetType};
     impl_version = "0.1.1",
     target_height = 0
 )]
-#[dependence(utxo = "fm_utxo::UtxoModule")]
+#[dependence(utxo = "UtxoModule")]
 pub struct CoinbaseModule {
     #[stateful(merkle = "AppendOnlyMerkle")]
     pub asset_owner: Map<AssetType, Address>,

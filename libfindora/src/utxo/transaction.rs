@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use crate::transaction::Transaction;
+use crate::transaction;
 use primitive_types::H512;
 use serde::{Deserialize, Serialize};
 use zei::xfr::structs::{
@@ -46,14 +46,14 @@ impl Output {
 }
 
 #[derive(Debug)]
-pub struct UtxoTransaction {
+pub struct Transaction {
     pub txid: H512,
     pub inputs: Vec<Input>,
     pub outputs: Vec<Output>,
     pub proof: AssetTypeAndAmountProof,
 }
 
-impl Default for UtxoTransaction {
+impl Default for Transaction {
     fn default() -> Self {
         Self {
             txid: H512::zero(),
@@ -64,10 +64,10 @@ impl Default for UtxoTransaction {
     }
 }
 
-impl TryFrom<&Transaction> for UtxoTransaction {
+impl TryFrom<&transaction::Transaction> for Transaction {
     type Error = abcf::Error;
 
-    fn try_from(tx: &Transaction) -> Result<Self, Self::Error> {
+    fn try_from(tx: &transaction::Transaction) -> Result<Self, Self::Error> {
         let mut inputs = Vec::new();
 
         for input in &tx.inputs {

@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use crate::{Error, Result};
 use abcf::bs3::MapStore;
 use libfindora::{
-    utxo::{Output, OutputId, UtxoTransaction, ValidateTransaction},
+    utxo::{Output, OutputId, Transaction, ValidateTransaction},
     Address,
 };
 use rand_chacha::ChaChaRng;
@@ -13,7 +13,7 @@ pub fn check_tx(
     params: &mut PublicParams,
     prng: &mut ChaChaRng,
     outputs_set: &impl MapStore<OutputId, Output>,
-    tx: &UtxoTransaction,
+    tx: &Transaction,
 ) -> Result<()> {
     let mut validate_tx = ValidateTransaction {
         inputs: Vec::new(),
@@ -98,7 +98,7 @@ pub fn deliver_tx(
     params: &mut PublicParams,
     prng: &mut ChaChaRng,
     outputs_set: &mut impl MapStore<OutputId, Output>,
-    tx: &UtxoTransaction,
+    tx: &Transaction,
 ) -> Result<BTreeMap<Address, Vec<OwnedOutputOperation>>> {
     let mut validate_tx = ValidateTransaction {
         inputs: Vec::new(),

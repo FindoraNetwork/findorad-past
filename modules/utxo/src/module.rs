@@ -4,7 +4,7 @@ use abcf::{
     Application, TxnContext,
 };
 use libfindora::{
-    utxo::{Output, OutputId, UtxoTransaction},
+    utxo::{Output, OutputId, self},
     Address,
 };
 use rand_chacha::ChaChaRng;
@@ -28,7 +28,7 @@ impl UtxoModule {}
 /// Module's block logic.
 #[abcf::application]
 impl Application for UtxoModule {
-    type Transaction = UtxoTransaction;
+    type Transaction = utxo::Transaction;
 
     async fn check_tx(
         &mut self,
@@ -51,7 +51,7 @@ impl Application for UtxoModule {
         context: &mut TxnContext<'_, Self>,
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
-        let tx: &UtxoTransaction = &req.tx;
+        let tx = &req.tx;
 
         let owned_outputs = utils::deliver_tx(
             &mut self.params,
