@@ -8,14 +8,14 @@ use libfindora::transaction::Transaction;
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use sha3::Sha3_512;
-use std::marker::PhantomData;
+use std::{marker::PhantomData, collections::BTreeMap};
 use zei::setup::PublicParams;
 
+use fm_asset::AssetModule;
 use fm_coinbase::CoinbaseModule;
+use fm_fee::FeeModule;
 use fm_staking::StakingModule;
 use fm_utxo::UtxoModule;
-use fm_fee::FeeModule;
-use fm_asset::AssetModule;
 
 #[abcf::manager(
     name = "findorad",
@@ -36,7 +36,7 @@ pub struct Findorad {
 fn main() {
     env_logger::init();
 
-    let staking = StakingModule::new(Vec::new());
+    let staking = StakingModule::new(BTreeMap::new());
 
     let asset = AssetModule::new();
 
@@ -47,7 +47,6 @@ fn main() {
     let params = PublicParams::default();
     let prng = ChaChaRng::from_entropy();
     let utxo = UtxoModule::new(params, prng);
-
 
     let manager = Findorad::<SledBackend>::new(staking, asset, fee, coinbase, utxo);
 
@@ -60,11 +59,6 @@ fn main() {
             global_power: bs3::SnapshotableStorage::new(
                 Default::default(),
                 SledBackend::open_tree(&staking_backend, "global_power").unwrap(),
-            )
-            .unwrap(),
-            delegation_amount: bs3::SnapshotableStorage::new(
-                Default::default(),
-                SledBackend::open_tree(&staking_backend, "delegation_amount").unwrap(),
             )
             .unwrap(),
             delegators: bs3::SnapshotableStorage::new(
@@ -82,7 +76,7 @@ fn main() {
                 SledBackend::open_tree(&staking_backend, "validator_staker").unwrap(),
             )
             .unwrap(),
-            validator_addr_pubkey: bs3::SnapshotableStorage::new(
+            validator_pubkey: bs3::SnapshotableStorage::new(
                 Default::default(),
                 SledBackend::open_tree(&staking_backend, "validator_addr_pubkey").unwrap(),
             )
@@ -135,9 +129,9 @@ fn main() {
 
     let stateless = abcf::Stateless::<Findorad<SledBackend>> {
         staking: abcf::Stateless::<StakingModule<SledBackend, Sha3_512>> {
-            sl_value: abcf::bs3::SnapshotableStorage::new(
+            delegation_amount: bs3::SnapshotableStorage::new(
                 Default::default(),
-                SledBackend::open_tree(&staking_backend, "sl_value").unwrap(),
+                SledBackend::open_tree(&staking_backend, "delegation_amount").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,

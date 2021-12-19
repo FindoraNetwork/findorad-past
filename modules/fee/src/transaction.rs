@@ -1,5 +1,5 @@
 use libfindora::{
-    asset::{Amount, XfrAmount, FRA_ASSET_TYPE},
+    asset::{Amount, FRA},
     Address,
 };
 
@@ -23,10 +23,12 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
 
             match output.operation {
                 libfindora::OutputOperation::Fee => {
-                    if core.asset == FRA_ASSET_TYPE && core.address == Address::BlockHole {
-                        if let XfrAmount::NonConfidential(n) = core.amount {
-                            amount = amount.checked_add(n).ok_or_else(|| Error::OverflowAdd)?;
-                        }
+                    if core.asset == FRA.asset_type && core.address == Address::BlockHole {
+                        let n = core
+                            .amount
+                            .get_amount()
+                            .ok_or_else(|| Error::MustBeNonConfidentialAmount)?;
+                        amount = amount.checked_add(n).ok_or_else(|| Error::OverflowAdd)?;
                     } else {
                         return Err(Error::MustUseFraAndBlockHole.into());
                     }

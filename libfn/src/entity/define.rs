@@ -4,8 +4,8 @@ use libfindora::{
     utxo, Address, OutputOperation,
 };
 use primitive_types::U256;
+use serde::{Deserialize, Serialize};
 use zei::xfr::sig::XfrKeyPair;
-use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Define {

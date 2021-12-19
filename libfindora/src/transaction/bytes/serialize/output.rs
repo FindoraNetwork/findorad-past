@@ -1,9 +1,9 @@
 use crate::{
+    staking::ValidatorPublicKey,
     transaction::{Output, OutputOperation},
     transaction_capnp::output,
     Address, Result,
 };
-use abcf::tm_protos::crypto;
 use zei::{
     serialization::ZeiFromToBytes,
     xfr::structs::{XfrAmount, XfrAssetType},
@@ -90,16 +90,14 @@ pub fn build_output(output: &Output, builder: output::Builder) -> Result<()> {
                     Some(v) => {
                         let mut key = validator.reborrow().init_some();
                         let mut k = key.reborrow().init_key();
-                        match &v.sum {
-                            Some(v) => match v {
-                                crypto::public_key::Sum::Ed25519(v) => {
-                                    k.set_ed25519(v.as_ref());
-                                }
-                                crypto::public_key::Sum::Secp256k1(v) => {
-                                    k.set_secp256k1(v.as_ref());
-                                }
-                            },
-                            None => validator.set_none(()),
+                        match v {
+                            ValidatorPublicKey::Ed25519(v) => {
+                                k.set_ed25519(&v);
+                            }
+                            ValidatorPublicKey::Secp256k1(v) => {
+                                k.set_secp256k1(v);
+                            }
+                            ValidatorPublicKey::Unknown => k.set_unknown(()),
                         }
                     }
                     None => validator.set_none(()),

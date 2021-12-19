@@ -1,10 +1,9 @@
-use abcf::tm_protos::crypto;
 use primitive_types::{H160, U256};
 
 use crate::{
     asset::AssetMeta,
     rewards,
-    staking::{self, TendermintAddress},
+    staking::{self, TendermintAddress, ValidatorPublicKey},
     transaction::{Output, OutputOperation},
     transaction_capnp::{address, output},
     utxo, Address, Result,
@@ -96,13 +95,14 @@ fn from_operation(reader: output::operation::Reader) -> Result<OutputOperation> 
                     let b_reader = b?;
                     let key = match b_reader.get_key().which()? {
                         validator_key::key::Which::Ed25519(a) => {
-                            crypto::public_key::Sum::Ed25519(a?.to_vec())
+                            ValidatorPublicKey::Ed25519(a?.to_vec())
                         }
                         validator_key::key::Which::Secp256k1(a) => {
-                            crypto::public_key::Sum::Secp256k1(a?.to_vec())
+                            ValidatorPublicKey::Secp256k1(a?.to_vec())
                         }
+                        validator_key::key::Which::Unknown(_) => ValidatorPublicKey::Unknown,
                     };
-                    Some(crypto::PublicKey { sum: Some(key) })
+                    Some(key)
                 }
             };
 
