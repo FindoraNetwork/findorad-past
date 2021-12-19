@@ -21,7 +21,12 @@ pub struct Builder {
 }
 
 impl Builder {
-    pub async fn fetch_owned_utxo<P: Provider>(&mut self, provider: &mut P, address: &Address, keypair: &XfrKeyPair) -> Result<()> {
+    pub async fn fetch_owned_utxo<P: Provider>(
+        &mut self,
+        provider: &mut P,
+        address: &Address,
+        keypair: &XfrKeyPair,
+    ) -> Result<()> {
         if !self.keypairs.contains_key(&address) {
             let (ids, outputs) = net::get_owned_outputs(provider, &address).await?;
 
@@ -99,7 +104,6 @@ impl Builder {
                         n: self.outputs.len().try_into()?,
                         operation: InputOperation::TransferAsset,
                     });
-
 
                     self.keypairs.insert(address, keypair);
                 }
@@ -220,7 +224,7 @@ impl Builder {
 
         // build transaction.
 
-        let tx = Transaction {
+        let mut tx = Transaction {
             txid: H512::default(),
             inputs: self.inputs,
             outputs: self.outputs,
@@ -229,6 +233,9 @@ impl Builder {
         };
 
         // signature.
+        let keypairs = self.keypairs.into_values().collect::<Vec<XfrKeyPair>>();
+        tx.signature(&keypairs)?;
+
         Ok(tx)
     }
 }

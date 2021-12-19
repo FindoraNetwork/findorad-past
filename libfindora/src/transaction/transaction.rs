@@ -1,14 +1,16 @@
 use abcf::ToBytes;
 use capnp::{message::ReaderOptions, serialize_packed};
+use digest::Digest;
 use primitive_types::H512;
+use sha3::Sha3_512;
 use zei::xfr::{sig::XfrKeyPair, structs::AssetTypeAndAmountProof};
 
-use crate::{transaction_capnp, Result};
+use crate::{transaction_capnp, Address, Error, Result};
 
 use super::{
     bytes::{deserialize, serialize},
     signature::Signature,
-    Input, Output,
+    FraSignature, Input, Output,
 };
 
 #[derive(Debug)]
@@ -39,61 +41,63 @@ impl abcf::module::FromBytes for Transaction {
     where
         Self: Sized,
     {
-        fn inner(bytes: &[u8]) -> Result<Transaction> {
-            let reader = serialize_packed::read_message(bytes, ReaderOptions::new())?;
-            let root = reader.get_root::<transaction_capnp::transaction::Reader>()?;
-
-            deserialize::from_root(root)
-        }
-
-        Ok(inner(bytes)?)
+        Ok(Transaction::deserialize(bytes)?)
     }
 }
 
 impl Transaction {
-    pub fn signature(&mut self, _keypairs: Vec<XfrKeyPair>) -> Result<()> {
-        //         if self.signatures.len() != 0 {
-        //     return Err(eg!("this tx is signed."));
-        // }
-        //
-        // if self.inputs.len() != keypairs.len() {
-        //     return Err(eg!("please give right keypair for inputs."));
-        // }
-        //
-        // let bytes = self.to_bytes().map_err(|e| eg!(format!("{:?}", e)))?;
-        //
-        // for i in 0..keypairs.len() {
-        //     let keypair = &keypairs[i];
-        //
-        //     let signature = keypair.sign(&bytes);
-        //
-        //     self.signatures.push(signature);
-        // }
-        //
-        // let bytes = self.to_bytes().map_err(|e| eg!(format!("{:?}", e)))?;
-        //
-        // let tx_hash = Sha3_512::digest(&bytes).as_slice();
-        //
-        // self.txid = H512(Sha3_512::digest(&bytes).try_into()?);
-        //
+    pub fn deserialize(bytes: &[u8]) -> Result<Self> {
+        let reader = serialize_packed::read_message(bytes, ReaderOptions::new())?;
+        let root = reader.get_root::<transaction_capnp::transaction::Reader>()?;
+
+        deserialize::from_root(root)
+    }
+
+    pub fn serialize(&self) -> Result<Vec<u8>> {
+        let mut result = Vec::new();
+
+        let mut message = capnp::message::Builder::new_default();
+        let transaction = message.init_root::<transaction_capnp::transaction::Builder>();
+
+        serialize::build_transaction(self, transaction)?;
+        serialize_packed::write_message(&mut result, &message)?;
+
+        Ok(result)
+    }
+
+    pub fn signature(&mut self, keypairs: &[XfrKeyPair]) -> Result<()> {
+        if self.signatures.len() != 0 {
+            return Err(Error::AlreadySign);
+        }
+
+        let bytes = self.serialize()?;
+
+        for keypair in keypairs {
+            let address = Address::from(keypair.get_pk());
+
+            let public_key = keypair.get_pk();
+
+            let signature = keypair.sign(&bytes);
+
+            self.signatures.push(Signature::Fra(FraSignature {
+                address,
+                public_key,
+                signature,
+            }))
+        }
+
+        let bytes = self.serialize()?;
+
+        let txid = Sha3_512::digest(&bytes);
+
+        self.txid = H512::from_slice(txid.as_slice());
+
         Ok(())
     }
 }
 
 impl ToBytes for Transaction {
     fn to_bytes(&self) -> abcf::Result<Vec<u8>> {
-        fn inner(t: &Transaction) -> Result<Vec<u8>> {
-            let mut result = Vec::new();
-
-            let mut message = capnp::message::Builder::new_default();
-            let transaction = message.init_root::<transaction_capnp::transaction::Builder>();
-
-            serialize::build_transaction(t, transaction)?;
-            serialize_packed::write_message(&mut result, &message)?;
-
-            Ok(result)
-        }
-
-        Ok(inner(self)?)
+        Ok(self.serialize()?)
     }
 }

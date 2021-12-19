@@ -116,8 +116,9 @@ struct ConfidentialAll {
 }
 
 struct FraSignature {
-    publicKey @0: Data;
-    siganture @1: Data;
+    address @0: Address;
+    publicKey @1: Data;
+    siganture @2: Data;
 }
 
 struct Signature {

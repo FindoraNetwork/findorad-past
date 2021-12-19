@@ -9,6 +9,13 @@ pub enum Error {
     KeyMustBeSet,
     TryFromIntError(core::num::TryFromIntError),
     BalanceNotEnough,
+    LibfndoraError(libfindora::Error),
+}
+
+impl From<libfindora::Error> for Error {
+    fn from(e: libfindora::Error) -> Self {
+        Error::LibfndoraError(e)
+    }
 }
 
 impl From<Box<dyn ruc::RucError>> for Error {

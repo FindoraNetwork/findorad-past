@@ -174,7 +174,7 @@ fn from_amount(reader: output::amount::Reader) -> Result<XfrAmount> {
     Ok(amount)
 }
 
-fn from_address(reader: address::Reader) -> Result<Address> {
+pub fn from_address(reader: address::Reader) -> Result<Address> {
     Ok(match reader.which()? {
         address::Which::Eth(a) => {
             let reader = a?;

@@ -13,6 +13,7 @@ pub enum Error {
     OverflowAdd,
     Unknown,
     MustBeNonConfidentialAsset,
+    AlreadySign,
 }
 
 impl From<capnp::Error> for Error {
@@ -70,6 +71,9 @@ impl From<Error> for abcf::Error {
                 80008,
                 String::from("mustbe nonconfidential asset type."),
             ),
+            Error::AlreadySign => {
+                abcf::Error::ABCIApplicationError(80009, String::from("already sign"))
+            }
             Error::Unknown => {
                 abcf::Error::ABCIApplicationError(81000, String::from("Only placeholder"))
             }
