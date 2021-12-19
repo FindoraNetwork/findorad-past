@@ -32,7 +32,7 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
         for input in &tx.inputs {
             match input.operation {
                 libfindora::InputOperation::TransferAsset => {
-                    let txid = if input.txid == H512::default() {
+                    let txid = if input.txid == H512::zero() {
                         tx.txid
                     } else {
                         input.txid

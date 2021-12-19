@@ -12,6 +12,8 @@ mod net;
 
 pub mod entity;
 
+mod mapper;
+
 mod error;
 pub use error::{Error, Result};
 

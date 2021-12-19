@@ -6,7 +6,7 @@ use libfindora::{
 
 use crate::Result;
 
-pub fn get_owned_outputs<P: Provider>(
+pub async fn get_owned_outputs<P: Provider>(
     _provider: &mut P,
     _address: &Address,
 ) -> Result<(Vec<OutputId>, Vec<Output>)> {

@@ -1,4 +1,3 @@
-use libfindora::asset::Amount;
 use libfindora::Address;
 
 use rand_core::{CryptoRng, RngCore};
@@ -71,12 +70,16 @@ impl Transfer {
         Address::from(self.from.get_pk())
     }
 
-    pub fn to_output_amount(&self) -> (AssetType, Amount) {
-        (self.asset_type, self.amount)
-    }
-
     pub fn to_keypair(&self) -> XfrKeyPair {
         self.from.clone()
+    }
+
+    pub fn is_confidential_amount(&self) -> bool {
+        self.confidential_amount
+    }
+
+    pub fn is_confidential_asset(&self) -> bool {
+        self.confidential_asset
     }
 }
 

@@ -39,11 +39,7 @@ impl Issue {
         self.keypair.clone()
     }
 
-    pub fn to_input_amount(&self) -> Result<(AssetType, Amount)> {
-        Ok((self.asset_type, self.amount))
-    }
-
-    pub fn to_output_amount(&self) -> Result<(AssetType, Amount)> {
-        Ok((self.asset_type, 0))
+    pub fn is_confidential(&self) -> bool {
+        self.confidential_amount
     }
 }

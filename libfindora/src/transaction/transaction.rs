@@ -51,7 +51,7 @@ impl abcf::module::FromBytes for Transaction {
 }
 
 impl Transaction {
-    pub fn signature(&mut self, _keypairs: Vec<XfrKeyPair>) -> ruc::Result<()> {
+    pub fn signature(&mut self, _keypairs: Vec<XfrKeyPair>) -> Result<()> {
         //         if self.signatures.len() != 0 {
         //     return Err(eg!("this tx is signed."));
         // }

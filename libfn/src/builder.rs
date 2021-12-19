@@ -1,119 +1,234 @@
-use std::collections::BTreeSet;
+use std::collections::BTreeMap;
 
-use crate::{entity::Entity, net, utils, Result};
+use crate::{entity::Entity, mapper::Mapper, net, utils, Error, Result};
 use abcf_sdk::providers::Provider;
 use libfindora::{
-    transaction::{Input, InputOperation, OutputOperation},
-    Address, Transaction,
+    transaction::{Input, InputOperation, Output, OutputOperation},
+    utxo, Address, Transaction,
 };
+use primitive_types::H512;
 use rand_core::{CryptoRng, RngCore};
-use zei::xfr::{
-    sig::XfrKeyPair,
-    structs::{AssetRecord, BlindAssetRecord},
-};
+use zei::xfr::{lib::gen_xfr_body, sig::XfrKeyPair, structs::AssetRecord};
 
-pub struct Output {
-    pub record: BlindAssetRecord,
-    pub operation: OutputOperation,
-    pub address: Address,
-}
-
+#[derive(Debug, Default)]
 pub struct Builder {
     pub inputs: Vec<Input>,
     pub outputs: Vec<Output>,
     pub zei_inputs: Vec<AssetRecord>,
     pub zei_outputs: Vec<AssetRecord>,
-    pub keypairs: Vec<XfrKeyPair>,
+    pub keypairs: BTreeMap<Address, XfrKeyPair>,
+    pub mapper: Mapper,
 }
 
 impl Builder {
+    pub async fn fetch_owned_utxo<P: Provider>(&mut self, provider: &mut P, address: &Address, keypair: &XfrKeyPair) -> Result<()> {
+        if !self.keypairs.contains_key(&address) {
+            let (ids, outputs) = net::get_owned_outputs(provider, &address).await?;
+
+            let mut ars = utils::open_outputs(outputs, &keypair)?;
+
+            for ar in &ars {
+                self.mapper.add(
+                    &address,
+                    &ar.open_asset_record.asset_type,
+                    ar.open_asset_record.amount,
+                    false,
+                    false,
+                )?;
+            }
+
+            self.zei_inputs.append(&mut ars);
+
+            for index in ids {
+                self.inputs.push(Input {
+                    txid: index.txid,
+                    n: index.n,
+                    operation: InputOperation::TransferAsset,
+                });
+            }
+
+            self.keypairs.insert(address.clone(), keypair.clone());
+        }
+        Ok(())
+    }
+
     pub async fn from_entries<R: RngCore + CryptoRng, P: Provider>(
+        &mut self,
         prng: &mut R,
         provider: &mut P,
         v: Vec<Entity>,
-    ) -> Result<Self> {
-        let mut inputs = Vec::new();
-        let mut outputs = Vec::new();
-        // let mut build_outputs = Vec::new();
-
-        let mut zei_inputs = Vec::new();
-        let mut zei_outputs = Vec::new();
-
-        let mut from_addresses = BTreeSet::new();
-
-        let mut keypairs = Vec::new();
-
+    ) -> Result<()> {
         for e in &v {
             match e {
                 Entity::Issue(e) => {
                     let record = e.to_output_asset_record(prng)?;
 
-                    outputs.push(Output {
-                        record: record.open_asset_record.blind_asset_record.clone(),
+                    let address = Address::from(e.keypair.get_pk());
+                    let keypair = e.to_keypair();
+
+                    self.fetch_owned_utxo(provider, &address, &keypair).await?;
+
+                    self.mapper.add(
+                        &address,
+                        &e.asset_type,
+                        e.amount,
+                        e.is_confidential(),
+                        false,
+                    )?;
+
+                    let core = utxo::Output {
+                        amount: record.open_asset_record.blind_asset_record.amount.clone(),
+                        asset: record
+                            .open_asset_record
+                            .blind_asset_record
+                            .asset_type
+                            .clone(),
+                        address: address.clone(),
+                        owner_memo: record.owner_memo.clone(),
+                    };
+
+                    self.outputs.push(Output {
                         operation: OutputOperation::IssueAsset,
-                        address: Address::from(e.keypair.get_pk()),
+                        core,
                     });
 
-                    zei_inputs.push(record);
+                    self.zei_inputs.push(record);
 
-                    keypairs.push(e.to_keypair());
+                    self.inputs.push(Input {
+                        txid: primitive_types::H512::zero(),
+                        n: self.outputs.len().try_into()?,
+                        operation: InputOperation::TransferAsset,
+                    });
+
+
+                    self.keypairs.insert(address, keypair);
                 }
                 Entity::Transfer(t) => {
                     let address = t.to_input_address();
                     let keypair = t.to_keypair();
 
-                    if !from_addresses.contains(&address) {
-                        let (ids, outputs) = net::get_owned_outputs(provider, &address)?;
-                        from_addresses.insert(address.clone());
-                        let mut ars = utils::open_outputs(outputs, &keypair)?;
-                        zei_inputs.append(&mut ars);
+                    let record = t.to_output_asset_record(prng)?;
 
-                        for index in ids {
-                            inputs.push(Input {
-                                txid: index.txid,
-                                n: index.n,
-                                operation: InputOperation::TransferAsset,
-                            });
-                        }
-                    }
+                    self.fetch_owned_utxo(provider, &address, &keypair).await?;
 
-                    let output = t.to_output_asset_record(prng)?;
+                    self.mapper.sub(
+                        &address,
+                        &record.open_asset_record.asset_type,
+                        record.open_asset_record.amount,
+                        t.is_confidential_amount(),
+                        t.is_confidential_asset(),
+                    )?;
 
-                    outputs.push(Output {
-                        record: output.open_asset_record.blind_asset_record.clone(),
-                        operation: OutputOperation::TransferAsset,
+                    let core = utxo::Output {
+                        amount: record.open_asset_record.blind_asset_record.amount.clone(),
+                        asset: record
+                            .open_asset_record
+                            .blind_asset_record
+                            .asset_type
+                            .clone(),
                         address,
+                        owner_memo: record.owner_memo.clone(),
+                    };
+
+                    self.outputs.push(Output {
+                        operation: OutputOperation::TransferAsset,
+                        core,
                     });
 
-                    zei_outputs.push(output);
+                    self.zei_outputs.push(record);
                 }
             }
         }
 
-        // Generate fee.
-        let fee_ar = utils::build_fee(prng)?;
-        outputs.push(Output {
-            address: Address::BlockHole,
-            record: fee_ar.open_asset_record.blind_asset_record.clone(),
-            operation: OutputOperation::Fee,
-        });
-        zei_outputs.push(fee_ar);
-
-        Ok(Builder {
-            inputs,
-            outputs,
-            zei_inputs,
-            zei_outputs,
-            keypairs,
-        })
+        Ok(())
     }
 
-    pub fn build(&self) -> Result<Transaction> {
-        // 1. check 
-        // 2. change
-        // 3. build xfr body.
-        // 4. build transaction.
-        // 5. signature.
-        Ok(Default::default())
+    pub fn build<R: RngCore + CryptoRng>(mut self, prng: &mut R) -> Result<Transaction> {
+        // Generate fee.
+        let record = utils::build_fee(prng)?;
+
+        let core = utxo::Output {
+            amount: record.open_asset_record.blind_asset_record.amount.clone(),
+            asset: record
+                .open_asset_record
+                .blind_asset_record
+                .asset_type
+                .clone(),
+            address: Address::BlockHole,
+            owner_memo: record.owner_memo.clone(),
+        };
+
+        let output = Output {
+            core,
+            operation: OutputOperation::Fee,
+        };
+
+        self.mapper.sub(
+            &Address::BlockHole,
+            &record.open_asset_record.asset_type,
+            record.open_asset_record.amount,
+            false,
+            false,
+        )?;
+
+        self.outputs.push(output);
+        self.zei_outputs.push(record);
+
+        // change
+
+        let mapper_vec = self.mapper.to_vec();
+
+        log::debug!("Charge is {:?}", mapper_vec);
+
+        for (address, asset, amount, confidential_amount, confidential_asset) in mapper_vec {
+            let public_key = self
+                .keypairs
+                .get(&address)
+                .ok_or_else(|| Error::BalanceNotEnough)?
+                .get_pk();
+
+            let record = utils::build_output(
+                prng,
+                asset,
+                amount,
+                confidential_asset,
+                confidential_amount,
+                public_key,
+            )?;
+
+            let core = utxo::Output {
+                amount: record.open_asset_record.blind_asset_record.amount.clone(),
+                asset: record
+                    .open_asset_record
+                    .blind_asset_record
+                    .asset_type
+                    .clone(),
+                address: Address::BlockHole,
+                owner_memo: record.owner_memo.clone(),
+            };
+            self.outputs.push(Output {
+                core,
+                operation: OutputOperation::TransferAsset,
+            });
+
+            self.zei_outputs.push(record);
+        }
+
+        // build xfr body.
+
+        let body = gen_xfr_body(prng, &self.zei_inputs, &self.zei_outputs)?;
+
+        // build transaction.
+
+        let tx = Transaction {
+            txid: H512::default(),
+            inputs: self.inputs,
+            outputs: self.outputs,
+            proof: body.proofs.asset_type_and_amount_proof,
+            signatures: Vec::new(),
+        };
+
+        // signature.
+        Ok(tx)
     }
 }
