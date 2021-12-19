@@ -1,7 +1,7 @@
 use abcf::bs3::MapStore;
-use libfindora::asset::{AssetInfo, AssetIssue, AssetType};
+use libfindora::asset::AssetType;
 
-use crate::{Error, Result};
+use crate::{AssetInfo, AssetIssue, Error, Result};
 
 pub fn check_define(
     asset_infos: &mut impl MapStore<AssetType, AssetInfo>,

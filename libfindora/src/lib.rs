@@ -1,11 +1,10 @@
 pub mod asset;
-pub mod coinbase;
-pub mod fee;
 pub mod rewards;
 pub mod staking;
 pub mod utxo;
 
 pub mod transaction;
+pub use transaction::{InputOperation, OutputOperation, Transaction};
 
 mod address;
 pub use address::Address;

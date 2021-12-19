@@ -1,4 +1,4 @@
-use crate::asset::meta::AssetMeta;
+use crate::asset::AssetMeta;
 use crate::rewards;
 use crate::staking;
 use crate::utxo;

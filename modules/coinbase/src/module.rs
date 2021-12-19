@@ -1,13 +1,16 @@
 use abcf::{
     bs3::{
         merkle::append_only::AppendOnlyMerkle,
-        model::{Map, Value}, ValueStore,
+        model::{Map, Value},
+        ValueStore,
     },
     module::types::{RequestDeliverTx, ResponseDeliverTx, ResponseEndBlock},
     Application, TxnContext,
 };
 use fm_utxo::UtxoModule;
-use libfindora::{coinbase, utxo::Output};
+use libfindora::utxo::Output;
+
+use crate::Transaction;
 
 #[abcf::module(
     name = "coinbase",
@@ -34,7 +37,7 @@ impl CoinbaseModule {}
 /// Module's block logic.
 #[abcf::application]
 impl Application for CoinbaseModule {
-    type Transaction = coinbase::Transaction;
+    type Transaction = Transaction;
 
     async fn begin_block(
         &mut self,
@@ -54,11 +57,10 @@ impl Application for CoinbaseModule {
         context: &mut abcf::AppContext<'_, Self>,
         _req: &abcf::tm_protos::abci::RequestEndBlock,
     ) -> ResponseEndBlock {
-
         if let Ok(_begin_index_data) = context.stateful.begin_index.get() {
-//             if let Some(begin_index) = begin_index_data {
-                // // if begin_index <= begin_index
-//             }
+            //             if let Some(begin_index) = begin_index_data {
+            // // if begin_index <= begin_index
+            //             }
         } else {
             // TODO: consider panic node.
             panic!("Read data from store failed.");

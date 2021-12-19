@@ -4,13 +4,13 @@ use abcf::{
     Application, TxnContext,
 };
 use libfindora::{
-    utxo::{self, Output, OutputId},
+    utxo::{Output, OutputId},
     Address,
 };
 use rand_chacha::ChaChaRng;
 use zei::setup::PublicParams;
 
-use crate::utils;
+use crate::{utils, Transaction};
 
 #[abcf::module(name = "utxo", version = 1, impl_version = "0.1.1", target_height = 0)]
 pub struct UtxoModule {
@@ -28,7 +28,7 @@ impl UtxoModule {}
 /// Module's block logic.
 #[abcf::application]
 impl Application for UtxoModule {
-    type Transaction = utxo::Transaction;
+    type Transaction = Transaction;
 
     async fn check_tx(
         &mut self,

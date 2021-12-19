@@ -6,9 +6,9 @@ use abcf::{
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, TxnContext,
 };
-use libfindora::asset::{self, AssetInfo, AssetType};
+use libfindora::asset::AssetType;
 
-use crate::utils;
+use crate::{utils, AssetInfo, Transaction};
 
 #[abcf::module(name = "asset", version = 1, impl_version = "0.1.1", target_height = 0)]
 pub struct AssetModule {
@@ -25,7 +25,7 @@ impl AssetModule {}
 /// Module's block logic.
 #[abcf::application]
 impl Application for AssetModule {
-    type Transaction = asset::Transaction;
+    type Transaction = Transaction;
 
     async fn check_tx(
         &mut self,

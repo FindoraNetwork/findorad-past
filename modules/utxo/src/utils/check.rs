@@ -1,6 +1,6 @@
-use crate::{Error, Result};
+use crate::{Error, Result, Transaction, ValidateTransaction};
 use abcf::bs3::MapStore;
-use libfindora::utxo::{Output, OutputId, Transaction, ValidateTransaction};
+use libfindora::utxo::{Output, OutputId};
 use rand_chacha::ChaChaRng;
 use zei::setup::PublicParams;
 

@@ -1,21 +1,18 @@
-pub mod constant;
+use libfindora::{asset::{Amount, FRA_ASSET_TYPE, XfrAmount}, Address};
 
-use zei::xfr::structs::XfrAmount;
+use crate::Error;
 
-use crate::{
-    asset::{Amount, FRA_ASSET_TYPE},
-    transaction, Address, Error,
-};
+pub const FRA_FEE_AMOUNT: u64 = 10_000;
 
 #[derive(Default, Debug)]
 pub struct Transaction {
     pub amount: Amount,
 }
 
-impl TryFrom<&transaction::Transaction> for Transaction {
+impl TryFrom<&libfindora::Transaction> for Transaction {
     type Error = abcf::Error;
 
-    fn try_from(tx: &transaction::Transaction) -> Result<Self, Self::Error> {
+    fn try_from(tx: &libfindora::Transaction) -> Result<Self, Self::Error> {
         let mut amount: Amount = 0;
 
         for output in &tx.outputs {

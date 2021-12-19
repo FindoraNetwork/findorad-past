@@ -6,6 +6,7 @@ pub enum Error {
     AssetTypeAlreadyExists(AssetType),
     AssetTypeNotExists(AssetType),
     MustBeNonConfidentialAmount,
+    MustBeNonConfidentialAsset,
     IssueMustBeOwner(Address, Address),
     AssetCantTransfer(AssetType),
     Unknown,
@@ -35,6 +36,10 @@ impl From<Error> for abcf::Error {
             Error::AssetCantTransfer(e) => {
                 abcf::Error::ABCIApplicationError(90005, format!("asset {:?} can't transfer", e))
             }
+            Error::MustBeNonConfidentialAsset => abcf::Error::ABCIApplicationError(
+                80008,
+                String::from("mustbe nonconfidential asset type."),
+            ),
             Error::Unknown => {
                 abcf::Error::ABCIApplicationError(100001, String::from("placeholder error"))
             }

@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 
 use super::{insert_owned_outputs_map, OwnedOutputOperation};
-use crate::{Error, Result};
+use crate::{Error, Result, Transaction, ValidateTransaction};
 use abcf::bs3::MapStore;
 use libfindora::{
-    utxo::{Output, OutputId, Transaction, ValidateTransaction},
+    utxo::{Output, OutputId},
     Address,
 };
 use rand_chacha::ChaChaRng;

@@ -5,3 +5,6 @@ pub use module::CoinbaseModule;
 
 mod error;
 pub use error::{Error, Result};
+
+mod transaction;
+pub use transaction::Transaction;

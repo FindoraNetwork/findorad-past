@@ -1,9 +1,11 @@
+use libfindora::{
+    asset::{AssetType, XfrAmount, XfrAssetType},
+    Address,
+};
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
-use zei::xfr::structs::{AssetType, XfrAssetType};
 
-use super::XfrAmount;
-use crate::{transaction, Address, Error};
+use crate::Error;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct AssetInfo {
@@ -27,22 +29,22 @@ pub struct Transaction {
     pub issue_asset: Vec<AssetIssue>,
 }
 
-impl TryFrom<&transaction::Transaction> for Transaction {
+impl TryFrom<&libfindora::Transaction> for Transaction {
     type Error = abcf::Error;
 
-    fn try_from(t: &transaction::Transaction) -> Result<Self, Self::Error> {
+    fn try_from(t: &libfindora::Transaction) -> Result<Self, Self::Error> {
         let mut infos = Vec::new();
         let mut types = Vec::new();
         let mut issue = Vec::new();
 
         for output in &t.outputs {
             match &output.operation {
-                transaction::OutputOperation::TransferAsset => {
+                libfindora::OutputOperation::TransferAsset => {
                     if let XfrAssetType::NonConfidential(at) = output.core.asset {
                         types.push(at);
                     }
                 }
-                transaction::OutputOperation::DefineAsset(e) => {
+                libfindora::OutputOperation::DefineAsset(e) => {
                     if let XfrAssetType::NonConfidential(asset) = output.core.asset {
                         let info = AssetInfo {
                             maximum: e.maximum,
@@ -56,7 +58,7 @@ impl TryFrom<&transaction::Transaction> for Transaction {
                         return Err(Error::MustBeNonConfidentialAsset.into());
                     }
                 }
-                transaction::OutputOperation::IssueAsset => {
+                libfindora::OutputOperation::IssueAsset => {
                     if let XfrAssetType::NonConfidential(asset) = output.core.asset {
                         let info = AssetIssue {
                             asset,

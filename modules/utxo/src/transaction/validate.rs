@@ -1,5 +1,5 @@
+use crate::Result;
 use rand_core::{CryptoRng, RngCore};
-use ruc::*;
 use zei::{
     setup::PublicParams,
     xfr::{
@@ -21,12 +21,12 @@ impl ValidateTransaction {
         prng: &mut C,
         params: &mut PublicParams,
     ) -> Result<()> {
-        verify_bare_transaction(
+        Ok(verify_bare_transaction(
             prng,
             params,
             self.inputs.as_ref(),
             self.outputs.as_ref(),
             &self.proof,
-        )
+        )?)
     }
 }

@@ -8,6 +8,7 @@ pub enum Error {
     TryFromIntError(core::num::TryFromIntError),
     DuplicateOutput(OutputId),
     MissingOutput(OutputId),
+    RucError(Box<dyn ruc::RucError>),
 }
 
 impl From<Error> for abcf::Error {
@@ -25,6 +26,7 @@ impl From<Error> for abcf::Error {
             Error::UtxoBalanceError(i) => Self::ABCIApplicationError(90002, i),
             Error::Bs3Error(e) => e.into(),
             Error::TryFromIntError(e) => Self::ABCIApplicationError(90003, format!("{:?}", e)),
+            Error::RucError(e) => Self::ABCIApplicationError(90003, format!("{:?}", e)),
         }
     }
 }
@@ -38,6 +40,12 @@ impl From<abcf::bs3::Error> for Error {
 impl From<core::num::TryFromIntError> for Error {
     fn from(e: core::num::TryFromIntError) -> Self {
         Self::TryFromIntError(e)
+    }
+}
+
+impl From<Box<dyn ruc::RucError>> for Error {
+    fn from(e: Box<dyn ruc::RucError>) -> Self {
+        Self::RucError(e)
     }
 }
 

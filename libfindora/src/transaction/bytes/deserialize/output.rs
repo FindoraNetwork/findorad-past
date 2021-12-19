@@ -2,7 +2,7 @@ use abcf::tm_protos::crypto;
 use primitive_types::{H160, U256};
 
 use crate::{
-    asset::meta::AssetMeta,
+    asset::AssetMeta,
     rewards,
     staking::{self, TendermintAddress},
     transaction::{Output, OutputOperation},

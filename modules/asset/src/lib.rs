@@ -7,3 +7,6 @@ mod error;
 pub use error::{Error, Result};
 
 mod utils;
+
+mod transaction;
+pub use transaction::{AssetInfo, AssetIssue, Transaction};
