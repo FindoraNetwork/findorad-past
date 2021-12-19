@@ -60,6 +60,7 @@ impl Application for UtxoModule {
             &tx,
         )?;
 
+        // TODO: 此代码可优化，倾向于删除同一个地址下的全部输出
         for (owner, ops) in owned_outputs.into_iter() {
             if let Some(v) = context.stateless.owned_outputs.get_mut(&owner)? {
                 utils::insert_by_operation(v, ops)?;

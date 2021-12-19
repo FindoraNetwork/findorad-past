@@ -1,4 +1,7 @@
-use libfindora::{asset::{Amount, FRA_ASSET_TYPE, XfrAmount}, Address};
+use libfindora::{
+    asset::{Amount, XfrAmount, FRA_ASSET_TYPE},
+    Address,
+};
 
 use crate::Error;
 
@@ -18,10 +21,17 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
         for output in &tx.outputs {
             let core = &output.core;
 
-            if core.asset == FRA_ASSET_TYPE && core.address == Address::BlockHole {
-                if let XfrAmount::NonConfidential(n) = core.amount {
-                    amount = amount.checked_add(n).ok_or_else(|| Error::OverflowAdd)?;
+            match output.operation {
+                libfindora::OutputOperation::Fee => {
+                    if core.asset == FRA_ASSET_TYPE && core.address == Address::BlockHole {
+                        if let XfrAmount::NonConfidential(n) = core.amount {
+                            amount = amount.checked_add(n).ok_or_else(|| Error::OverflowAdd)?;
+                        }
+                    } else {
+                        return Err(Error::MustUseFraAndBlockHole.into());
+                    }
                 }
+                _ => {}
             }
         }
 

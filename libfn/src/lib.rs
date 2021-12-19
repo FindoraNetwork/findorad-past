@@ -1,14 +1,6 @@
-use serde::{Deserialize, Serialize};
-
 mod utils;
 
 pub mod types;
-
-mod issue;
-pub use issue::IssueEntry;
-
-mod transfer;
-pub use transfer::TransferEntry;
 
 mod wallet;
 pub use wallet::WalletEntry;
@@ -16,11 +8,12 @@ pub use wallet::WalletEntry;
 mod builder;
 pub use builder::Builder;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub enum Entry {
-    Issue(IssueEntry),
-    Transfer(TransferEntry),
-}
+mod net;
+
+pub mod entity;
+
+mod error;
+pub use error::{Error, Result};
 
 // pub async fn build_transaction<R: CryptoRng + RngCore>(
 //     prng: &mut R,

@@ -2,7 +2,6 @@ use libfindora::asset::Amount;
 use libfindora::Address;
 
 use rand_core::{CryptoRng, RngCore};
-use ruc::*;
 use serde::{Deserialize, Serialize};
 
 use zei::xfr::asset_record::AssetRecordType;
@@ -12,8 +11,10 @@ use zei::xfr::{
     structs::{AssetRecord, AssetRecordTemplate},
 };
 
+use crate::{Error, Result};
+
 #[derive(Serialize, Deserialize, Debug)]
-pub struct TransferEntry {
+pub struct Transfer {
     pub from: XfrKeyPair,
 
     /// Zei's public key, if you want to receive confidential transaction, this field must provide.
@@ -30,9 +31,9 @@ pub struct TransferEntry {
     pub confidential_asset: bool,
 }
 
-impl TransferEntry {
+impl Transfer {
     pub fn to_output_asset_record<R: CryptoRng + RngCore>(
-        self,
+        &self,
         prng: &mut R,
     ) -> Result<AssetRecord> {
         let (pk, asset_record_type) = match self.address {
@@ -43,14 +44,14 @@ impl TransferEntry {
                     let asset_record_type = AssetRecordType::from_flags(false, false);
                     (self.from.get_pk(), asset_record_type)
                 } else {
-                    return Err(eg!("If transfer to ETH adress, must be non-confidential asset and non-confidential amount"));
+                    return Err(Error::MustBeNonConfidentialAssetAmount);
                 }
             }
             Address::Fra(_) | Address::BlockHole => {
                 let asset_record_type =
                     AssetRecordType::from_flags(self.confidential_amount, self.confidential_asset);
                 (
-                    self.public_key.c(d!("Public key must be set."))?,
+                    self.public_key.ok_or_else(|| Error::KeyMustBeSet)?,
                     asset_record_type,
                 )
             }
@@ -61,7 +62,9 @@ impl TransferEntry {
             asset_record_type,
             pk,
         );
-        AssetRecord::from_template_no_identity_tracing(prng, &template)
+        Ok(AssetRecord::from_template_no_identity_tracing(
+            prng, &template,
+        )?)
     }
 
     pub fn to_input_address(&self) -> Address {
@@ -70,6 +73,10 @@ impl TransferEntry {
 
     pub fn to_output_amount(&self) -> (AssetType, Amount) {
         (self.asset_type, self.amount)
+    }
+
+    pub fn to_keypair(&self) -> XfrKeyPair {
+        self.from.clone()
     }
 }
 

@@ -1,27 +1,19 @@
-use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 
+use crate::{entity::Entity, net, utils, Result};
 use abcf_sdk::providers::Provider;
 use libfindora::{
-    asset::Amount,
-    transaction::{InputOperation, OutputOperation},
-    utxo::OutputId,
-    Address,
+    transaction::{Input, InputOperation, OutputOperation},
+    Address, Transaction,
 };
-use primitive_types::H512;
 use rand_core::{CryptoRng, RngCore};
-use ruc::*;
-use zei::xfr::structs::{AssetRecord, AssetType};
-
-use crate::Entry;
-
-pub struct Input {
-    pub id: OutputId,
-    pub record: AssetRecord,
-    pub operation: InputOperation,
-}
+use zei::xfr::{
+    sig::XfrKeyPair,
+    structs::{AssetRecord, BlindAssetRecord},
+};
 
 pub struct Output {
-    pub record: AssetRecord,
+    pub record: BlindAssetRecord,
     pub operation: OutputOperation,
     pub address: Address,
 }
@@ -29,63 +21,99 @@ pub struct Output {
 pub struct Builder {
     pub inputs: Vec<Input>,
     pub outputs: Vec<Output>,
-    pub inputs_amount: BTreeMap<AssetType, Amount>,
-    pub outputs_amount: BTreeMap<AssetType, Amount>,
+    pub zei_inputs: Vec<AssetRecord>,
+    pub zei_outputs: Vec<AssetRecord>,
+    pub keypairs: Vec<XfrKeyPair>,
 }
 
 impl Builder {
     pub async fn from_entries<R: RngCore + CryptoRng, P: Provider>(
         prng: &mut R,
-        provider: P,
-        v: Vec<Entry>,
+        provider: &mut P,
+        v: Vec<Entity>,
     ) -> Result<Self> {
         let mut inputs = Vec::new();
         let mut outputs = Vec::new();
+        // let mut build_outputs = Vec::new();
 
-        let mut inputs_amount = BTreeMap::new();
-        let mut outputs_amount = BTreeMap::new();
+        let mut zei_inputs = Vec::new();
+        let mut zei_outputs = Vec::new();
+
+        let mut from_addresses = BTreeSet::new();
+
+        let mut keypairs = Vec::new();
 
         for e in &v {
             match e {
-                Entry::Issue(e) => {
+                Entity::Issue(e) => {
                     let record = e.to_output_asset_record(prng)?;
 
-                    //                     inputs.push(Input {
-                    //     id: OutputId {
-                    //         txid: H512::zero(),
-                    //         n: u32::try_from(inputs.len()).c(d!())?,
-                    //     },
-                    //     record: record.clone(),
-                    //     operation: InputOperation::IssueAsset,
-                    // });
-                    //
-                    // outputs.push(Output {
-                    //     record,
-                    //     operation: OutputOperation::IssueAsset,
-                    //     address: Address::from(e.keypair.get_pk()),
-                    // });
-                    //
-                    // let am = e.to_input_amount()?;
-                    //
-                    // inputs_amount.insert(am.0, am.1);
-                    //
-                    // TODO: Add public key for signature.
+                    outputs.push(Output {
+                        record: record.open_asset_record.blind_asset_record.clone(),
+                        operation: OutputOperation::IssueAsset,
+                        address: Address::from(e.keypair.get_pk()),
+                    });
+
+                    zei_inputs.push(record);
+
+                    keypairs.push(e.to_keypair());
                 }
-                Entry::Transfer(t) => {
+                Entity::Transfer(t) => {
                     let address = t.to_input_address();
+                    let keypair = t.to_keypair();
+
+                    if !from_addresses.contains(&address) {
+                        let (ids, outputs) = net::get_owned_outputs(provider, &address)?;
+                        from_addresses.insert(address.clone());
+                        let mut ars = utils::open_outputs(outputs, &keypair)?;
+                        zei_inputs.append(&mut ars);
+
+                        for index in ids {
+                            inputs.push(Input {
+                                txid: index.txid,
+                                n: index.n,
+                                operation: InputOperation::TransferAsset,
+                            });
+                        }
+                    }
+
+                    let output = t.to_output_asset_record(prng)?;
+
+                    outputs.push(Output {
+                        record: output.open_asset_record.blind_asset_record.clone(),
+                        operation: OutputOperation::TransferAsset,
+                        address,
+                    });
+
+                    zei_outputs.push(output);
                 }
             }
         }
 
+        // Generate fee.
+        let fee_ar = utils::build_fee(prng)?;
+        outputs.push(Output {
+            address: Address::BlockHole,
+            record: fee_ar.open_asset_record.blind_asset_record.clone(),
+            operation: OutputOperation::Fee,
+        });
+        zei_outputs.push(fee_ar);
+
         Ok(Builder {
             inputs,
             outputs,
-            inputs_amount,
-            outputs_amount,
+            zei_inputs,
+            zei_outputs,
+            keypairs,
         })
     }
 
-    //     pub fn build(&self) -> Result<Transaction> {
-    //
-    //     }
+    pub fn build(&self) -> Result<Transaction> {
+        // 1. check 
+        // 2. change
+        // 3. build xfr body.
+        // 4. build transaction.
+        // 5. signature.
+        Ok(Default::default())
+    }
 }
