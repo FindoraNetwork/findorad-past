@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
-libfindora = { path = "../libfindora" }
 abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", default-features = false }
 serde = "1.0.130"
 log = "0.4.14"
@@ -22,4 +21,5 @@ primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
 hex = "0.4.3"
 sha3 = "0.9"
 
+libfindora = { path = "../libfindora" }
 fm-fee = { path = "../modules/fee" }

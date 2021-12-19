@@ -65,6 +65,10 @@ impl Builder {
     ) -> Result<()> {
         for e in &v {
             match e {
+                Entity::Define(e) => {
+                    let output = e.to_output();
+                    self.outputs.push(output);
+                }
                 Entity::Issue(e) => {
                     let record = e.to_output_asset_record(prng)?;
 
