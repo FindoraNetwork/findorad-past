@@ -7,28 +7,32 @@ use abcf::{
     tm_protos::abci::ValidatorUpdate,
     Error,
 };
-use libfindora::staking::voting::{Amount, Power};
-use libfindora::staking::TendermintAddress;
+use libfindora::{
+    staking::{
+        voting::{Amount, Power},
+        TendermintAddress,
+    },
+    Address,
+};
 use std::collections::BTreeMap;
-use zei::xfr::sig::XfrPublicKey;
 
 /// un-delegate operation
 pub struct UnDelegateOp {
-    pub delegator: XfrPublicKey,
+    pub delegator: Address,
     pub validator_address: TendermintAddress,
     pub amount: Amount,
 }
 
 /// execute un-delegate operation
-pub fn execute_undelegate<'a>(
+pub fn execute_undelegate(
     op: UnDelegateOp,
     global_power: &mut impl ValueStore<Power>,
-    delegation_amount: &mut impl MapStore<XfrPublicKey, Amount>,
-    delegators: &mut impl MapStore<TendermintAddress, BTreeMap<XfrPublicKey, Amount>>,
+    delegation_amount: &mut impl MapStore<Address, Amount>,
+    delegators: &mut impl MapStore<TendermintAddress, BTreeMap<Address, Amount>>,
     powers: &mut impl MapStore<TendermintAddress, Power>,
     validator_addr_pubkey: &mut impl MapStore<TendermintAddress, ValidatorPublicKey>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
-    if let Some(_) = validator_addr_pubkey.get(&op.validator_address)? {
+    if validator_addr_pubkey.get(&op.validator_address)?.is_some() {
         let mut power = 0;
         if let Some(p) = powers.get(&op.validator_address)? {
             power = *p;

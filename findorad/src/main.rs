@@ -23,6 +23,7 @@ use zei::setup::PublicParams;
 )]
 pub struct Findorad {
     pub staking: StakingModule,
+    #[dependence(utxo = "utxo")]
     pub coinbase: CoinbaseModule,
     pub utxo: UtxoModule,
 }
@@ -32,7 +33,7 @@ fn main() {
 
     let staking = StakingModule::new(Vec::new());
 
-    let coinbase = CoinbaseModule::new();
+    let coinbase = CoinbaseModule::new(0);
 
     let params = PublicParams::default();
 
@@ -82,16 +83,21 @@ fn main() {
             __marker_d: PhantomData,
         },
         coinbase: abcf::Stateful::<CoinbaseModule<SledBackend, Sha3_512>> {
-            asset_owner: bs3::SnapshotableStorage::new(
+            pending_outputs: abcf::bs3::SnapshotableStorage::new(
                 Default::default(),
-                SledBackend::open_tree(&coinbase_backend, "asset_owner").unwrap(),
+                SledBackend::open_tree(&staking_backend, "pending_outputs").unwrap(),
+            )
+            .unwrap(),
+            begin_index: abcf::bs3::SnapshotableStorage::new(
+                Default::default(),
+                SledBackend::open_tree(&staking_backend, "begin_index").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,
             __marker_d: PhantomData,
         },
         utxo: abcf::Stateful::<UtxoModule<SledBackend, Sha3_512>> {
-            output_set: bs3::SnapshotableStorage::new(
+            outputs_set: bs3::SnapshotableStorage::new(
                 Default::default(),
                 SledBackend::open_tree(&coinbase_backend, "output_set").unwrap(),
             )

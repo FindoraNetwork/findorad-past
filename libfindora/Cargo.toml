@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor" }
+zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor-address-v1" }
 ed25519-dalek = "1"
 curve25519-dalek = { version =  "3" }
 abcf = { git = "https://github.com/FindoraNetwork/abcf.git" }
@@ -14,13 +14,14 @@ serde = { version = "1.0", features = ["derive", "alloc"], default-features = fa
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 digest = "0.9"
 sha3 = "0.9"
-ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 capnp = "0.14"
 bulletproofs = { package = "bulletproofs", git = "https://github.com/FindoraNetwork/bp.git", branch = "batch_verification", features = ["yoloproofs"] }
 log = "0.4.14"
 hex = "0.4.3"
 base64 = "0.10"
+primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
+ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
 
 [build-dependencies]
 capnpc = "0.14"

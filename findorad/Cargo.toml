@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 abcf = { git = "https://github.com/FindoraNetwork/abcf.git" }
 abcf-node = { git = "https://github.com/FindoraNetwork/abcf.git" }
-bs3 = { git = "https://github.com/FindoraNetwork/bs3.git", features = ["sled-backend"], tag = "0.1.1" }
+bs3 = { git = "https://github.com/FindoraNetwork/bs3.git", features = ["sled-backend"], tag = "0.1.4" }
 env_logger = "0.9.0"
 async-trait = "0.1.51"
 sha3 = "0.9.1"
@@ -16,7 +16,7 @@ digest = "0.9.0"
 serde_json = "1.0.68"
 serde = "1.0.130"
 libfindora = { path = "../libfindora" }
-zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor" }
+zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor-address-v1" }
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 rand_chacha = "0.2.2"
 log = "0.4.14"

@@ -10,34 +10,36 @@ use abcf::{
     tm_protos::abci::ValidatorUpdate,
     Error,
 };
-use libfindora::staking::voting::{
-    Amount, Power, MAX_DELEGATION_AMOUNT, MIN_DELEGATION_AMOUNT, STAKING_VALIDATOR_MIN_POWER,
-};
 use libfindora::staking::TendermintAddress;
+use libfindora::{
+    staking::voting::{
+        Amount, Power, MAX_DELEGATION_AMOUNT, MIN_DELEGATION_AMOUNT, STAKING_VALIDATOR_MIN_POWER,
+    },
+    Address,
+};
 use std::collections::BTreeMap;
-use zei::xfr::sig::XfrPublicKey;
 
 /// delegation operation
 pub struct DelegateOp {
-    pub delegator: XfrPublicKey,
+    pub delegator: Address,
     pub validator_address: TendermintAddress,
     pub validator_pubkey: Option<ValidatorPublicKey>,
     pub amount: Amount,
-    pub memo: Option<String>,
+    pub memo: Option<Vec<u8>>,
 }
 
 /// execute delegate operation
 pub fn execute_delegate<'a>(
     op: DelegateOp,
     global_power: &mut impl ValueStore<Power>,
-    delegation_amount: &mut impl MapStore<XfrPublicKey, Amount>,
-    delegators: &mut impl MapStore<TendermintAddress, BTreeMap<XfrPublicKey, Amount>>,
+    delegation_amount: &mut impl MapStore<Address, Amount>,
+    delegators: &mut impl MapStore<TendermintAddress, BTreeMap<Address, Amount>>,
     powers: &mut impl MapStore<TendermintAddress, Power>,
-    validator_staker: &mut impl MapStore<TendermintAddress, XfrPublicKey>,
+    validator_staker: &mut impl MapStore<TendermintAddress, Address>,
     validator_addr_pubkey: &mut impl MapStore<TendermintAddress, ValidatorPublicKey>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
     // op.validator exists && has done self-delegate operation
-    if let Some(_) = validator_addr_pubkey.get(&op.validator_address)? {
+    if validator_addr_pubkey.get(&op.validator_address)?.is_some() {
         let mut power = 0;
         if let Some(p) = powers.get(&op.validator_address)? {
             power = *p;
@@ -85,7 +87,7 @@ pub fn execute_delegate<'a>(
                 } else {
                     // add new delegation amount
                     actual_amount = op.amount;
-                    delegation_amount.insert(op.delegator, op.amount)?;
+                    delegation_amount.insert(op.delegator.clone(), op.amount)?;
                 }
 
                 // update delegators
@@ -103,15 +105,13 @@ pub fn execute_delegate<'a>(
 
                 let pub_key = if let Some(pubkey) = &op.validator_pubkey {
                     pubkey.to_crypto_publickey()
+                } else if let Some(pub_key) = validator_addr_pubkey.get(&op.validator_address)? {
+                    pub_key.to_crypto_publickey()
                 } else {
-                    if let Some(pub_key) = validator_addr_pubkey.get(&op.validator_address)? {
-                        pub_key.to_crypto_publickey()
-                    } else {
-                        return Err(abcf::Error::ABCIApplicationError(
-                            90003,
-                            "there is no matching public key for this address".to_string(),
-                        ));
-                    }
+                    return Err(abcf::Error::ABCIApplicationError(
+                        90003,
+                        "there is no matching public key for this address".to_string(),
+                    ));
                 };
 
                 let validator_update = ValidatorUpdate {
@@ -160,15 +160,13 @@ pub fn execute_delegate<'a>(
 
                 let pub_key = if let Some(pubkey) = &op.validator_pubkey {
                     pubkey.to_crypto_publickey()
+                } else if let Some(pub_key) = validator_addr_pubkey.get(&op.validator_address)? {
+                    pub_key.to_crypto_publickey()
                 } else {
-                    if let Some(pub_key) = validator_addr_pubkey.get(&op.validator_address)? {
-                        pub_key.to_crypto_publickey()
-                    } else {
-                        return Err(abcf::Error::ABCIApplicationError(
-                            90003,
-                            "there is no matching public key for this address".to_string(),
-                        ));
-                    }
+                    return Err(abcf::Error::ABCIApplicationError(
+                        90003,
+                        "there is no matching public key for this address".to_string(),
+                    ));
                 };
 
                 let validator_update = ValidatorUpdate {

@@ -14,20 +14,22 @@ use abcf::{
     tm_protos::abci::ValidatorUpdate,
     Error,
 };
-use libfindora::staking::{
-    voting::{Amount, Power, MAX_POWER_PERCENT_PER_VALIDATOR, MAX_TOTAL_POWER},
-    Operation, StakingInfo, TendermintAddress,
+use libfindora::{
+    staking::{
+        voting::{Amount, Power, MAX_POWER_PERCENT_PER_VALIDATOR, MAX_TOTAL_POWER},
+        Operation, StakingInfo, TendermintAddress,
+    },
+    Address,
 };
 use std::collections::BTreeMap;
-use zei::xfr::sig::XfrPublicKey;
 
 pub fn execute_staking(
     info: &StakingInfo,
     global_power: &mut impl ValueStore<Power>,
-    delegation_amount: &mut impl MapStore<XfrPublicKey, Amount>,
-    delegators: &mut impl MapStore<TendermintAddress, BTreeMap<XfrPublicKey, Amount>>,
+    delegation_amount: &mut impl MapStore<Address, Amount>,
+    delegators: &mut impl MapStore<TendermintAddress, BTreeMap<Address, Amount>>,
     powers: &mut impl MapStore<TendermintAddress, Power>,
-    validator_staker: &mut impl MapStore<TendermintAddress, XfrPublicKey>,
+    validator_staker: &mut impl MapStore<TendermintAddress, Address>,
     validator_addr_pubkey: &mut impl MapStore<TendermintAddress, ValidatorPublicKey>,
 ) -> abcf::Result<Vec<ValidatorUpdate>> {
     match &info.operation {
@@ -52,7 +54,7 @@ pub fn execute_staking(
                 }
             };
 
-            return execute_delegate(
+            execute_delegate(
                 op,
                 global_power,
                 delegation_amount,
@@ -60,7 +62,7 @@ pub fn execute_staking(
                 powers,
                 validator_staker,
                 validator_addr_pubkey,
-            );
+            )
         }
         Operation::Undelegate(ud) => {
             let op = UnDelegateOp {
@@ -69,14 +71,14 @@ pub fn execute_staking(
                 amount: info.amount,
             };
 
-            return execute_undelegate(
+            execute_undelegate(
                 op,
                 global_power,
                 delegation_amount,
                 delegators,
                 powers,
                 validator_addr_pubkey,
-            );
+            )
         }
     }
 }

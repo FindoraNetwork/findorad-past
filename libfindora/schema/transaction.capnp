@@ -7,9 +7,8 @@ struct Input {
 
     enum Operation {
         transferAsset @0;
-        issueAsset @1;
-        undelegate @2;
-        claimReward @3;
+        undelegate @1;
+        claimReward @2;
     }
 }
 
@@ -37,6 +36,10 @@ struct DelegateData {
         none @1: Void;
         some @2: ValidatorKey;
     }
+    memo :union {
+        nono @3: Void;
+        some @4: Data;
+    }
 }
 
 struct UndelegateData {
@@ -44,11 +47,19 @@ struct UndelegateData {
 }
 
 struct ClaimData {
-    validator @0: ValidatorKey;
+    validator @0: Data;
+}
+
+struct Address {
+    union {
+        blockHole @0: Void;
+        eth @1: Data;
+        fra @2: Data;
+    }
 }
 
 struct Output {
-    publicKey @0: Data;
+    address @0: Address;
 
     amount :union {
         confidential @1: ConfidentialAmount;
@@ -67,13 +78,22 @@ struct Output {
 
     operation :union {
         transferAsset @7: Void;
-        issueAsset @8: Void;
-        fee @9: Void;
-        undelegate @10: UndelegateData;
-        claimReward @11: ClaimData;
-        delegate @12: DelegateData;
+        defineAsset @8: DefineAsset;
+        issueAsset @9: Void;
+        fee @10: Void;
+        undelegate @11: UndelegateData;
+        claimReward @12: ClaimData;
+        delegate @13: DelegateData;
     }
 
+}
+
+struct DefineAsset {
+    transferable @0: Bool;
+    maximum :union {
+        none @1: Void;
+        some @2: Data;
+    }
 }
 
 struct RangeProof {
@@ -95,11 +115,24 @@ struct ConfidentialAll {
     asset @1: List(ChaumPedersenProof);
 }
 
+struct FraSignature {
+    address @0: Address;
+    publicKey @1: Data;
+    siganture @2: Data;
+}
+
+struct Signature {
+    union {
+        fra @0: FraSignature;
+        none @1: Void;
+    }
+}
+
 struct Transaction {
     txid @0: Data;
     inputs @1: List(Input);
     outputs @2: List(Output);
-    signature @3: List(Data);
+    signature @3: List(Signature);
     proof :union {
         assetMix @4: Data;
         confidentialAmount @5: RangeProof;

@@ -6,21 +6,23 @@ use abcf::{
         merkle::append_only::AppendOnlyMerkle,
         model::{Map, Value},
     },
-    manager::{AContext, TContext},
     module::types::{
         RequestCheckTx, RequestDeliverTx, RequestEndBlock, ResponseCheckTx, ResponseDeliverTx,
         ResponseEndBlock,
     },
     tm_protos::abci::ValidatorUpdate,
-    Application, Stateful, StatefulBatch, Stateless, StatelessBatch,
+    Application,
 };
-use libfindora::staking::TendermintAddress;
-use libfindora::staking::{
-    self,
-    voting::{Amount, Power},
+use abcf::{AppContext, TxnContext};
+use libfindora::{
+    staking::{
+        self,
+        voting::{Amount, Power},
+        TendermintAddress,
+    },
+    Address,
 };
 use std::{collections::BTreeMap, mem};
-use zei::xfr::sig::XfrPublicKey;
 
 #[abcf::module(
     name = "staking",
@@ -39,7 +41,7 @@ pub struct StakingModule {
     pub vote_updaters: Vec<ValidatorUpdate>,
 
     #[stateful(merkle = "AppendOnlyMerkle")]
-    pub validator_staker: Map<TendermintAddress, XfrPublicKey>,
+    pub validator_staker: Map<TendermintAddress, Address>,
 
     /// Global delegation amount.
     #[stateful(merkle = "AppendOnlyMerkle")]
@@ -47,11 +49,11 @@ pub struct StakingModule {
 
     /// Delegation amount by wallet address.
     #[stateful(merkle = "AppendOnlyMerkle")]
-    pub delegation_amount: Map<XfrPublicKey, Amount>,
+    pub delegation_amount: Map<Address, Amount>,
 
     /// Who delegate to which validator.
     #[stateful(merkle = "AppendOnlyMerkle")]
-    pub delegators: Map<TendermintAddress, BTreeMap<XfrPublicKey, Amount>>,
+    pub delegators: Map<TendermintAddress, BTreeMap<Address, Amount>>,
 
     /// TendermintAddress to validatorPublicKey
     #[stateful(merkle = "AppendOnlyMerkle")]
@@ -72,34 +74,19 @@ impl Application for StakingModule {
 
     async fn check_tx(
         &mut self,
-        _context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        _context: &mut TxnContext<'_, Self>,
         _req: &RequestCheckTx<Self::Transaction>,
     ) -> abcf::Result<ResponseCheckTx> {
         Ok(Default::default())
     }
 
-    async fn begin_block(
-        &mut self,
-        _context: &mut AContext<Stateless<Self>, Stateful<Self>>,
-        _req: &RequestBeginBlock,
-    ) {
-        let mut penalty_list = vec![];
+    async fn begin_block(&mut self, _context: &mut AppContext<'_, Self>, _req: &RequestBeginBlock) {
+        let mut penalty_list = Vec::new();
 
         // get the list of validators to be punished
         for eve in _req.byzantine_validators.iter() {
             if let Some(validator) = &eve.validator {
                 let bk = ByzantineKind::from_evidence_type(eve.r#type);
-                if bk.is_err() {
-                    log::debug!(
-                        "height: {}, type: {}, msg: {}",
-                        eve.height,
-                        eve.r#type,
-                        bk.unwrap_err()
-                    );
-                    return;
-                }
-                let bk = bk.unwrap();
-
                 penalty_list.push((validator.clone(), bk));
             }
         }
@@ -129,7 +116,7 @@ impl Application for StakingModule {
 
     async fn deliver_tx(
         &mut self,
-        context: &mut TContext<StatelessBatch<'_, Self>, StatefulBatch<'_, Self>>,
+        context: &mut TxnContext<'_, Self>,
         req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
         let infos = &req.tx.infos;
@@ -156,12 +143,12 @@ impl Application for StakingModule {
 
     async fn end_block(
         &mut self,
-        _context: &mut AContext<Stateless<Self>, Stateful<Self>>,
+        _context: &mut AppContext<'_, Self>,
         _req: &RequestEndBlock,
     ) -> ResponseEndBlock {
         let mut res = ResponseEndBlock::default();
 
-        res.validator_updates = mem::replace(&mut self.vote_updaters, Vec::new());
+        res.validator_updates = mem::take(&mut self.vote_updaters);
 
         res
     }

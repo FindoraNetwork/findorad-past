@@ -1,23 +1,21 @@
 use std::path::PathBuf;
 
 use clap::{Parser, ValueHint};
-// use ruc::*;
 
 use crate::config::Config;
 
-mod execute;
-mod issue;
+mod asset;
+mod delegate;
 mod setup;
 mod transfer;
-mod tx;
 mod wallet;
 
 #[derive(Parser, Debug)]
 #[clap(author, about, version)]
 pub struct Opts {
-    #[clap(short, long, default_value = concat!(env!("HOME"), "/.findora/fn"), value_hint = ValueHint::DirPath)]
+    #[clap(long, default_value = concat!(env!("HOME"), "/.findora/fn"),value_name = "FOLDER", value_hint = ValueHint::DirPath)]
     pub home: PathBuf,
-    #[clap(short, long, default_value = concat!(env!("HOME"), "/.findora/fn/config.toml"), value_hint = ValueHint::FilePath)]
+    #[clap(long, default_value = concat!(env!("HOME"), "/.findora/fn/config.toml"), value_name = "FILE", value_hint = ValueHint::FilePath)]
     pub config: PathBuf,
     #[clap(subcommand)]
     subcmd: SubCommand,
@@ -28,10 +26,10 @@ impl Opts {
         let config = Config::load(&self.home, &self.config)?;
 
         match &self.subcmd {
+            SubCommand::Asset(c) => c.execute(config).await?,
+            SubCommand::Delegate(c) => c.execute(config).await?,
             SubCommand::Setup(c) => c.execute(config).await?,
-            SubCommand::Execute(c) => c.execute(config).await?,
             SubCommand::Transfer(c) => c.execute(config).await?,
-            SubCommand::Issue(c) => c.execute(config).await?,
             SubCommand::Wallet(c) => c.execute(config).await?,
         }
 
@@ -41,14 +39,14 @@ impl Opts {
 
 #[derive(Parser, Debug)]
 enum SubCommand {
-    #[clap(version, author, about = "Setup configuration entry.")]
+    /// Manipulate custom asset
+    Asset(asset::Command),
+    /// Delegating operations
+    Delegate(delegate::Command),
+    /// Setup configuration entry
     Setup(setup::Command),
-    #[clap(version, author, about = "Execute batch of transaction.")]
-    Execute(execute::Command),
-    #[clap(version, author, about = "Transfer asset to other user.")]
+    /// Transfer asset to other user
     Transfer(transfer::Command),
-    #[clap(version, author, about = "Issue asset.")]
-    Issue(issue::Command),
-    #[clap(version, author, about = "Manage wallet")]
+    /// Manage wallet
     Wallet(wallet::Command),
 }
