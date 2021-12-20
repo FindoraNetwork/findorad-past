@@ -1,6 +1,7 @@
-use clap::Parser;
-
 use crate::config::Config;
+
+use anyhow::Result;
+use clap::Parser;
 
 #[derive(Parser, Debug)]
 pub struct Command {
@@ -10,7 +11,7 @@ pub struct Command {
 }
 
 impl Command {
-    pub async fn execute(&self, config: Config) -> ruc::Result<()> {
+    pub fn execute(&self, config: Config) -> Result<()> {
         let mut config = config;
 
         if let Some(addr) = &self.set_server_address {
