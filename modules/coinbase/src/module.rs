@@ -8,7 +8,7 @@ use abcf::{
 };
 use fm_utxo::UtxoModule;
 
-use crate::{Transaction, types::OutputChain};
+use crate::{types::OutputChain, Transaction};
 
 #[abcf::module(
     name = "coinbase",
@@ -53,7 +53,6 @@ impl Application for CoinbaseModule {
         _context: &mut abcf::AppContext<'_, Self>,
         _req: &abcf::tm_protos::abci::RequestEndBlock,
     ) -> ResponseEndBlock {
-
         Default::default()
     }
 

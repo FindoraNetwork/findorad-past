@@ -1,6 +1,7 @@
 use abcf::tm_protos::abci::RequestBeginBlock;
 use libfindora::staking::TendermintAddress;
 
+#[derive(Debug, Clone)]
 pub enum ByzantineKind {
     DuplicateVote,
     LightClientAttack,

@@ -15,6 +15,8 @@ pub enum Error {
     TryFromIntError(TryFromIntError),
     MustDoSelfDegegateFirst,
     DelegateAmountNotEnough,
+    NoTendermintAddress,
+    IsOptionNone,
 }
 
 impl From<Error> for abcf::Error {
@@ -54,6 +56,10 @@ impl From<Error> for abcf::Error {
             Error::DelegateAmountNotEnough => {
                 abcf::Error::ABCIApplicationError(90002, format!("Delegate amount not enough."))
             }
+            Error::NoTendermintAddress => {
+                abcf::Error::ABCIApplicationError(90002, format!("No tendermint address."))
+            }
+            Error::IsOptionNone => abcf::Error::ABCIApplicationError(90002, format!("Is none.")),
         }
     }
 }

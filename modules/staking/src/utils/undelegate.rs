@@ -20,9 +20,11 @@ pub fn apply_undelegate_amount(
 ) -> Result<()> {
     if let Some(v) = delegators.get_mut(&op.address)? {
         if let Some(a) = v.get_mut(delegator) {
-            *a = a
+            let undelegate_amount = a
                 .checked_sub(amount)
                 .ok_or_else(|| Error::DelegateAmountNotEnough)?;
+
+            *a = undelegate_amount;
         } else {
             return Err(Error::DelegateAmountNotEnough);
         }

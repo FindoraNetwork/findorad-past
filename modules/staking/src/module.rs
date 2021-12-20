@@ -14,7 +14,7 @@ use abcf::{
 };
 use fm_coinbase::CoinbaseModule;
 use libfindora::{
-    asset::{Amount, FRA, XfrAmount},
+    asset::{Amount, XfrAmount, FRA},
     staking::{TendermintAddress, ValidatorPublicKey},
     utxo::Output,
     Address,
@@ -78,7 +78,21 @@ impl Application for StakingModule {
         Ok(Default::default())
     }
 
-    async fn begin_block(&mut self, _context: &mut AppContext<'_, Self>, _req: &RequestBeginBlock) {
+    async fn begin_block(&mut self, context: &mut AppContext<'_, Self>, req: &RequestBeginBlock) {
+        let evidences = utils::BlockEvidence::from(req);
+
+        let mut updates = utils::penalty(
+            &evidences,
+            &mut context.stateful.powers,
+            &mut context.stateful.global_power,
+            &mut context.stateless.delegation_amount,
+            &mut context.stateful.delegators,
+            &mut context.stateful.validator_staker,
+            &mut context.stateful.validator_pubkey,
+        )
+        .unwrap_or_default();
+
+        self.vote_updaters.append(&mut updates);
     }
 
     async fn deliver_tx(
