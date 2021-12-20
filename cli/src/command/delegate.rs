@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{fmt::Display, path::PathBuf};
 
 use crate::config::Config;
 
@@ -74,13 +74,13 @@ struct Show {
 }
 
 impl Command {
-    pub fn execute(&self, _config: Config) -> Result<()> {
+    pub fn execute(&self, _config: Config) -> Result<Box<dyn Display>> {
         match &self.subcmd {
             SubCommand::StakeSelf(_stake_self) => {}
             SubCommand::StakeOther(_stake_other) => {}
             SubCommand::Claim(_claim) => {}
             SubCommand::Show(_show) => {}
         }
-        Ok(())
+        Ok(Box::new(()))
     }
 }
