@@ -10,7 +10,8 @@ const DEFAULT_WALLET_FILE: &str = ".wallet.json";
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Wallet {
-    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
     pub mnemonic: String,
     pub address: String,
     pub public: String,
@@ -83,7 +84,7 @@ mod tests {
         assert_eq!(wallets.list().len(), 0);
 
         let wallet_1 = Wallet {
-            name: "wallet_1".to_string(),
+            name: Some("wallet_1".to_string()),
             mnemonic: "some_mnemonic_1".to_string(),
             address: "some_address_1".to_string(),
             public: "some_public_1".to_string(),
@@ -97,7 +98,7 @@ mod tests {
         assert!(wallets.read("not_exists_wallet").is_err());
 
         let wallet_2 = Wallet {
-            name: "wallet_2".to_string(),
+            name: None,
             mnemonic: "some_mnemonic_2".to_string(),
             address: "some_address_2".to_string(),
             public: "some_public_2".to_string(),
