@@ -5,15 +5,12 @@ pub mod config;
 pub mod entry;
 pub mod utils;
 
-#[tokio::main]
-async fn main() {
-    env_logger::init();
+fn main() {
     let opts = command::Opts::parse();
 
-    match opts.execute().await {
+    match opts.execute() {
         Ok(_) => {}
-        Err(e) => {
-            e.print(None);
+        Err(_e) => {
             //             let mut app = command::Opts::into_app();
             //             app.print_help().unwrap();
             panic!();

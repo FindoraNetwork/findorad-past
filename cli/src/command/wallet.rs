@@ -1,6 +1,7 @@
-use clap::{ArgEnum, Parser};
-
 use crate::config::Config;
+
+use anyhow::Result;
+use clap::{ArgEnum, Parser};
 
 #[derive(Parser, Debug)]
 pub struct Command {
@@ -51,7 +52,7 @@ struct Delete {
 }
 
 impl Command {
-    pub async fn execute(&self, _config: Config) -> ruc::Result<()> {
+    pub fn execute(&self, _config: Config) -> Result<()> {
         match &self.subcmd {
             SubCommand::Show(_show) => {}
             SubCommand::Create(_create) => {}

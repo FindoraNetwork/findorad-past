@@ -1,8 +1,9 @@
-use clap::{Parser, ValueHint};
+use std::path::PathBuf;
 
 use crate::config::Config;
 
-use std::path::PathBuf;
+use anyhow::Result;
+use clap::{Parser, ValueHint};
 
 #[derive(Parser, Debug)]
 pub struct Command {
@@ -73,7 +74,7 @@ struct Show {
 }
 
 impl Command {
-    pub async fn execute(&self, _config: Config) -> ruc::Result<()> {
+    pub fn execute(&self, _config: Config) -> Result<()> {
         match &self.subcmd {
             SubCommand::StakeSelf(_stake_self) => {}
             SubCommand::StakeOther(_stake_other) => {}

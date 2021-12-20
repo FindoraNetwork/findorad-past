@@ -1,6 +1,7 @@
-use clap::{Parser, ValueHint};
-
 use crate::config::Config;
+
+use anyhow::Result;
+use clap::{Parser, ValueHint};
 
 #[derive(Parser, Debug)]
 pub struct Command {
@@ -64,7 +65,7 @@ struct Issue {
 }
 
 impl Command {
-    pub async fn execute(&self, _config: Config) -> ruc::Result<()> {
+    pub fn execute(&self, _config: Config) -> Result<()> {
         match &self.subcmd {
             SubCommand::Create(_create) => {}
             SubCommand::Show(_show) => {}
