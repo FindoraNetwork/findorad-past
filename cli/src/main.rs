@@ -2,6 +2,7 @@ use clap::Parser;
 
 pub(crate) mod command;
 pub(crate) mod config;
+pub(crate) mod display;
 pub(crate) mod entry;
 pub(crate) mod utils;
 

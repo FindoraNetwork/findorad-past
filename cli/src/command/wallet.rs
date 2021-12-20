@@ -1,4 +1,7 @@
+use std::fmt::Display;
+
 use crate::config::Config;
+use crate::display::wallet as display_wallet;
 use crate::entry::wallet as entry_wallet;
 
 use anyhow::{anyhow, bail, Context, Result};
@@ -46,37 +49,40 @@ struct Delete {
 }
 
 impl Command {
-    pub fn execute(&self, cfg: &Config) -> Result<()> {
+    pub fn execute(&self, cfg: &Config) -> Result<Box<dyn Display>> {
         let mut wallets = entry_wallet::Wallets::new(&cfg.node.home)
             .with_context(|| format!("wallets new failed: {:?}", cfg.node.home))?;
 
         match &self.subcmd {
-            SubCommand::Show(cmd) => show(cmd, &wallets)?,
-            SubCommand::Create(cmd) => create(cmd, &mut wallets)?,
-            SubCommand::Delete(cmd) => delete(cmd, &mut wallets)?,
+            SubCommand::Show(cmd) => show(cmd, &wallets),
+            SubCommand::Create(cmd) => create(cmd, &mut wallets),
+            SubCommand::Delete(cmd) => delete(cmd, &mut wallets),
         }
-        Ok(())
     }
 }
 
-fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<()> {
-    let _result = match &cmd.address {
-        Some(a) => vec![wallets
-            .read(a)
-            .with_context(|| format!("read wallet failed: {:?}", cmd))?],
-        None => wallets.list(),
+fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>> {
+    let result = match &cmd.address {
+        Some(a) => display_wallet::Display::from(
+            wallets
+                .read(a)
+                .with_context(|| format!("read wallet failed: {:?}", cmd))?,
+        ),
+        None => display_wallet::Display::from(wallets.list()),
     };
 
-    Ok(())
+    Ok(Box::new(result))
 }
 
-fn delete(cmd: &Delete, wallets: &mut entry_wallet::Wallets) -> Result<()> {
+fn delete(cmd: &Delete, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn Display>> {
     wallets
         .delete(&cmd.address)
-        .with_context(|| format!("delete wallet failed: {:?}", cmd))
+        .with_context(|| format!("delete wallet failed: {:?}", cmd))?;
+
+    Ok(Box::new(display_wallet::Display::from(cmd.address)))
 }
 
-fn create(cmd: &Create, wallets: &mut entry_wallet::Wallets) -> Result<()> {
+fn create(cmd: &Create, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn Display>> {
     let result = match &cmd.mnemonic {
         Some(m) => lib_wallet::from_mnemonic(&m),
         None => lib_wallet::generate(),
@@ -87,7 +93,7 @@ fn create(cmd: &Create, wallets: &mut entry_wallet::Wallets) -> Result<()> {
         Err(e) => bail!("lib_wallet creating failed: {:?}", e),
     };
 
-    wallets
+    let result = wallets
         .create(&entry_wallet::Wallet {
             name: cmd.name.clone(),
             mnemonic: wallet.mnemonic,
@@ -106,5 +112,5 @@ fn create(cmd: &Create, wallets: &mut entry_wallet::Wallets) -> Result<()> {
         })
         .with_context(|| format!("create wallet failed: {:?}", cmd))?;
 
-    Ok(())
+    Ok(Box::new(display_wallet::Display::from(result.address)))
 }
