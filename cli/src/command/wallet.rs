@@ -1,7 +1,7 @@
 use crate::config::Config;
 
 use anyhow::Result;
-use clap::{ArgEnum, Parser};
+use clap::Parser;
 
 #[derive(Parser, Debug)]
 pub struct Command {
@@ -28,20 +28,9 @@ struct Show {
 
 #[derive(Parser, Debug)]
 struct Create {
-    /// Specific a wallet type to create
-    #[clap(arg_enum, short, long, default_value = "findora")]
-    wallet_typ: KeyType,
     /// Specific to create a new wallet from Mnemonic phrase
     #[clap(short, long, forbid_empty_values = true)]
     mnemonic: Option<String>,
-}
-
-#[derive(ArgEnum, Debug, Clone)]
-enum KeyType {
-    /// Generate a random Findora public and private key pair
-    FRA,
-    /// Generate an Ethereum public and private key pair from??? and memo too???
-    ETH,
 }
 
 #[derive(Parser, Debug)]
