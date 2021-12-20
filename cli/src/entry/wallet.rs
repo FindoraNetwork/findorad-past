@@ -18,6 +18,11 @@ pub struct Wallet {
     pub secret: String,
 }
 
+pub struct ListWallet {
+    pub name: Option<String>,
+    pub address: String,
+}
+
 pub struct Wallets {
     wallets: Vec<Wallet>,
     f_path: PathBuf,
@@ -52,12 +57,18 @@ impl Wallets {
         Ok(())
     }
 
-    pub fn list(&self) -> Vec<Wallet> {
-        self.wallets.clone()
+    pub fn list(&self) -> Vec<ListWallet> {
+        self.wallets
+            .iter()
+            .map(|w| ListWallet {
+                name: w.name,
+                address: w.address,
+            })
+            .collect()
     }
 
     pub fn read(&self, address: &str) -> Result<Wallet> {
-        let result = self.wallets.iter().find(|x| x.address == address);
+        let result = self.wallets.iter().find(|w| w.address == address);
         match result {
             Some(w) => Ok(w.clone()),
             None => bail!("read connot find address: {}", address),
@@ -65,7 +76,7 @@ impl Wallets {
     }
 
     pub fn delete(&mut self, address: &str) -> Result<()> {
-        self.wallets.retain(|x| x.address != address);
+        self.wallets.retain(|w| w.address != address);
         self.save()
             .with_context(|| format!("delete on save failed: {}", address))?;
         Ok(())
