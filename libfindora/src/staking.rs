@@ -49,9 +49,7 @@ impl From<ValidatorPublicKey> for Option<crypto::PublicKey> {
             ValidatorPublicKey::Secp256k1(s) => Some(crypto::PublicKey {
                 sum: Some(crypto::public_key::Sum::Secp256k1(s.clone())),
             }),
-            ValidatorPublicKey::Unknown => {
-                None
-            }
+            ValidatorPublicKey::Unknown => None,
         }
     }
 }

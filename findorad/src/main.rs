@@ -8,7 +8,7 @@ use libfindora::transaction::Transaction;
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use sha3::Sha3_512;
-use std::{marker::PhantomData, collections::BTreeMap};
+use std::{collections::BTreeMap, marker::PhantomData};
 use zei::setup::PublicParams;
 
 use fm_asset::AssetModule;

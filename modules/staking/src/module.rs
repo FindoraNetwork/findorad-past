@@ -31,6 +31,10 @@ pub struct StakingModule {
     /// This field will send to tendermint when end block.
     pub vote_updaters: BTreeMap<ValidatorPublicKey, i64>,
 
+    /// TendermintAddress to validatorPublicKey
+    #[stateful(merkle = "AppendOnlyMerkle")]
+    pub validator_pubkey: Map<TendermintAddress, ValidatorPublicKey>,
+
     #[stateful(merkle = "AppendOnlyMerkle")]
     pub validator_staker: Map<TendermintAddress, Address>,
 
@@ -45,10 +49,6 @@ pub struct StakingModule {
     /// Who delegate to which validator.
     #[stateful(merkle = "AppendOnlyMerkle")]
     pub delegators: Map<TendermintAddress, BTreeMap<Address, Amount>>,
-
-    /// TendermintAddress to validatorPublicKey
-    #[stateful(merkle = "AppendOnlyMerkle")]
-    pub validator_pubkey: Map<TendermintAddress, ValidatorPublicKey>,
 
     /// Validator power.
     #[stateful(merkle = "AppendOnlyMerkle")]
@@ -106,7 +106,8 @@ impl Application for StakingModule {
             .map(|(key, power)| ValidatorUpdate {
                 pub_key: key.into(),
                 power,
-            }).collect();
+            })
+            .collect();
 
         res.validator_updates = updates;
 
@@ -152,7 +153,15 @@ impl StakingModule {
                         &mut context.stateless.delegation_amount,
                     )?;
                 }
-                Operation::Undelegate(_op) => {}
+                Operation::Undelegate(op) => utils::apply_undelegate_amount(
+                    info.amount,
+                    &info.delegator,
+                    op,
+                    &mut context.stateful.delegators,
+                    &mut context.stateful.global_power,
+                    &mut context.stateful.powers,
+                    &mut context.stateless.delegation_amount,
+                )?,
             }
         }
 

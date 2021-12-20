@@ -14,6 +14,7 @@ pub enum Error {
     AlreadySelfDelegate,
     TryFromIntError(TryFromIntError),
     MustDoSelfDegegateFirst,
+    DelegateAmountNotEnough,
 }
 
 impl From<Error> for abcf::Error {
@@ -49,6 +50,9 @@ impl From<Error> for abcf::Error {
             }
             Error::MustDoSelfDegegateFirst => {
                 abcf::Error::ABCIApplicationError(90002, format!("Must do self delegate."))
+            }
+            Error::DelegateAmountNotEnough => {
+                abcf::Error::ABCIApplicationError(90002, format!("Delegate amount not enough."))
             }
         }
     }
