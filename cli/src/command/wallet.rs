@@ -1,6 +1,5 @@
-use std::fmt::Display;
+use std::{fmt::Display, path::Path};
 
-use crate::config::Config;
 use crate::display::wallet as display_wallet;
 use crate::entry::wallet as entry_wallet;
 
@@ -49,9 +48,9 @@ struct Delete {
 }
 
 impl Command {
-    pub fn execute(&self, cfg: &Config) -> Result<Box<dyn Display>> {
-        let mut wallets = entry_wallet::Wallets::new(&cfg.node.home)
-            .with_context(|| format!("wallets new failed: {:?}", cfg.node.home))?;
+    pub fn execute(&self, node_home: &Path) -> Result<Box<dyn Display>> {
+        let mut wallets = entry_wallet::Wallets::new(node_home)
+            .with_context(|| format!("wallets new failed: {:?}", node_home))?;
 
         match &self.subcmd {
             SubCommand::Show(cmd) => show(cmd, &wallets),
@@ -113,4 +112,47 @@ fn create(cmd: &Create, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn D
         .with_context(|| format!("create wallet failed: {:?}", cmd))?;
 
     Ok(Box::new(display_wallet::Display::from(result.address)))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utils::test_utils::TempDir;
+
+    #[test]
+    fn test_command_wallet_execute_show() {
+        let node_home = TempDir::new("test_command_wallet_execute_show").unwrap();
+        let mut cmd = Command {
+            subcmd: SubCommand::Show(Show { address: None }),
+        };
+        assert!(cmd.execute(node_home.path()).is_ok());
+        cmd.subcmd = SubCommand::Show(Show {
+            address: Some("some_address".to_string()),
+        });
+        // because not found
+        assert!(cmd.execute(node_home.path()).is_err());
+    }
+
+    #[test]
+    fn test_command_wallet_execute_create() {
+        let node_home = TempDir::new("test_command_wallet_execute_create").unwrap();
+        let cmd = Command {
+            subcmd: SubCommand::Create(Create {
+                mnemonic: None,
+                name: None,
+            }),
+        };
+        assert!(cmd.execute(node_home.path()).is_ok());
+    }
+
+    #[test]
+    fn test_command_wallet_execute_delete() {
+        let node_home = TempDir::new("test_command_wallet_execute_delete").unwrap();
+        let cmd = Command {
+            subcmd: SubCommand::Delete(Delete {
+                address: "some_address".to_string(),
+            }),
+        };
+        assert!(cmd.execute(node_home.path()).is_ok());
+    }
 }

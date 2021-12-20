@@ -31,7 +31,7 @@ impl Opts {
             SubCommand::Delegate(c) => c.execute(config),
             SubCommand::Setup(c) => c.execute(config),
             SubCommand::Transfer(c) => c.execute(config),
-            SubCommand::Wallet(c) => c.execute(&config),
+            SubCommand::Wallet(c) => c.execute(&config.node.home),
         }
     }
 }

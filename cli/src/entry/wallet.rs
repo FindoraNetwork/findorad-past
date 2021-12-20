@@ -6,7 +6,7 @@ use std::{
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 
-const DEFAULT_WALLET_FILE: &str = ".wallet.json";
+const DEFAULT_WALLET_FILE: &str = "wallets.json";
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Wallet {
