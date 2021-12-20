@@ -9,6 +9,7 @@ edition = "2021"
 ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
 abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", default-features = false }
 serde = "1.0.130"
+serde_json = "1.0.68"
 log = "0.4.14"
 zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor-address-v1" }
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
