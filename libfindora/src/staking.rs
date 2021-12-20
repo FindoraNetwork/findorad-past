@@ -16,6 +16,36 @@ pub struct Undelegate {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TendermintAddress(pub [u8; 20]);
 
+impl From<Vec<u8>> for TendermintAddress {
+    fn from(e: Vec<u8>) -> Self {
+        let mut r = [0u8; 20];
+
+        r.copy_from_slice(&e);
+
+        Self(r)
+    }
+}
+
+impl From<&[u8]> for TendermintAddress {
+    fn from(e: &[u8]) -> Self {
+        let mut r = [0u8; 20];
+
+        r.copy_from_slice(&e);
+
+        Self(r)
+    }
+}
+
+impl From<&Vec<u8>> for TendermintAddress {
+    fn from(e: &Vec<u8>) -> Self {
+        let mut r = [0u8; 20];
+
+        r.copy_from_slice(&e);
+
+        Self(r)
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ValidatorPublicKey {
     Ed25519(Vec<u8>),

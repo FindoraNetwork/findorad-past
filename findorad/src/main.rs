@@ -25,6 +25,7 @@ use fm_utxo::UtxoModule;
     transaction = "Transaction"
 )]
 pub struct Findorad {
+    #[dependence(coinbase = "coinbase")]
     pub staking: StakingModule,
     pub asset: AssetModule,
     pub fee: FeeModule,
@@ -106,11 +107,6 @@ fn main() {
             pending_outputs: abcf::bs3::SnapshotableStorage::new(
                 Default::default(),
                 SledBackend::open_tree(&staking_backend, "pending_outputs").unwrap(),
-            )
-            .unwrap(),
-            begin_index: abcf::bs3::SnapshotableStorage::new(
-                Default::default(),
-                SledBackend::open_tree(&staking_backend, "begin_index").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,

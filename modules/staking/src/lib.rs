@@ -25,6 +25,7 @@ pub struct FraStaking {
     pub validator_min_power: Power,
     pub min_delegate: Amount,
     pub max_percent_per_validator: [u32; 2],
+    pub undelegate_block: i64,
 }
 
 impl FraStaking {
@@ -43,4 +44,5 @@ pub const FRA_STAKING: FraStaking = FraStaking {
     validator_min_power: 1_0000 * FRA.units,
     min_delegate: 1,
     max_percent_per_validator: [1, 5],
+    undelegate_block: 5,
 };

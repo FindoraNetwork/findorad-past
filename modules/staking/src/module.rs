@@ -1,4 +1,4 @@
-use crate::{transaction::Operation, utils, Power, Result, Transaction};
+use crate::{transaction::Operation, utils, Power, Result, Transaction, FRA_STAKING};
 use abcf::{
     bs3::{
         merkle::append_only::AppendOnlyMerkle,
@@ -12,9 +12,11 @@ use abcf::{
     tm_protos::abci::ValidatorUpdate,
     Application, {AppContext, TxnContext},
 };
+use fm_coinbase::CoinbaseModule;
 use libfindora::{
-    asset::Amount,
+    asset::{Amount, FRA, XfrAmount},
     staking::{TendermintAddress, ValidatorPublicKey},
+    utxo::Output,
     Address,
 };
 use std::{collections::BTreeMap, mem};
@@ -25,6 +27,7 @@ use std::{collections::BTreeMap, mem};
     impl_version = "0.1.1",
     target_height = 0
 )]
+#[dependence(coinbase = "CoinbaseModule")]
 pub struct StakingModule {
     /// Recording validator update info
     ///
@@ -88,6 +91,25 @@ impl Application for StakingModule {
         let mut res = self.apply_tx(context, tx)?;
 
         self.vote_updaters.append(&mut res);
+
+        for info in &tx.infos {
+            match info.operation {
+                Operation::Undelegate(_) => {
+                    let output = Output {
+                        address: info.delegator.clone(),
+                        amount: XfrAmount::NonConfidential(info.amount),
+                        asset: FRA.asset_type,
+                        owner_memo: None,
+                    };
+                    fm_coinbase::utils::mint(
+                        context.deps.coinbase.module.block_height + FRA_STAKING.undelegate_block,
+                        output,
+                        &mut context.deps.coinbase.stateful.pending_outputs,
+                    )?;
+                }
+                _ => {}
+            }
+        }
 
         Ok(Default::default())
     }

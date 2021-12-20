@@ -2,15 +2,13 @@ use abcf::{
     bs3::{
         merkle::append_only::AppendOnlyMerkle,
         model::{Map, Value},
-        ValueStore,
     },
     module::types::{RequestDeliverTx, ResponseDeliverTx, ResponseEndBlock},
     Application, TxnContext,
 };
 use fm_utxo::UtxoModule;
-use libfindora::utxo::Output;
 
-use crate::Transaction;
+use crate::{Transaction, types::OutputChain};
 
 #[abcf::module(
     name = "coinbase",
@@ -23,9 +21,7 @@ pub struct CoinbaseModule {
     pub block_height: i64,
 
     #[stateful(merkle = "AppendOnlyMerkle")]
-    pub begin_index: Value<i64>,
-    #[stateful(merkle = "AppendOnlyMerkle")]
-    pub pending_outputs: Map<i64, Output>,
+    pub pending_outputs: Map<i64, OutputChain>,
     // Only a placeholder, will remove when abcf update.
     #[stateless]
     pub sl_value: Value<u32>,
@@ -48,23 +44,15 @@ impl Application for CoinbaseModule {
             self.block_height = header.height;
         } else {
             // TODO: consider panic node.
-            panic!("Got none header, Please reset node.");
+            panic!("Got none header, Please restart node.");
         }
     }
 
     async fn end_block(
         &mut self,
-        context: &mut abcf::AppContext<'_, Self>,
+        _context: &mut abcf::AppContext<'_, Self>,
         _req: &abcf::tm_protos::abci::RequestEndBlock,
     ) -> ResponseEndBlock {
-        if let Ok(_begin_index_data) = context.stateful.begin_index.get() {
-            //             if let Some(begin_index) = begin_index_data {
-            // // if begin_index <= begin_index
-            //             }
-        } else {
-            // TODO: consider panic node.
-            panic!("Read data from store failed.");
-        }
 
         Default::default()
     }
