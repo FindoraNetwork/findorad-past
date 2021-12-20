@@ -10,6 +10,13 @@ pub enum Error {
     TryFromIntError(core::num::TryFromIntError),
     BalanceNotEnough,
     LibfndoraError(libfindora::Error),
+    JsonError(serde_json::Error),
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(e: serde_json::Error) -> Self {
+        Error::JsonError(e)
+    }
 }
 
 impl From<libfindora::Error> for Error {

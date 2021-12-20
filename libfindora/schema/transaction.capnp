@@ -25,8 +25,9 @@ struct OwnerMemo {
 
 struct ValidatorKey {
     key :union {
-        ed25519 @0: Data;
-        secp256k1 @1: Data;
+        unknown @0: Void;
+        ed25519 @1: Data;
+        secp256k1 @2: Data;
     }
 }
 
