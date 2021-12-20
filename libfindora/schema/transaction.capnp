@@ -1,5 +1,7 @@
 @0x9edb1e9495ce4d5a;
 
+using Evm = import "evm.capnp";
+
 struct Input {
     txid @0 : Data;
     n @1: UInt32;
@@ -7,8 +9,7 @@ struct Input {
 
     enum Operation {
         transferAsset @0;
-        undelegate @1;
-        claimReward @2;
+        evmCall @1;
     }
 }
 
@@ -85,6 +86,7 @@ struct Output {
         undelegate @11: UndelegateData;
         claimReward @12: ClaimData;
         delegate @13: DelegateData;
+        evmCall @14: Evm.EvmCall;
     }
 
 }

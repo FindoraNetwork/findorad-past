@@ -4,8 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Operation {
     TransferAsset,
-    Undelegate,
-    ClaimReward,
+    EvmCall,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

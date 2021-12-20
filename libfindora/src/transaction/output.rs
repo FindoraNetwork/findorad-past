@@ -1,4 +1,5 @@
 use crate::asset::AssetMeta;
+use crate::evm;
 use crate::rewards;
 use crate::staking;
 use crate::utxo;
@@ -12,6 +13,7 @@ pub enum Operation {
     Delegate(staking::Delegate),
     ClaimReward(rewards::Claim),
     Undelegate(staking::Undelegate),
+    EvmCall(evm::Evm),
 }
 
 #[derive(Debug, Clone)]

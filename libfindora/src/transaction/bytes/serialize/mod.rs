@@ -1,3 +1,4 @@
+mod evm;
 mod input;
 mod output;
 mod proof;
