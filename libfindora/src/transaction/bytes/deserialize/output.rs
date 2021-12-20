@@ -4,7 +4,7 @@ use crate::{
     asset::AssetMeta,
     rewards,
     staking::{self, TendermintAddress, ValidatorPublicKey},
-    transaction::{Output, OutputOperation, bytes::deserialize::evm::from_evm},
+    transaction::{bytes::deserialize::evm::from_evm, Output, OutputOperation},
     transaction_capnp::{address, output},
     utxo, Address, Result,
 };

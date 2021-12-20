@@ -1,13 +1,14 @@
 use primitive_types::H512;
-use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+use crate::evm;
+
+#[derive(Debug, Clone)]
 pub enum Operation {
     TransferAsset,
-    EvmCall,
+    EvmCall(evm::Input),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug, Clone)]
 pub struct Input {
     pub txid: H512,
     pub n: u32,

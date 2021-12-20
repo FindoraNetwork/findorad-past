@@ -1,21 +1,15 @@
 use abcf::{
-    bs3::{
-        merkle::append_only::AppendOnlyMerkle,
-        model::{Map, Value},
+    bs3::{merkle::append_only::AppendOnlyMerkle, model::Value, MapStore},
+    module::types::{
+        RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx, ResponseEndBlock,
     },
-    module::types::{RequestDeliverTx, ResponseDeliverTx, ResponseEndBlock},
     Application, TxnContext,
 };
 use fm_utxo::UtxoModule;
 
-use crate::{Transaction};
+use crate::Transaction;
 
-#[abcf::module(
-    name = "evm",
-    version = 1,
-    impl_version = "0.1.1",
-    target_height = 0
-)]
+#[abcf::module(name = "evm", version = 1, impl_version = "0.1.1", target_height = 0)]
 #[dependence(utxo = "UtxoModule")]
 pub struct EvmModule {
     #[stateful(merkle = "AppendOnlyMerkle")]
@@ -33,19 +27,16 @@ impl EvmModule {}
 impl Application for EvmModule {
     type Transaction = Transaction;
 
-    async fn begin_block(
+    async fn check_tx(
         &mut self,
-        _context: &mut abcf::AppContext<'_, Self>,
-        req: &abcf::tm_protos::abci::RequestBeginBlock,
-    ) {
-    }
+        context: &mut TxnContext<'_, Self>,
+        req: &RequestCheckTx<Self::Transaction>,
+    ) -> abcf::Result<ResponseCheckTx> {
+        let tx = &req.tx;
 
-    async fn end_block(
-        &mut self,
-        _context: &mut abcf::AppContext<'_, Self>,
-        _req: &abcf::tm_protos::abci::RequestEndBlock,
-    ) -> ResponseEndBlock {
-        Default::default()
+        for account in &tx.txs {}
+
+        Ok(Default::default())
     }
 
     async fn deliver_tx(

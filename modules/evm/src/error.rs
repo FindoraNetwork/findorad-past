@@ -4,6 +4,8 @@ use std::num::TryFromIntError;
 pub enum Error {
     TryFromIntError(TryFromIntError),
     Bs3Error(abcf::bs3::Error),
+    NoOutputIndex,
+    OutputOperationMustBeEvm,
 }
 
 impl From<abcf::bs3::Error> for Error {
@@ -25,6 +27,11 @@ impl From<Error> for abcf::Error {
                 abcf::Error::ABCIApplicationError(80005, format!("{:?}", e))
             }
             Error::Bs3Error(e) => abcf::Error::ABCIApplicationError(80005, format!("{:?}", e)),
+            Error::NoOutputIndex => abcf::Error::ABCIApplicationError(80005, format!("No output.")),
+            Error::OutputOperationMustBeEvm => abcf::Error::ABCIApplicationError(
+                80005,
+                format!("Output operation must be evm call."),
+            ),
         }
     }
 }

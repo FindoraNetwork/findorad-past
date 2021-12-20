@@ -4,7 +4,11 @@ struct Create {
     salt @0 :Data;
 }
 
-struct EvmCall {
+struct Input {
+    n @0: UInt32;
+}
+
+struct Output {
     nonce @0 : UInt64;
     gasLimit @1: UInt64;
     data @2: Data;

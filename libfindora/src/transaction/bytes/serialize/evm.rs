@@ -1,10 +1,10 @@
 use crate::{
     evm::{Action, Evm},
-    evm_capnp::evm_call,
+    evm_capnp::output,
     Result,
 };
 
-pub fn build_evm(evm: &Evm, builder: evm_call::Builder) -> Result<()> {
+pub fn build_evm(evm: &Evm, builder: output::Builder) -> Result<()> {
     let mut builder = builder;
 
     builder.set_nonce(evm.nonce);

@@ -5,11 +5,10 @@ using Evm = import "evm.capnp";
 struct Input {
     txid @0 : Data;
     n @1: UInt32;
-    operation @2: Operation;
 
-    enum Operation {
-        transferAsset @0;
-        evmCall @1;
+    operation: union {
+        transferAsset @2: Void;
+        evmCall @3: Evm.Input;
     }
 }
 
@@ -86,7 +85,7 @@ struct Output {
         undelegate @11: UndelegateData;
         claimReward @12: ClaimData;
         delegate @13: DelegateData;
-        evmCall @14: Evm.EvmCall;
+        evmCall @14: Evm.Output;
     }
 
 }

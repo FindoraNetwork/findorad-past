@@ -12,6 +12,12 @@ pub enum Address {
     BlockHole,
 }
 
+impl Default for Address {
+    fn default() -> Self {
+        Address::BlockHole
+    }
+}
+
 impl From<H160> for Address {
     fn from(e: H160) -> Self {
         Self::Eth(e)

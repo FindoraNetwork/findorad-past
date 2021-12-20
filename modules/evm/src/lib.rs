@@ -10,4 +10,3 @@ mod transaction;
 pub use transaction::Transaction;
 
 pub mod utils;
-
