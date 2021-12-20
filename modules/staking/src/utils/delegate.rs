@@ -25,7 +25,7 @@ pub fn apply_delegated(
     } else {
         validator_pubkey
             .get(&op.address)?
-            .ok_or_else(|| Error::PublicKeyNotFound)?
+            .ok_or_else(|| Error::MustDoSelfDegegateFirst)?
             .clone()
     };
 

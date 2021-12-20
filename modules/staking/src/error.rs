@@ -13,7 +13,7 @@ pub enum Error {
     DelegateAmountOutOfRange(Amount, Amount),
     AlreadySelfDelegate,
     TryFromIntError(TryFromIntError),
-    PublicKeyNotFound,
+    MustDoSelfDegegateFirst,
 }
 
 impl From<Error> for abcf::Error {
@@ -47,8 +47,8 @@ impl From<Error> for abcf::Error {
             Error::TryFromIntError(e) => {
                 abcf::Error::ABCIApplicationError(90002, format!("{:?}", e))
             }
-            Error::PublicKeyNotFound => {
-                abcf::Error::ABCIApplicationError(90002, format!("public key not found"))
+            Error::MustDoSelfDegegateFirst => {
+                abcf::Error::ABCIApplicationError(90002, format!("Must do self delegate."))
             }
         }
     }
