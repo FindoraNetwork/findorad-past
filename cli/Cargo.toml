@@ -32,4 +32,4 @@ bip0039 = "0.8.0"
 ed25519-dalek-bip32 = { git = "https://github.com/FindoraNetwork/ed25519-dalek-bip32", branch = "feat-allow-nohardened" }
 libfn = { path = "../libfn" }
 fm-utxo = { path = "../modules/utxo" }
-
+anyhow = "1.0"
