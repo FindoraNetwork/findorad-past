@@ -81,6 +81,6 @@ impl Command {
             SubCommand::Claim(_claim) => {}
             SubCommand::Show(_show) => {}
         }
-        Ok(Box::new(()))
+        Ok(Box::new(0))
     }
 }

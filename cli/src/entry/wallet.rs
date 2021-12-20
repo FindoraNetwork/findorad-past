@@ -61,8 +61,8 @@ impl Wallets {
         self.wallets
             .iter()
             .map(|w| ListWallet {
-                name: w.name,
-                address: w.address,
+                name: w.name.clone(),
+                address: w.address.clone(),
             })
             .collect()
     }

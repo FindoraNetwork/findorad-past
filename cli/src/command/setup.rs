@@ -21,6 +21,6 @@ impl Command {
             config.save()?;
         }
 
-        Ok(Box::new(()))
+        Ok(Box::new(0))
     }
 }

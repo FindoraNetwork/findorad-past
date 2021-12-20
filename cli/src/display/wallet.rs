@@ -27,8 +27,8 @@ impl From<Vec<wallet::ListWallet>> for Display {
         let contents = w
             .iter()
             .map(|v| Content {
-                name: v.name,
-                address: Some(v.address),
+                name: v.name.clone(),
+                address: Some(v.address.clone()),
                 ..Default::default()
             })
             .collect();

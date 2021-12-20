@@ -79,7 +79,7 @@ fn delete(cmd: &Delete, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn D
         .delete(&cmd.address)
         .with_context(|| format!("delete wallet failed: {:?}", cmd))?;
 
-    Ok(Box::new(display_wallet::Display::from(cmd.address)))
+    Ok(Box::new(display_wallet::Display::from(cmd.address.clone())))
 }
 
 fn create(cmd: &Create, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn Display>> {

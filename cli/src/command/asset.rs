@@ -73,6 +73,6 @@ impl Command {
             SubCommand::Show(_show) => {}
             SubCommand::Issue(_issue) => {}
         }
-        Ok(Box::new(()))
+        Ok(Box::new(0))
     }
 }
