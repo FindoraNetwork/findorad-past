@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use crate::{entity::Entity, mapper::Mapper, net, utils, Error, Result};
 use abcf_sdk::providers::Provider;
 use libfindora::{
+    asset::FRA,
     transaction::{Input, InputOperation, Output, OutputOperation},
     utxo, Address, Transaction,
 };
@@ -65,6 +66,10 @@ impl Builder {
     ) -> Result<()> {
         for e in &v {
             match e {
+                Entity::Define(e) => {
+                    let output = e.to_output();
+                    self.outputs.push(output);
+                }
                 Entity::Issue(e) => {
                     let record = e.to_output_asset_record(prng)?;
 
@@ -140,6 +145,118 @@ impl Builder {
                     });
 
                     self.zei_outputs.push(record);
+                }
+                Entity::Delegate(d) => {
+                    let output = d.to_output(prng)?;
+
+                    let address = Address::from(d.keypair.get_pk());
+
+                    let bar = &output.open_asset_record.blind_asset_record;
+
+                    let keypair = d.to_keypair();
+
+                    self.fetch_owned_utxo(provider, &address, &keypair).await?;
+
+                    self.mapper.sub(
+                        &address,
+                        &output.open_asset_record.asset_type,
+                        output.open_asset_record.amount,
+                        false,
+                        false,
+                    )?;
+
+                    let core = utxo::Output {
+                        amount: bar.amount.clone(),
+                        asset: bar.asset_type.clone(),
+                        owner_memo: None,
+                        address: address.clone(),
+                    };
+
+                    self.zei_outputs.push(output);
+
+                    let output = Output {
+                        core,
+                        operation: OutputOperation::Delegate(d.to_operation()?),
+                    };
+
+                    self.outputs.push(output);
+
+                    self.keypairs.insert(address, keypair);
+                }
+                Entity::Stake(d) => {
+                    let output = d.to_output(prng)?;
+
+                    let address = Address::from(d.keypair.get_pk());
+
+                    let bar = &output.open_asset_record.blind_asset_record;
+
+                    let keypair = d.to_keypair();
+
+                    self.fetch_owned_utxo(provider, &address, &keypair).await?;
+
+                    self.mapper.sub(
+                        &address,
+                        &output.open_asset_record.asset_type,
+                        output.open_asset_record.amount,
+                        false,
+                        false,
+                    )?;
+
+                    let core = utxo::Output {
+                        amount: bar.amount.clone(),
+                        asset: bar.asset_type.clone(),
+                        owner_memo: None,
+                        address: address.clone(),
+                    };
+
+                    self.zei_outputs.push(output);
+
+                    let output = Output {
+                        core,
+                        operation: OutputOperation::Delegate(d.to_operation()?),
+                    };
+
+                    self.outputs.push(output);
+
+                    self.keypairs.insert(address, keypair);
+                }
+
+                Entity::Undelegate(e) => {
+                    let record = e.to_output(prng)?;
+
+                    let address = Address::from(e.keypair.get_pk());
+                    let keypair = e.to_keypair();
+
+                    self.fetch_owned_utxo(provider, &address, &keypair).await?;
+
+                    self.mapper
+                        .add(&address, &FRA.bare_asset_type, e.amount, false, false)?;
+
+                    let core = utxo::Output {
+                        amount: record.open_asset_record.blind_asset_record.amount.clone(),
+                        asset: record
+                            .open_asset_record
+                            .blind_asset_record
+                            .asset_type
+                            .clone(),
+                        address: address.clone(),
+                        owner_memo: record.owner_memo.clone(),
+                    };
+
+                    self.outputs.push(Output {
+                        operation: OutputOperation::IssueAsset,
+                        core,
+                    });
+
+                    self.zei_inputs.push(record);
+
+                    self.inputs.push(Input {
+                        txid: primitive_types::H512::zero(),
+                        n: self.outputs.len().try_into()?,
+                        operation: InputOperation::TransferAsset,
+                    });
+
+                    self.keypairs.insert(address, keypair);
                 }
             }
         }

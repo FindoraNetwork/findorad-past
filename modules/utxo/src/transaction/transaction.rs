@@ -52,6 +52,8 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
         for output in &tx.outputs {
             match output.operation {
                 libfindora::OutputOperation::TransferAsset => outputs.push(output.core.clone()),
+                libfindora::OutputOperation::Fee => outputs.push(output.core.clone()),
+                libfindora::OutputOperation::Delegate(_) => outputs.push(output.core.clone()),
                 _ => {}
             }
         }

@@ -1,5 +1,6 @@
 use bip0039::{Count, Language, Mnemonic};
-use ruc::*;
+
+use crate::{Result, Error};
 
 pub fn generate_mnemonic_custom(wordslen: u8, lang: &str) -> Result<String> {
     let w = match wordslen {
@@ -9,13 +10,11 @@ pub fn generate_mnemonic_custom(wordslen: u8, lang: &str) -> Result<String> {
         21 => Count::Words21,
         24 => Count::Words24,
         _ => {
-            return Err(eg!(
-                "Invalid words length, only 12/15/18/21/24 can be accepted."
-            ));
+            return Err(Error::MnemonicFormatError);
         }
     };
 
-    let l = check_lang(lang).c(d!())?;
+    let l = check_lang(lang)?;
 
     Ok(Mnemonic::generate_in(l, w).into_phrase())
 }
@@ -30,6 +29,6 @@ pub fn check_lang(lang: &str) -> Result<Language> {
         "ko" => Ok(Language::Korean),
         "sp" => Ok(Language::Spanish),
         "jp" => Ok(Language::Japanese),
-        _ => Err(eg!("Unsupported language")),
+        _ => Err(Error::UnsupportMnemonicLanguage),
     }
 }

@@ -1,7 +1,6 @@
-use ruc::*;
 use serde::{Deserialize, Serialize};
 
-use crate::types::Wallet;
+use crate::{types::Wallet, Result};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WalletEntry {

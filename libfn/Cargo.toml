@@ -7,14 +7,15 @@ edition = "2021"
 
 [dependencies]
 ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
-libfindora = { path = "../libfindora" }
 abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", default-features = false }
 serde = "1.0.130"
+serde_json = "1.0.68"
 log = "0.4.14"
 zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor-address-v1" }
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 rand_chacha = "0.2.2"
 ed25519-dalek-bip32 = { git = "https://github.com/FindoraNetwork/ed25519-dalek-bip32", branch = "feat-allow-nohardened" }
+derivation-path = { version = "0.1.3"}
 bip0039 = "0.8.0"
 bech32 = "0.8.1"
 base64 = "0.10"
@@ -22,4 +23,5 @@ primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
 hex = "0.4.3"
 sha3 = "0.9"
 
+libfindora = { path = "../libfindora" }
 fm-fee = { path = "../modules/fee" }
