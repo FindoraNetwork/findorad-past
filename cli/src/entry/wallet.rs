@@ -43,7 +43,7 @@ impl Wallets {
         Ok(Wallets { wallets, f_path })
     }
 
-    pub fn create(&mut self, wallet: &Wallet) -> Result<Wallet> {
+    pub fn create(&mut self, wallet: &Wallet) -> Result<()> {
         self.wallets.push(wallet.clone());
         self.save()
             .with_context(|| format!("create on save failed: {:?}", wallet))?;

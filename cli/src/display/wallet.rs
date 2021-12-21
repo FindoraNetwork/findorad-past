@@ -6,11 +6,12 @@ use console::{style, Emoji};
 
 #[derive(Default, Debug)]
 pub struct Content {
-    name: Option<String>,
-    mnemonic: Option<String>,
-    address: Option<String>,
-    public: Option<String>,
-    secret: Option<String>,
+    pub name: Option<String>,
+    pub eth_compatible_address: Option<String>,
+    pub fra_address: Option<String>,
+    pub public_key: Option<String>,
+    pub secret: Option<String>,
+    pub mnemonic: Option<String>,
 }
 
 #[derive(Debug)]
@@ -20,10 +21,11 @@ pub struct Display {
 }
 
 #[derive(Debug)]
-enum DisplayType {
-    ListWallet,
-    Wallet,
-    Address,
+pub enum DisplayType {
+    List,
+    Show,
+    Create,
+    Delete,
 }
 
 impl Display {
@@ -43,7 +45,7 @@ impl Display {
         )
     }
 
-    fn list_wallet(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn list(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{} {}\n",
@@ -53,69 +55,92 @@ impl Display {
         for (index, content) in self.contents.iter().enumerate() {
             let none = "[(none found)]".to_string();
             let name = content.name.as_ref().unwrap_or(&none);
-            let address = self.fetcher(&content.address)?;
+            let eth_compatible_address = self.fetcher(&self.contents[0].eth_compatible_address)?;
             write!(
                 f,
                 "
 {} [{}]
-name:       {}
-address:    {}
+Name:                   {}
+ETH Compatible Address: {}
                 ",
                 Emoji("👛", "$ "),
                 index + 1,
                 style(name).bold().white(),
-                style(address).bold().white(),
+                style(eth_compatible_address).bold().white(),
             )?;
         }
         Ok(())
     }
 
-    fn wallet(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn show(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.contents.len() == 0 {
             return Err(fmt::Error);
         }
 
         let none = "[(none found)]".to_string();
         let name = &self.contents[0].name.as_ref().unwrap_or(&none);
-        let mnemonic = self.fetcher(&self.contents[0].mnemonic)?;
-        let address = self.fetcher(&self.contents[0].address)?;
-        let public = self.fetcher(&self.contents[0].public)?;
+        let eth_compatible_address = self.fetcher(&self.contents[0].eth_compatible_address)?;
+        let fra_address = self.fetcher(&self.contents[0].fra_address)?;
+        let public_key = self.fetcher(&self.contents[0].public_key)?;
         let secret = self.fetcher(&self.contents[0].secret)?;
+        let mnemonic = self.fetcher(&self.contents[0].mnemonic)?;
 
         write!(
             f,
             "
 {}
-name:       {}
-address:    {}
-public:     {}
-secret:     {}
-mnemonic:   {}
+Name:                   {}
+ETH Compatible Address: {}
+Findora Address:        {}
+Findora Public key:     {}
+Secret:                 {}
+Mnemonic: {}
             ",
             Emoji("👛", "$ "),
             style(name).bold().white(),
-            style(address).bold().white(),
-            style(public).bold().white(),
+            style(eth_compatible_address).bold().white(),
+            style(fra_address).bold().white(),
+            style(public_key).bold().white(),
             style(secret).bold().white(),
             style(mnemonic).bold().white(),
         )
     }
 
-    fn address(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn create(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.contents.len() == 0 {
             return Err(fmt::Error);
         }
 
-        let addr = self.fetcher(&self.contents[0].address)?;
+        let addr = self.fetcher(&self.contents[0].eth_compatible_address)?;
         write!(
             f,
             "{} {}\n",
             Emoji("✨", ":)"),
-            style("Success").bold().green()
+            style("Success Created").bold().green()
         )?;
         write!(
             f,
-            "{} Address: {}\n",
+            "{} ETH Compatible Address: {}\n",
+            Emoji("★ ", "* "),
+            style(addr).white()
+        )
+    }
+
+    fn delete(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.contents.len() == 0 {
+            return Err(fmt::Error);
+        }
+
+        let addr = self.fetcher(&self.contents[0].eth_compatible_address)?;
+        write!(
+            f,
+            "{} {}\n",
+            Emoji("✨", ":)"),
+            style("Success Deleted").bold().green()
+        )?;
+        write!(
+            f,
+            "{} ETH Compatible Address: {}\n",
             Emoji("★ ", "* "),
             style(addr).white()
         )
@@ -129,9 +154,22 @@ impl fmt::Display for Display {
         }
 
         match self.typ {
-            DisplayType::ListWallet => self.list_wallet(f),
-            DisplayType::Wallet => self.wallet(f),
-            DisplayType::Address => self.address(f),
+            DisplayType::List => self.list(f),
+            DisplayType::Show => self.show(f),
+            DisplayType::Create => self.create(f),
+            DisplayType::Delete => self.delete(f),
+        }
+    }
+}
+
+impl From<(String, DisplayType)> for Display {
+    fn from(w: (String, DisplayType)) -> Display {
+        Display {
+            contents: vec![Content {
+                eth_compatible_address: Some(w.0),
+                ..Default::default()
+            }],
+            typ: w.1,
         }
     }
 }
@@ -142,41 +180,23 @@ impl From<Vec<wallet::ListWallet>> for Display {
             .iter()
             .map(|v| Content {
                 name: v.name.clone(),
-                address: Some(v.address.clone()),
+                eth_compatible_address: Some(v.address.clone()),
                 ..Default::default()
             })
             .collect();
 
         Display {
             contents,
-            typ: DisplayType::ListWallet,
+            typ: DisplayType::List,
         }
     }
 }
 
-impl From<wallet::Wallet> for Display {
-    fn from(w: wallet::Wallet) -> Display {
+impl From<Content> for Display {
+    fn from(c: Content) -> Display {
         Display {
-            contents: vec![Content {
-                name: w.name,
-                mnemonic: Some(w.mnemonic),
-                address: Some(w.address),
-                public: Some(w.public),
-                secret: Some(w.secret),
-            }],
-            typ: DisplayType::Wallet,
-        }
-    }
-}
-
-impl From<String> for Display {
-    fn from(w: String) -> Display {
-        Display {
-            contents: vec![Content {
-                address: Some(w),
-                ..Default::default()
-            }],
-            typ: DisplayType::Address,
+            contents: vec![c],
+            typ: DisplayType::Show,
         }
     }
 }
