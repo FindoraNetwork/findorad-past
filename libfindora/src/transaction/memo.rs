@@ -1,4 +1,4 @@
 #[derive(Debug)]
 pub enum Memo {
-    Ethereum(ethereum::TransactionV2),
+    Ethereum(Vec<u8>),
 }
