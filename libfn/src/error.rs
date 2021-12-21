@@ -1,4 +1,4 @@
-use std::num::TryFromIntError;
+use std::{num::TryFromIntError, fmt::Display};
 
 use ruc::RucError;
 
@@ -24,6 +24,39 @@ pub enum Error {
     Bip0039Error(bip0039::Error),
     ED25519BipError(ed25519_dalek_bip32::Error),
     DerivationPathError(derivation_path::DerivationPathError),
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl std::error::Error for Error {
+    fn description(&self) -> &str {
+        match self {
+            Self::OverflowSub => "add overflow",
+            Self::OverflowAdd => "sub overflow",
+            Self::MustBeNonConfidentialAssetAmount => "must be use non-confidential asset and non-confidential amount",
+            Self::KeyMustBeSet => "public key must be set.",
+            Self::TryFromIntError(_) => "convert int error",
+            Self::BalanceNotEnough => "balance not enough",
+            Self::LibfndoraError(_) => "libfindora error",
+            Self::JsonError(_) => "json convert error",
+            Self::EthereumAddressFormatError => "ethereum address format error.",
+            Self::FraV1AddressFormatError => "fra v1 address format error",
+            Self::FraAddressFormatError => "fra address format error",
+            Self::MnemonicFormatError => "mnemonic format error",
+            Self::UnsupportMnemonicLanguage => "unsupport mnemonic language",
+            Self::RucError(_) => "error cause by ruc",
+            Self::Bech32Error(_) => "bech32 error",
+            Self::FromHexError(_) => "from hex error",
+            Self::Base64DecodeError(_) => "base64 decode error",
+            Self::Bip0039Error(_) => "bip0039 error",
+            Self::ED25519BipError(_) => "ed25519 bip error",
+            Self::DerivationPathError(_) => "derivation_path error",
+        }
+    }
 }
 
 impl From<derivation_path::DerivationPathError> for Error {
