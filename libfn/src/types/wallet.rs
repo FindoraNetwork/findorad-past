@@ -1,8 +1,6 @@
-use crate::utils::mnemonic::generate_mnemonic_custom;
+use crate::{utils::mnemonic::generate_mnemonic_custom, Result};
 
 use super::{Address, PublicKey, SecretKey};
-
-use ruc::*;
 
 pub struct Wallet {
     pub mnemonic: String,
