@@ -4,6 +4,7 @@ use crate::config::Config;
 
 use anyhow::Result;
 use clap::{Parser, ValueHint};
+use lazy_static::lazy_static;
 
 pub(crate) mod asset;
 pub(crate) mod delegate;
@@ -11,10 +12,21 @@ pub(crate) mod setup;
 pub(crate) mod transfer;
 pub(crate) mod wallet;
 
+lazy_static! {
+    static ref DEFAULT_HOME_PATH: String = {
+        // must get home!
+        home::home_dir()
+            .unwrap()
+            .into_os_string()
+            .into_string()
+            .unwrap()
+    };
+}
+
 #[derive(Parser, Debug)]
 #[clap(author, about, version)]
 pub struct Opts {
-    #[clap(long, value_name = "FOLDER", value_hint = ValueHint::DirPath)]
+    #[clap(long, default_value = &DEFAULT_HOME_PATH, value_name = "FOLDER", value_hint = ValueHint::DirPath)]
     home: PathBuf,
     #[clap(subcommand)]
     subcmd: SubCommand,

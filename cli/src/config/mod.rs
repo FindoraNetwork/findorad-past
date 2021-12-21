@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 const DEFAULT_CONFIG_FILE: &str = "config.toml";
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Config {
     pub node: Node,
     #[serde(skip)]
@@ -44,21 +44,6 @@ impl Config {
     pub fn save(&self) -> Result<()> {
         let data = toml::to_string_pretty(self).context("toml to_string_pretty failed")?;
         fs::write(&self.config_path, data).context("write config file failed")
-    }
-}
-
-impl Default for Config {
-    fn default() -> Config {
-        // must get "home"
-        let mut cfg = home::home_dir().unwrap();
-        cfg.push(".findora");
-        cfg.push("fn");
-        cfg.push("config.toml");
-
-        Config {
-            node: Node::default(),
-            config_path: cfg,
-        }
     }
 }
 
