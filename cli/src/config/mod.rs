@@ -60,9 +60,12 @@ mod tests {
     #[test]
     fn test_config_new() {
         let home_path = TempDir::new("test_config").unwrap();
-        let cfg = Config::default();
+        let mut cfg = Config::load(home_path.path()).unwrap();
+        let want = "http://127.0.0.1:9999".to_string();
+        cfg.node.address = want.clone();
         assert!(cfg.save().is_ok());
+
         let cfg = Config::load(home_path.path()).unwrap();
-        assert_eq!(cfg.node.address, "http://localhost:25576".to_string());
+        assert_eq!(want, cfg.node.address);
     }
 }
