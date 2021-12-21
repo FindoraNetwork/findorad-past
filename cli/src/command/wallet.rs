@@ -109,8 +109,12 @@ fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
 }
 
 fn delete(cmd: &Delete, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn Display>> {
+    let addr = types::Address::from_eth(&cmd.address)
+        .map_err(|e| anyhow!("lib_wallet address from_eth failed: {}", e))?
+        .to_base64()
+        .map_err(|e| anyhow!("lib_wallet address to_base64 failed: {}", e))?;
     wallets
-        .delete(&cmd.address)
+        .delete(&addr)
         .with_context(|| format!("delete wallet failed: {:?}", cmd))?;
 
     Ok(Box::new(display_wallet::Display::from((

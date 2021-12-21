@@ -1,4 +1,5 @@
 use clap::Parser;
+use console::{style, Emoji};
 
 pub(crate) mod command;
 pub(crate) mod config;
@@ -14,7 +15,15 @@ fn main() {
             println!("{}", v)
         }
         Err(e) => {
-            panic!("{}", e);
+            println!(
+                "{} {}",
+                Emoji("❌", "x "),
+                style("Something Wrong...").bold().red()
+            );
+            for cause in e.chain() {
+                eprintln!("{} {}", Emoji("🔥", "x "), style(cause).yellow());
+            }
+            std::process::exit(1);
         }
     }
 }
