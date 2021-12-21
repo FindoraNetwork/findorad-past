@@ -14,6 +14,7 @@ pub enum Error {
     Unknown,
     MustBeNonConfidentialAsset,
     AlreadySign,
+    RlpError(rlp::DecoderError),
 }
 
 impl From<capnp::Error> for Error {
@@ -43,6 +44,12 @@ impl From<TryFromSliceError> for Error {
 impl From<TryFromIntError> for Error {
     fn from(e: TryFromIntError) -> Self {
         Self::TryFromIntError(e)
+    }
+}
+
+impl From<rlp::DecoderError> for Error {
+    fn from(e: rlp::DecoderError) -> Self {
+        Error::RlpError(e)
     }
 }
 
@@ -76,6 +83,9 @@ impl From<Error> for abcf::Error {
             }
             Error::Unknown => {
                 abcf::Error::ABCIApplicationError(81000, String::from("Only placeholder"))
+            }
+            Error::RlpError(e) => {
+                abcf::Error::ABCIApplicationError(80002, format!("{:?}", e))
             }
         }
     }

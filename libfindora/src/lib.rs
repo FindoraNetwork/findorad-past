@@ -17,6 +17,10 @@ pub mod evm_capnp {
     include!(concat!(env!("OUT_DIR"), "/evm_capnp.rs"));
 }
 
+pub mod memo_capnp {
+    include!(concat!(env!("OUT_DIR"), "/memo_capnp.rs"));
+}
+
 pub mod transaction_capnp {
     include!(concat!(env!("OUT_DIR"), "/transaction_capnp.rs"));
 }

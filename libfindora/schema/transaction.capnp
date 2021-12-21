@@ -1,6 +1,7 @@
 @0x9edb1e9495ce4d5a;
 
 using Evm = import "evm.capnp";
+using Memo = import "memo.capnp";
 
 struct Input {
     txid @0 : Data;
@@ -135,12 +136,13 @@ struct Transaction {
     inputs @1: List(Input);
     outputs @2: List(Output);
     signature @3: List(Signature);
+    memo @4: Memo.Memo;
     proof :union {
-        assetMix @4: Data;
-        confidentialAmount @5: RangeProof;
-        confidentialAsset @6: List(ChaumPedersenProof);
-        confidentialAll @7: ConfidentialAll;
-        noProof @8: Void;
+        assetMix @5: Data;
+        confidentialAmount @6: RangeProof;
+        confidentialAsset @7: List(ChaumPedersenProof);
+        confidentialAll @8: ConfidentialAll;
+        noProof @9: Void;
     }
 }
 

@@ -347,6 +347,7 @@ impl Builder {
             outputs: self.outputs,
             proof: body.proofs.asset_type_and_amount_proof,
             signatures: Vec::new(),
+            memos: Vec::new(),
         };
 
         // signature.

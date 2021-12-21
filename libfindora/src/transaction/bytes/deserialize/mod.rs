@@ -3,9 +3,12 @@ mod input;
 mod output;
 mod proof;
 mod signature;
+mod memo;
 
 use crate::{transaction::Transaction, transaction_capnp::transaction, Result};
 use primitive_types::H512;
+
+use self::memo::from_memo;
 
 pub fn from_root(root: transaction::Reader) -> Result<Transaction> {
     let txid = {
@@ -34,11 +37,14 @@ pub fn from_root(root: transaction::Reader) -> Result<Transaction> {
         signatures.push(signature::from_signature(reader)?);
     }
 
+    let memos = from_memo(root.get_memo()?)?;
+
     Ok(Transaction {
         txid,
         inputs,
         outputs,
         signatures,
         proof,
+        memos,
     })
 }

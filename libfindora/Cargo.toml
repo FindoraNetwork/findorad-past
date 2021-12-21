@@ -23,5 +23,8 @@ base64 = "0.10"
 primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
 ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
 
+ethereum = "0.10.0"
+rlp = "0.5.1"
+
 [build-dependencies]
 capnpc = "0.14"

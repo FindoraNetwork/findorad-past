@@ -10,7 +10,7 @@ use crate::{transaction_capnp, Address, Error, Result};
 use super::{
     bytes::{deserialize, serialize},
     signature::Signature,
-    FraSignature, Input, Output,
+    FraSignature, Input, Output, Memo,
 };
 
 #[derive(Debug)]
@@ -20,6 +20,7 @@ pub struct Transaction {
     pub outputs: Vec<Output>,
     pub proof: AssetTypeAndAmountProof,
     pub signatures: Vec<Signature>,
+    pub memos: Vec<Memo>,
 }
 
 impl abcf::Transaction for Transaction {}
@@ -32,6 +33,7 @@ impl Default for Transaction {
             outputs: Vec::new(),
             proof: AssetTypeAndAmountProof::NoProof,
             signatures: Vec::new(),
+            memos: Vec::new(),
         }
     }
 }
