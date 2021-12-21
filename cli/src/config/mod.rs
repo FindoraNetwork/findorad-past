@@ -2,12 +2,14 @@ mod node;
 use node::Node;
 
 use std::{
-    fs::{create_dir_all, read_to_string, write},
+    fs,
     path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+
+const DEFAULT_CONFIG_FILE: &str = "config.toml";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
@@ -17,24 +19,31 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(home_path: &Path, config_path: &Path) -> Result<Config> {
+    pub fn load(home_path: &Path) -> Result<Config> {
         if !home_path.exists() {
-            create_dir_all(home_path)
+            fs::create_dir_all(home_path)
                 .with_context(|| format!("failed to create_dir_all: {:?}", home_path))?;
         }
 
-        let d = read_to_string(config_path)
-            .with_context(|| format!("failed to read_to_string: {:?}", config_path))?;
+        let cfg_path = home_path.join(DEFAULT_CONFIG_FILE);
+        if !cfg_path.exists() {
+            let data = toml::to_string_pretty(&Config::default())
+                .context("toml to_string_pretty failed")?;
+            fs::write(&cfg_path, data)
+                .with_context(|| format!("write config file failed: {:?}", cfg_path))?;
+        }
+        let data = fs::read_to_string(&cfg_path)
+            .with_context(|| format!("failed to read_to_string: {:?}", cfg_path))?;
 
-        let mut cfg: Config = toml::from_str(&d).context("toml from_str failed")?;
-        cfg.config_path = config_path.to_path_buf();
+        let mut cfg: Config = toml::from_str(&data).context("toml from_str failed")?;
+        cfg.config_path = cfg_path.clone();
 
         Ok(cfg)
     }
 
     pub fn save(&self) -> Result<()> {
         let data = toml::to_string_pretty(self).context("toml to_string_pretty failed")?;
-        write(&self.config_path, data).context("write config file failed")
+        fs::write(&self.config_path, data).context("write config file failed")
     }
 }
 
@@ -60,26 +69,15 @@ mod tests {
 
     #[test]
     fn test_config_new_home_path_not_exist() {
-        assert!(Config::new(&Path::new("/not-exist"), &Path::new("not-exist")).is_err());
-    }
-
-    #[test]
-    fn test_config_new_config_path_not_exist() {
-        let home_path = TempDir::new("test_config_new_config_path_not_exist").unwrap();
-        assert!(Config::new(home_path.path(), &Path::new("/not-exist")).is_err());
+        assert!(Config::load(&Path::new("/not-exist")).is_err());
     }
 
     #[test]
     fn test_config_new() {
         let home_path = TempDir::new("test_config").unwrap();
-        let config_path = home_path.path().join("config.toml");
-
-        let cfg = Config {
-            node: Node::default(),
-            config_path: config_path.clone(),
-        };
+        let cfg = Config::default();
         assert!(cfg.save().is_ok());
-        let cfg = Config::new(home_path.path(), &config_path).unwrap();
+        let cfg = Config::load(home_path.path()).unwrap();
         assert_eq!(cfg.node.address, "http://localhost:25576".to_string());
     }
 }

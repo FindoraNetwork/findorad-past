@@ -14,17 +14,15 @@ pub(crate) mod wallet;
 #[derive(Parser, Debug)]
 #[clap(author, about, version)]
 pub struct Opts {
-    #[clap(long, default_value = concat!(env!("HOME"), "/.findora/fn"),value_name = "FOLDER", value_hint = ValueHint::DirPath)]
-    pub home: PathBuf,
-    #[clap(long, default_value = concat!(env!("HOME"), "/.findora/fn/config.toml"), value_name = "FILE", value_hint = ValueHint::FilePath)]
-    pub config: PathBuf,
+    #[clap(long, value_name = "FOLDER", value_hint = ValueHint::DirPath)]
+    home: PathBuf,
     #[clap(subcommand)]
     subcmd: SubCommand,
 }
 
 impl Opts {
     pub fn execute(&self) -> Result<()> {
-        let config = Config::new(&self.home, &self.config)?;
+        let config = Config::load(&self.home)?;
 
         match &self.subcmd {
             SubCommand::Asset(c) => c.execute(config)?,
