@@ -47,7 +47,7 @@ impl Wallets {
         self.wallets.push(wallet.clone());
         self.save()
             .with_context(|| format!("create on save failed: {:?}", wallet))?;
-        Ok(wallet.clone())
+        Ok(())
     }
 
     fn save(&self) -> Result<()> {

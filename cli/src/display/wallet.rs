@@ -52,16 +52,17 @@ impl Display {
             Emoji("✨", ":)"),
             style("Listing").bold().green()
         )?;
-        for (index, content) in self.contents.iter().enumerate() {
+        for index in 0..self.contents.len() {
             let none = "[(none found)]".to_string();
-            let name = content.name.as_ref().unwrap_or(&none);
-            let eth_compatible_address = self.fetcher(&self.contents[0].eth_compatible_address)?;
+            let name = self.contents[index].name.as_ref().unwrap_or(&none);
+            let eth_compatible_address =
+                self.fetcher(&self.contents[index].eth_compatible_address)?;
             write!(
                 f,
                 "
 {} [{}]
-Name:                   {}
-ETH Compatible Address: {}
+Name:    {}
+Address: {} (ETH Compatible Address)
                 ",
                 Emoji("👛", "$ "),
                 index + 1,
@@ -89,20 +90,21 @@ ETH Compatible Address: {}
             f,
             "
 {}
-Name:                   {}
-ETH Compatible Address: {}
-Findora Address:        {}
-Findora Public key:     {}
-Secret:                 {}
-Mnemonic: {}
+Name:               {}
+Address:            {} (ETH Compatible)
+Findora Address:    {}
+Findora Public key: {}
+Secret:             {}
+Mnemonic:
+{}
             ",
             Emoji("👛", "$ "),
-            style(name).bold().white(),
-            style(eth_compatible_address).bold().white(),
-            style(fra_address).bold().white(),
-            style(public_key).bold().white(),
-            style(secret).bold().white(),
-            style(mnemonic).bold().white(),
+            style(name).bold().cyan(),
+            style(eth_compatible_address).bold().cyan(),
+            style(fra_address).bold().cyan(),
+            style(public_key).bold().cyan(),
+            style(secret).bold().cyan(),
+            style(mnemonic).bold().magenta(),
         )
     }
 
@@ -114,13 +116,12 @@ Mnemonic: {}
         let addr = self.fetcher(&self.contents[0].eth_compatible_address)?;
         write!(
             f,
-            "{} {}\n",
+            "
+{} {}
+{} ETH Compatible Address: {} 
+",
             Emoji("✨", ":)"),
-            style("Success Created").bold().green()
-        )?;
-        write!(
-            f,
-            "{} ETH Compatible Address: {}\n",
+            style("Success Created").bold().green(),
             Emoji("★ ", "* "),
             style(addr).white()
         )
@@ -134,13 +135,12 @@ Mnemonic: {}
         let addr = self.fetcher(&self.contents[0].eth_compatible_address)?;
         write!(
             f,
-            "{} {}\n",
+            "
+{} {}
+{} ETH Compatible Address: {}
+",
             Emoji("✨", ":)"),
-            style("Success Deleted").bold().green()
-        )?;
-        write!(
-            f,
-            "{} ETH Compatible Address: {}\n",
+            style("Success Deleted").bold().green(),
             Emoji("★ ", "* "),
             style(addr).white()
         )

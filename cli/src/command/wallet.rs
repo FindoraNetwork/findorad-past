@@ -15,9 +15,9 @@ pub struct Command {
 
 #[derive(Parser, Debug)]
 enum SubCommand {
-    /// Show a list of wallet addresses or specific one for detail information
+    /// Show a list of wallet addresses or a specific one for detailed information
     Show(Show),
-    /// Create a new wallet or create a new wallet from Mnemonic phrase
+    /// Create a new wallet or create a new wallet from a Mnemonic phrase
     Create(Create),
     /// Delete a wallet
     Delete(Delete),
@@ -25,14 +25,14 @@ enum SubCommand {
 
 #[derive(Parser, Debug)]
 struct Show {
-    /// Wallet ETH Compatible Address to show the wallet information of the specific one
+    /// The ETH compatible address to show the wallet information of the specific one
     #[clap(short, long, forbid_empty_values = true)]
     address: Option<String>,
 }
 
 #[derive(Parser, Debug)]
 struct Create {
-    /// Specific to create a new wallet from Mnemonic phrase
+    /// Specific to create a new wallet from a Mnemonic phrase
     #[clap(short, long, forbid_empty_values = true)]
     mnemonic: Option<String>,
     /// Name of the new wallet to be created
@@ -42,7 +42,7 @@ struct Create {
 
 #[derive(Parser, Debug)]
 struct Delete {
-    /// Wallet ETH Compatible Address to do the deletion
+    /// The ETH compatible address to do the deletion
     #[clap(forbid_empty_values = true)]
     address: String,
 }
@@ -63,8 +63,12 @@ impl Command {
 fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>> {
     let result = match &cmd.address {
         Some(a) => {
+            let a = types::Address::from_eth(a)
+                .map_err(|e| anyhow!("lib_wallet address from_eth failed: {}", e))?
+                .to_base64()
+                .map_err(|e| anyhow!("lib_wallet address to_bash64 failed: {}", e))?;
             let wallet = wallets
-                .read(a)
+                .read(&a)
                 .with_context(|| format!("read wallet failed: {:?}", cmd))?;
             let c = display_wallet::Content {
                 name: wallet.name,
@@ -86,7 +90,19 @@ fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
             };
             display_wallet::Display::from(c)
         }
-        None => display_wallet::Display::from(wallets.list()),
+        None => {
+            let mut list = vec![];
+            for w in wallets.list().iter() {
+                list.push(entry_wallet::ListWallet {
+                    name: w.name.clone(),
+                    address: types::Address::from_base64(&w.address)
+                        .map_err(|e| anyhow!("lib_wallet address from_base64 failed: {}", e))?
+                        .to_eth()
+                        .map_err(|e| anyhow!("lib_wallet address to_eth failed: {}", e))?,
+                });
+            }
+            display_wallet::Display::from(list)
+        }
     };
 
     Ok(Box::new(result))
