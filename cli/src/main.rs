@@ -1,19 +1,29 @@
 use clap::Parser;
+use console::{style, Emoji};
 
-pub mod command;
-pub mod config;
-pub mod entry;
-pub mod utils;
+pub(crate) mod command;
+pub(crate) mod config;
+pub(crate) mod display;
+pub(crate) mod entry;
+pub(crate) mod utils;
 
 fn main() {
     let opts = command::Opts::parse();
 
     match opts.execute() {
-        Ok(_) => {}
-        Err(_e) => {
-            //             let mut app = command::Opts::into_app();
-            //             app.print_help().unwrap();
-            panic!();
+        Ok(v) => {
+            println!("{}", v)
+        }
+        Err(e) => {
+            println!(
+                "{} {}",
+                Emoji("❌", "x "),
+                style("Something Wrong...").bold().red()
+            );
+            for cause in e.chain() {
+                eprintln!("{} {}", Emoji("🔥", "x "), style(cause).yellow());
+            }
+            std::process::exit(1);
         }
     }
 }

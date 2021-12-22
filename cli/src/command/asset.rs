@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::config::Config;
 
 use anyhow::Result;
@@ -65,12 +67,12 @@ struct Issue {
 }
 
 impl Command {
-    pub fn execute(&self, _config: Config) -> Result<()> {
+    pub fn execute(&self, _config: Config) -> Result<Box<dyn Display>> {
         match &self.subcmd {
             SubCommand::Create(_create) => {}
             SubCommand::Show(_show) => {}
             SubCommand::Issue(_issue) => {}
         }
-        Ok(())
+        Ok(Box::new(0))
     }
 }

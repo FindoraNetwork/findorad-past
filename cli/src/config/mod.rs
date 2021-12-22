@@ -1,5 +1,5 @@
 mod node;
-use node::Node;
+pub use node::Node;
 
 use std::{
     fs::{create_dir_all, read_to_string, write},

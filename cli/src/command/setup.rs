@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::config::Config;
 
 use anyhow::Result;
@@ -11,7 +13,7 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn execute(&self, config: Config) -> Result<()> {
+    pub fn execute(&self, config: Config) -> Result<Box<dyn Display>> {
         let mut config = config;
 
         if let Some(addr) = &self.set_server_address {
@@ -19,6 +21,6 @@ impl Command {
             config.save()?;
         }
 
-        Ok(())
+        Ok(Box::new(0))
     }
 }
