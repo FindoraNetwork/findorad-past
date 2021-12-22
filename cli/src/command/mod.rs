@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{fmt::Display, path::PathBuf};
 
 use crate::config::Config;
 
@@ -33,18 +33,16 @@ pub struct Opts {
 }
 
 impl Opts {
-    pub fn execute(&self) -> Result<()> {
-        let config = Config::load(&self.home)?;
+    pub fn execute(&self) -> Result<Box<dyn Display>> {
+        let config = Config::new(&self.home, &self.config)?;
 
         match &self.subcmd {
-            SubCommand::Asset(c) => c.execute(config)?,
-            SubCommand::Delegate(c) => c.execute(config)?,
-            SubCommand::Setup(c) => c.execute(config)?,
-            SubCommand::Transfer(c) => c.execute(config)?,
-            SubCommand::Wallet(c) => c.execute(config)?,
+            SubCommand::Asset(c) => c.execute(config),
+            SubCommand::Delegate(c) => c.execute(config),
+            SubCommand::Setup(c) => c.execute(config),
+            SubCommand::Transfer(c) => c.execute(config),
+            SubCommand::Wallet(c) => c.execute(&self.home),
         }
-
-        Ok(())
     }
 }
 

@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::config::Config;
 
 use anyhow::Result;
@@ -72,13 +74,13 @@ struct Show {
 }
 
 impl Command {
-    pub fn execute(&self, _config: Config) -> Result<()> {
+    pub fn execute(&self, _config: Config) -> Result<Box<dyn Display>> {
         match &self.subcmd {
             SubCommand::Send(_send) => {}
             SubCommand::Save(_save) => {}
             SubCommand::Batch(_batch) => {}
             SubCommand::Show(_show) => {}
         }
-        Ok(())
+        Ok(Box::new(0))
     }
 }

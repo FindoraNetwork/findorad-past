@@ -34,6 +34,12 @@ impl TempDir {
     }
 }
 
+impl Default for TempDir {
+    fn default() -> TempDir {
+        TempDir::new("default_temp").unwrap()
+    }
+}
+
 impl Drop for TempDir {
     fn drop(&mut self) {
         self.remove();

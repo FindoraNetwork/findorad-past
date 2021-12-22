@@ -1,5 +1,5 @@
 mod node;
-use node::Node;
+pub use node::Node;
 
 use std::{
     fs,

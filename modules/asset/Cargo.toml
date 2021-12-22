@@ -10,8 +10,9 @@ abcf = { git = "https://github.com/FindoraNetwork/abcf.git" }
 abcf-node = { git = "https://github.com/FindoraNetwork/abcf.git" }
 abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git" }
 async-trait = "0.1.51"
-libfindora = { path = "../../libfindora" }
 log = "0.4.14"
 serde = { version = "1.0", features = ["derive", "alloc"], default-features = false }
 serde_json = "1.0.68"
 primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
+
+libfindora = { path = "../../libfindora" }

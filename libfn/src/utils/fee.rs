@@ -1,5 +1,5 @@
 use fm_fee::FRA_FEE_AMOUNT;
-use libfindora::asset::FRA_BARE_ASSET_TYPE;
+use libfindora::asset::FRA;
 use rand_core::{CryptoRng, RngCore};
 use zei::xfr::{
     asset_record::AssetRecordType,
@@ -13,7 +13,7 @@ pub fn build_fee<R: RngCore + CryptoRng>(prng: &mut R) -> Result<AssetRecord> {
 
     let template = AssetRecordTemplate::with_no_asset_tracing(
         FRA_FEE_AMOUNT,
-        FRA_BARE_ASSET_TYPE,
+        FRA.bare_asset_type,
         asset_record_type,
         Default::default(),
     );

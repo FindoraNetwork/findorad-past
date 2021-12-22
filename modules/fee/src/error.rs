@@ -1,5 +1,6 @@
 #[derive(Debug)]
 pub enum Error {
+    MustBeNonConfidentialAmount,
     OverflowAdd,
     MustUseFraAndBlockHole,
 }
@@ -13,6 +14,10 @@ impl From<Error> for abcf::Error {
             Error::MustUseFraAndBlockHole => {
                 abcf::Error::ABCIApplicationError(90002, String::from("Must use fra to pay fee."))
             }
+            Error::MustBeNonConfidentialAmount => abcf::Error::ABCIApplicationError(
+                90002,
+                String::from("Must be non confidential amount."),
+            ),
         }
     }
 }

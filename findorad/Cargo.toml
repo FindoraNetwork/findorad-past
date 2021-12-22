@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 abcf = { git = "https://github.com/FindoraNetwork/abcf.git" }
 abcf-node = { git = "https://github.com/FindoraNetwork/abcf.git" }
-bs3 = { git = "https://github.com/FindoraNetwork/bs3.git", features = ["sled-backend"], tag = "0.1.4" }
+bs3 = { git = "https://github.com/FindoraNetwork/bs3.git", features = ["sled-backend"], tag = "0.1.8" }
 env_logger = "0.9.0"
 async-trait = "0.1.51"
 sha3 = "0.9.1"
@@ -20,9 +20,12 @@ zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor-add
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 rand_chacha = "0.2.2"
 log = "0.4.14"
+
 fm-utxo = { path = "../modules/utxo" }
 fm-coinbase = { path = "../modules/coinbase" }
 fm-staking = { path = "../modules/staking" }
+fm-fee = { path = "../modules/fee" }
+fm-asset = { path = "../modules/asset" }
 
 [dev-dependencies]
 abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", default-features = false, features=["websocket"] }
