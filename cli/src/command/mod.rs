@@ -12,11 +12,16 @@ pub(crate) mod setup;
 pub(crate) mod transfer;
 pub(crate) mod wallet;
 
+const DEFAULT_FINDORA_FOLDER_NAME: &str = ".findora";
+const DEFAULT_FN_FOLDER_NAME: &str = "fn";
+
 lazy_static! {
     static ref DEFAULT_HOME_PATH: String = {
         // must get home!
         home::home_dir()
             .unwrap()
+            .join(DEFAULT_FINDORA_FOLDER_NAME)
+            .join(DEFAULT_FN_FOLDER_NAME)
             .into_os_string()
             .into_string()
             .unwrap()
@@ -34,7 +39,7 @@ pub struct Opts {
 
 impl Opts {
     pub fn execute(&self) -> Result<Box<dyn Display>> {
-        let config = Config::new(&self.home, &self.config)?;
+        let config = Config::load(&self.home)?;
 
         match &self.subcmd {
             SubCommand::Asset(c) => c.execute(config),

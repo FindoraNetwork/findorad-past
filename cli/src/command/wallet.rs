@@ -102,7 +102,7 @@ fn delete(cmd: &Delete, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn D
 
 fn create(cmd: &Create, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn Display>> {
     let wallet = match &cmd.mnemonic {
-        Some(m) => types::Wallet::from_mnemonic(&m)?,
+        Some(m) => types::Wallet::from_mnemonic(m)?,
         None => types::Wallet::generate()?,
     };
 

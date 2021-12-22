@@ -32,12 +32,12 @@ impl Config {
             fs::write(&cfg_path, data)
                 .with_context(|| format!("write config file failed: {:?}", cfg_path))?;
         }
+
         let data = fs::read_to_string(&cfg_path)
             .with_context(|| format!("failed to read_to_string: {:?}", cfg_path))?;
-
         let mut cfg: Config = toml::from_str(&data).context("toml from_str failed")?;
-        cfg.config_path = cfg_path.clone();
 
+        cfg.config_path = cfg_path;
         Ok(cfg)
     }
 
@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn test_config_new_home_path_not_exist() {
-        assert!(Config::load(&Path::new("/not-exist")).is_err());
+        assert!(Config::load(Path::new("/not-exist")).is_err());
     }
 
     #[test]
