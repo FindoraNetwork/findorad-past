@@ -93,7 +93,7 @@ Address: {} (ETH Compatible Address)
 Name:               {}
 Address:            {} (ETH Compatible)
 Findora Address:    {}
-Findora Public key: {}
+Findora Public Key: {}
 Secret:             {}
 Mnemonic:
 {}

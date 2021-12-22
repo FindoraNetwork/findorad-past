@@ -3,7 +3,7 @@ use std::{fmt::Display, path::Path};
 use crate::display::wallet as display_wallet;
 use crate::entry::wallet as entry_wallet;
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::Result;
 use clap::Parser;
 use libfn::types;
 
@@ -48,9 +48,8 @@ struct Delete {
 }
 
 impl Command {
-    pub fn execute(&self, node_home: &Path) -> Result<Box<dyn Display>> {
-        let mut wallets = entry_wallet::Wallets::new(node_home)
-            .with_context(|| format!("wallets new failed: {:?}", node_home))?;
+    pub fn execute(&self, home: &Path) -> Result<Box<dyn Display>> {
+        let mut wallets = entry_wallet::Wallets::new(home)?;
 
         match &self.subcmd {
             SubCommand::Show(cmd) => show(cmd, &wallets),
@@ -63,27 +62,14 @@ impl Command {
 fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>> {
     let result = match &cmd.address {
         Some(a) => {
-            let a = types::Address::from_eth(a)
-                .map_err(|e| anyhow!("lib_wallet address from_eth failed: {}", e))?
-                .to_base64()
-                .map_err(|e| anyhow!("lib_wallet address to_bash64 failed: {}", e))?;
-            let wallet = wallets
-                .read(&a)
-                .with_context(|| format!("read wallet failed: {:?}", cmd))?;
+            let wallet = wallets.read(&types::Address::from_eth(a)?.to_base64()?)?;
+
             let c = display_wallet::Content {
                 name: wallet.name,
                 eth_compatible_address: Some(
-                    types::Address::from_base64(&wallet.address)
-                        .map_err(|e| anyhow!("lib_wallet address from_base64 failed: {}", e))?
-                        .to_eth()
-                        .map_err(|e| anyhow!("lib_wallet address to_eth failed: {}", e))?,
+                    types::Address::from_base64(&wallet.address)?.to_eth()?,
                 ),
-                fra_address: Some(
-                    types::PublicKey::from_base64(&wallet.public)
-                        .map_err(|e| anyhow!("lib_wallet public from_base64 failed: {}", e))?
-                        .to_bech32()
-                        .map_err(|e| anyhow!("lib_wallet public to_bech32 failed: {}", e))?,
-                ),
+                fra_address: Some(types::PublicKey::from_base64(&wallet.public)?.to_bech32()?),
                 public_key: Some(wallet.public),
                 secret: Some(wallet.secret),
                 mnemonic: Some(wallet.mnemonic),
@@ -95,10 +81,7 @@ fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
             for w in wallets.list().iter() {
                 list.push(entry_wallet::ListWallet {
                     name: w.name.clone(),
-                    address: types::Address::from_base64(&w.address)
-                        .map_err(|e| anyhow!("lib_wallet address from_base64 failed: {}", e))?
-                        .to_eth()
-                        .map_err(|e| anyhow!("lib_wallet address to_eth failed: {}", e))?,
+                    address: types::Address::from_base64(&w.address)?.to_eth()?,
                 });
             }
             display_wallet::Display::from(list)
@@ -109,13 +92,7 @@ fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
 }
 
 fn delete(cmd: &Delete, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn Display>> {
-    let addr = types::Address::from_eth(&cmd.address)
-        .map_err(|e| anyhow!("lib_wallet address from_eth failed: {}", e))?
-        .to_base64()
-        .map_err(|e| anyhow!("lib_wallet address to_base64 failed: {}", e))?;
-    wallets
-        .delete(&addr)
-        .with_context(|| format!("delete wallet failed: {:?}", cmd))?;
+    wallets.delete(&types::Address::from_eth(&cmd.address)?.to_base64()?)?;
 
     Ok(Box::new(display_wallet::Display::from((
         cmd.address.clone(),
@@ -124,40 +101,21 @@ fn delete(cmd: &Delete, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn D
 }
 
 fn create(cmd: &Create, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn Display>> {
-    let result = match &cmd.mnemonic {
-        Some(m) => types::Wallet::from_mnemonic(&m),
-        None => types::Wallet::generate(),
+    let wallet = match &cmd.mnemonic {
+        Some(m) => types::Wallet::from_mnemonic(&m)?,
+        None => types::Wallet::generate()?,
     };
 
-    let wallet = match result {
-        Ok(v) => v,
-        Err(e) => bail!("lib_wallet creating failed: {:?}", e),
-    };
-
-    wallets
-        .create(&entry_wallet::Wallet {
-            name: cmd.name.clone(),
-            mnemonic: wallet.mnemonic,
-            address: wallet
-                .address
-                .to_base64()
-                .map_err(|e| anyhow!("lib_wallet address to_base64 failed: {}", e))?,
-            public: wallet
-                .public
-                .to_base64()
-                .map_err(|e| anyhow!("lib_wallet public to_base64 failed: {}", e))?,
-            secret: wallet
-                .secret
-                .to_base64()
-                .map_err(|e| anyhow!("lib_wallet secret to_base64 failed: {}", e))?,
-        })
-        .with_context(|| format!("create wallet failed: {:?}", cmd))?;
+    wallets.create(&entry_wallet::Wallet {
+        name: cmd.name.clone(),
+        mnemonic: wallet.mnemonic,
+        address: wallet.address.to_base64()?,
+        public: wallet.public.to_base64()?,
+        secret: wallet.secret.to_base64()?,
+    })?;
 
     Ok(Box::new(display_wallet::Display::from((
-        wallet
-            .address
-            .to_eth()
-            .map_err(|e| anyhow!("lib_wallet address to_eth failed: {}", e))?,
+        wallet.address.to_eth()?,
         display_wallet::DisplayType::Create,
     ))))
 }
