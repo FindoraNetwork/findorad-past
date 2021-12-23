@@ -59,15 +59,22 @@ impl Display {
             let name = self.contents[index].name.as_ref().unwrap_or(&none);
             let eth_compatible_address =
                 self.fetcher(&self.contents[index].eth_compatible_address)?;
+            let in_use = self.contents[index].in_use.as_ref();
+
             write!(
                 f,
                 "
-{} [{}]
+{} [{}]   {}
 Name:    {}
 Address: {} (ETH Compatible Address)
                 ",
                 Emoji("👛", "$ "),
                 index + 1,
+                if in_use.is_some() {
+                    style("( in use )").bold().yellow()
+                } else {
+                    style("")
+                },
                 style(name).bold().white(),
                 style(eth_compatible_address).bold().white(),
             )?;
@@ -206,6 +213,11 @@ impl From<Vec<wallet::ListWallet>> for Display {
             .map(|v| Content {
                 name: v.name.clone(),
                 eth_compatible_address: Some(v.address.clone()),
+                in_use: if v.current {
+                    Some("yes".to_string())
+                } else {
+                    None
+                },
                 ..Default::default()
             })
             .collect();

@@ -113,6 +113,7 @@ fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
                     list.push(entry_wallet::ListWallet {
                         name: w.name.clone(),
                         address: types::Address::from_base64(&w.address)?.to_eth()?,
+                        current: w.current,
                     });
                 }
                 display_wallet::Display::from(list)

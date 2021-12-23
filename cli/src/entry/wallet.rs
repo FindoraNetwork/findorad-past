@@ -23,6 +23,7 @@ pub struct Wallet {
 pub struct ListWallet {
     pub name: Option<String>,
     pub address: String,
+    pub current: bool,
 }
 
 pub struct Wallets {
@@ -65,6 +66,7 @@ impl Wallets {
             .map(|w| ListWallet {
                 name: w.name.clone(),
                 address: w.address.clone(),
+                current: w.current,
             })
             .collect()
     }
