@@ -22,17 +22,17 @@ impl Mapper {
         confidential_asset: bool,
     ) -> Result<()> {
         if let Some(v) = self.inner.get_mut(address) {
-            if let Some((a, ca, ct)) = v.get_mut(&asset) {
-                *a = a.checked_add(amount).ok_or_else(|| Error::OverflowAdd)?;
+            if let Some((a, ca, ct)) = v.get_mut(asset) {
+                *a = a.checked_add(amount).ok_or(Error::OverflowAdd)?;
                 *ca = *ca || confidential_amount;
                 *ct = *ct || confidential_asset;
             } else {
-                v.insert(asset.clone(), (amount, false, false));
+                v.insert(*asset, (amount, false, false));
             }
         } else {
             let mut v = BTreeMap::new();
 
-            v.insert(asset.clone(), (amount, false, false));
+            v.insert(*asset, (amount, false, false));
 
             self.inner.insert(address.clone(), v);
         }
@@ -49,9 +49,7 @@ impl Mapper {
     ) -> Result<()> {
         if let Some(v) = self.inner.get_mut(address) {
             if let Some((a, ca, ct)) = v.get_mut(asset) {
-                *a = a
-                    .checked_sub(amount)
-                    .ok_or_else(|| Error::BalanceNotEnough)?;
+                *a = a.checked_sub(amount).ok_or(Error::BalanceNotEnough)?;
                 *ca = *ca || confidential_amount;
                 *ct = *ct || confidential_asset;
             } else {

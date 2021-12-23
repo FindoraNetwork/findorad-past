@@ -40,7 +40,7 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
                 .core
                 .amount
                 .get_amount()
-                .ok_or_else(|| Error::MustBeNonConfidentialAmount)?;
+                .ok_or(Error::MustBeNonConfidentialAmount)?;
 
             let delegator = output.core.address.clone();
 

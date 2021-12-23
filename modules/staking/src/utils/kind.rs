@@ -46,11 +46,10 @@ impl From<&RequestBeginBlock> for BlockEvidence {
 
         for ev in &req.byzantine_validators {
             let kind = ByzantineKind::from_evidence_type(ev.r#type);
-            let validator = if let Some(validator) = &ev.validator {
-                Some((&validator.address).into())
-            } else {
-                None
-            };
+            let validator = ev
+                .validator
+                .as_ref()
+                .map(|validator| (&validator.address).into());
 
             evidences.push(Evidence { kind, validator });
         }

@@ -21,13 +21,13 @@ impl Define {
 
         let core = utxo::Output {
             address,
-            asset: XfrAssetType::NonConfidential(self.asset.clone()),
+            asset: XfrAssetType::NonConfidential(self.asset),
             owner_memo: None,
             amount: XfrAmount::NonConfidential(0),
         };
 
         let asset = AssetMeta {
-            maximum: self.maximum.clone(),
+            maximum: self.maximum,
             transferable: self.transferable,
         };
 

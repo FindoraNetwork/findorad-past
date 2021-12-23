@@ -50,7 +50,7 @@ impl Transfer {
                 let asset_record_type =
                     AssetRecordType::from_flags(self.confidential_amount, self.confidential_asset);
                 (
-                    self.public_key.ok_or_else(|| Error::KeyMustBeSet)?,
+                    self.public_key.ok_or(Error::KeyMustBeSet)?,
                     asset_record_type,
                 )
             }

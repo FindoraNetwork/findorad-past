@@ -22,7 +22,7 @@ pub fn apply_undelegate_amount(
         if let Some(a) = v.get_mut(delegator) {
             let undelegate_amount = a
                 .checked_sub(amount)
-                .ok_or_else(|| Error::DelegateAmountNotEnough)?;
+                .ok_or(Error::DelegateAmountNotEnough)?;
 
             *a = undelegate_amount;
         } else {
@@ -35,7 +35,7 @@ pub fn apply_undelegate_amount(
     if let Some(v) = global_power.get()? {
         let a = v
             .checked_sub(amount)
-            .ok_or_else(|| Error::DelegateAmountNotEnough)?;
+            .ok_or(Error::DelegateAmountNotEnough)?;
         global_power.set(a)?;
     } else {
         return Err(Error::DelegateAmountNotEnough);
@@ -44,7 +44,7 @@ pub fn apply_undelegate_amount(
     if let Some(v) = powers.get_mut(&op.address)? {
         *v = v
             .checked_sub(amount)
-            .ok_or_else(|| Error::DelegateAmountNotEnough)?;
+            .ok_or(Error::DelegateAmountNotEnough)?;
     } else {
         return Err(Error::DelegateAmountNotEnough);
     }
@@ -52,7 +52,7 @@ pub fn apply_undelegate_amount(
     if let Some(v) = delegation_amount.get_mut(delegator)? {
         *v = v
             .checked_sub(amount)
-            .ok_or_else(|| Error::DelegateAmountNotEnough)?;
+            .ok_or(Error::DelegateAmountNotEnough)?;
     } else {
         return Err(Error::DelegateAmountNotEnough);
     }
