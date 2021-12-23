@@ -90,7 +90,11 @@ fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
             public_key: Some(wallet.public.clone()),
             secret: Some(wallet.secret.clone()),
             mnemonic: Some(wallet.mnemonic.clone()),
-            in_use: Some(wallet.current),
+            in_use: Some(if wallet.current {
+                "yes".to_string()
+            } else {
+                "no".to_string()
+            }),
         })
     }
 

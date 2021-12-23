@@ -12,7 +12,7 @@ pub struct Content {
     pub public_key: Option<String>,
     pub secret: Option<String>,
     pub mnemonic: Option<String>,
-    pub in_use: Option<bool>,
+    pub in_use: Option<String>,
 }
 
 #[derive(Debug)]
@@ -87,13 +87,14 @@ Address: {} (ETH Compatible Address)
         let public_key = self.fetcher(&self.contents[0].public_key)?;
         let secret = self.fetcher(&self.contents[0].secret)?;
         let mnemonic = self.fetcher(&self.contents[0].mnemonic)?;
-        // let in_use = self.fetcher(&self.contents[0].in_use)?;
+        let in_use = self.fetcher(&self.contents[0].in_use)?;
 
         write!(
             f,
             "
 {}
 Name:               {}
+In Use:             {}
 Address:            {} (ETH Compatible)
 Findora Address:    {}
 Findora Public Key: {}
@@ -103,6 +104,7 @@ Mnemonic:
             ",
             Emoji("👛", "$ "),
             style(name).bold().cyan(),
+            style(in_use).bold().cyan(),
             style(eth_compatible_address).bold().cyan(),
             style(fra_address).bold().cyan(),
             style(public_key).bold().cyan(),
