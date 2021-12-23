@@ -27,8 +27,10 @@ jobs:
     - name: Check Formatting
       run: cargo fmt --all -- --check 
 
-    - name: Install Golang for libfindora custom build
-      uses: actions/setup-go@v2 
+    - name: Install Capnproto for libfindora custom build
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y capnproto
 
     - name: Check Clippy Lints 
       run: cargo clippy --all-targets --all-features -- -D warnings 
