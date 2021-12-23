@@ -12,6 +12,7 @@ pub struct Content {
     pub public_key: Option<String>,
     pub secret: Option<String>,
     pub mnemonic: Option<String>,
+    pub in_use: Option<bool>,
 }
 
 #[derive(Debug)]

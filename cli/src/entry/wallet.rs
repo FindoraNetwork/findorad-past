@@ -16,6 +16,7 @@ pub struct Wallet {
     pub address: String,
     pub public: String,
     pub secret: String,
+    #[serde(default)]
     pub current: bool,
 }
 

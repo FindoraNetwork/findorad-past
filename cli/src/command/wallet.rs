@@ -21,15 +21,18 @@ enum SubCommand {
     Create(Create),
     /// Delete a wallet
     Delete(Delete),
-    /// Use this wallet as current wallet
+    /// Use a specific wallet as current in use wallet
     Use(Use),
 }
 
 #[derive(Parser, Debug)]
 struct Show {
     /// The ETH compatible address to show the wallet information of the specific one
-    #[clap(short, long, forbid_empty_values = true)]
+    #[clap(short, long, forbid_empty_values = true, group = "input")]
     address: Option<String>,
+    /// Showing the current in use wallet
+    #[clap(short, long, group = "input")]
+    current: bool,
 }
 
 #[derive(Parser, Debug)]
@@ -79,31 +82,37 @@ fn use_this(cmd: &Use, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn Di
 }
 
 fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>> {
+    fn convert_helper(wallet: &entry_wallet::Wallet) -> Result<display_wallet::Content> {
+        Ok(display_wallet::Content {
+            name: wallet.name.clone(),
+            eth_compatible_address: Some(types::Address::from_base64(&wallet.address)?.to_eth()?),
+            fra_address: Some(types::PublicKey::from_base64(&wallet.public)?.to_bech32()?),
+            public_key: Some(wallet.public.clone()),
+            secret: Some(wallet.secret.clone()),
+            mnemonic: Some(wallet.mnemonic.clone()),
+            in_use: Some(wallet.current),
+        })
+    }
+
     let result = match &cmd.address {
         Some(a) => {
             let wallet = wallets.read(&types::Address::from_eth(a)?.to_base64()?)?;
-
-            let c = display_wallet::Content {
-                name: wallet.name,
-                eth_compatible_address: Some(
-                    types::Address::from_base64(&wallet.address)?.to_eth()?,
-                ),
-                fra_address: Some(types::PublicKey::from_base64(&wallet.public)?.to_bech32()?),
-                public_key: Some(wallet.public),
-                secret: Some(wallet.secret),
-                mnemonic: Some(wallet.mnemonic),
-            };
-            display_wallet::Display::from(c)
+            display_wallet::Display::from(convert_helper(&wallet)?)
         }
         None => {
-            let mut list = vec![];
-            for w in wallets.list().iter() {
-                list.push(entry_wallet::ListWallet {
-                    name: w.name.clone(),
-                    address: types::Address::from_base64(&w.address)?.to_eth()?,
-                });
+            if cmd.current {
+                let wallet = wallets.get_current()?;
+                display_wallet::Display::from(convert_helper(&wallet)?)
+            } else {
+                let mut list = vec![];
+                for w in wallets.list().iter() {
+                    list.push(entry_wallet::ListWallet {
+                        name: w.name.clone(),
+                        address: types::Address::from_base64(&w.address)?.to_eth()?,
+                    });
+                }
+                display_wallet::Display::from(list)
             }
-            display_wallet::Display::from(list)
         }
     };
 
@@ -146,14 +155,38 @@ mod tests {
     use crate::utils::test_utils::TempDir;
 
     #[test]
+    fn test_command_wallet_execute_use() {
+        let node_home = TempDir::new("test_command_wallet_execute_use").unwrap();
+        let cmd = Command {
+            subcmd: SubCommand::Use(Use {
+                address: "some_address".to_string(),
+            }),
+        };
+        // because not found
+        assert!(cmd.execute(node_home.path()).is_err());
+    }
+
+    #[test]
     fn test_command_wallet_execute_show() {
         let node_home = TempDir::new("test_command_wallet_execute_show").unwrap();
         let mut cmd = Command {
-            subcmd: SubCommand::Show(Show { address: None }),
+            subcmd: SubCommand::Show(Show {
+                address: None,
+                current: false,
+            }),
         };
         assert!(cmd.execute(node_home.path()).is_ok());
+
         cmd.subcmd = SubCommand::Show(Show {
             address: Some("some_address".to_string()),
+            current: false,
+        });
+        // because not found
+        assert!(cmd.execute(node_home.path()).is_err());
+
+        cmd.subcmd = SubCommand::Show(Show {
+            address: None,
+            current: true,
         });
         // because not found
         assert!(cmd.execute(node_home.path()).is_err());
