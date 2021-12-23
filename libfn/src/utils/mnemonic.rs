@@ -1,6 +1,6 @@
 use bip0039::{Count, Language, Mnemonic};
 
-use crate::{Result, Error};
+use crate::{Error, Result};
 
 pub fn generate_mnemonic_custom(wordslen: u8, lang: &str) -> Result<String> {
     let w = match wordslen {

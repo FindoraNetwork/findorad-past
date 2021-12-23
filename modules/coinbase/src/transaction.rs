@@ -23,16 +23,13 @@ fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
     for i in 0..tx.outputs.len() {
         let output = &tx.outputs[i];
 
-        match output.operation {
-            libfindora::OutputOperation::IssueAsset => {
-                let output_id = OutputId {
-                    txid: tx.txid.clone(),
-                    n: i.try_into()?,
-                };
+        if let libfindora::OutputOperation::IssueAsset = output.operation {
+            let output_id = OutputId {
+                txid: tx.txid,
+                n: i.try_into()?,
+            };
 
-                outputs.push((output_id, output.core.clone()));
-            }
-            _ => {}
+            outputs.push((output_id, output.core.clone()));
         }
     }
 

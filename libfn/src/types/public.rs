@@ -3,7 +3,7 @@ use primitive_types::H160;
 use sha3::Digest;
 use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrPublicKey};
 
-use crate::{Result, Error};
+use crate::{Error, Result};
 
 use super::Address;
 

@@ -1,0 +1,42 @@
+name: CI for Main branch
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    runs-on: ubuntu-latest 
+    steps:
+    - uses: actions/checkout@v2
+
+    # since findorad rust-toolchain specifying to use the nightly toolchain
+    - name: Install minimal nightly with clippy and rustfmt
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: nightly
+        components: rustfmt, clippy 
+        override: true
+
+    - name: Check Formatting
+      run: cargo fmt --all -- --check 
+
+    - name: Install Capnproto for libfindora custom build
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y capnproto
+
+    - name: Check Clippy Lints 
+      # there has a clippy warning "clippy::needless-question-mark" at findorad/src/main.rs
+      # but it depends on the outside library abcf::manager
+      # so allow it temporary.
+      run: cargo clippy --all-targets --all-features -- -D warnings -Z macro-backtrace -A clippy::needless_question_mark
+
+    - name: Run Tests 
+      run: cargo test --all --all-features --no-fail-fast

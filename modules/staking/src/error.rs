@@ -45,21 +45,21 @@ impl From<Error> for abcf::Error {
             ),
             Error::AlreadySelfDelegate => abcf::Error::ABCIApplicationError(
                 90002,
-                format!("validator already do self-delegate."),
+                "validator already do self-delegate.".to_string(),
             ),
             Error::TryFromIntError(e) => {
                 abcf::Error::ABCIApplicationError(90002, format!("{:?}", e))
             }
             Error::MustDoSelfDegegateFirst => {
-                abcf::Error::ABCIApplicationError(90002, format!("Must do self delegate."))
+                abcf::Error::ABCIApplicationError(90002, "Must do self delegate.".to_string())
             }
             Error::DelegateAmountNotEnough => {
-                abcf::Error::ABCIApplicationError(90002, format!("Delegate amount not enough."))
+                abcf::Error::ABCIApplicationError(90002, "Delegate amount not enough.".to_string())
             }
             Error::NoTendermintAddress => {
-                abcf::Error::ABCIApplicationError(90002, format!("No tendermint address."))
+                abcf::Error::ABCIApplicationError(90002, "No tendermint address.".to_string())
             }
-            Error::IsOptionNone => abcf::Error::ABCIApplicationError(90002, format!("Is none.")),
+            Error::IsOptionNone => abcf::Error::ABCIApplicationError(90002, "Is none.".to_string()),
         }
     }
 }

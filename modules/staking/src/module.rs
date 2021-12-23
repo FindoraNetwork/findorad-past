@@ -107,21 +107,18 @@ impl Application for StakingModule {
         self.vote_updaters.append(&mut res);
 
         for info in &tx.infos {
-            match info.operation {
-                Operation::Undelegate(_) => {
-                    let output = Output {
-                        address: info.delegator.clone(),
-                        amount: XfrAmount::NonConfidential(info.amount),
-                        asset: FRA.asset_type,
-                        owner_memo: None,
-                    };
-                    fm_coinbase::utils::mint(
-                        context.deps.coinbase.module.block_height + FRA_STAKING.undelegate_block,
-                        output,
-                        &mut context.deps.coinbase.stateful.pending_outputs,
-                    )?;
-                }
-                _ => {}
+            if let Operation::Undelegate(_) = info.operation {
+                let output = Output {
+                    address: info.delegator.clone(),
+                    amount: XfrAmount::NonConfidential(info.amount),
+                    asset: FRA.asset_type,
+                    owner_memo: None,
+                };
+                fm_coinbase::utils::mint(
+                    context.deps.coinbase.module.block_height + FRA_STAKING.undelegate_block,
+                    output,
+                    &mut context.deps.coinbase.stateful.pending_outputs,
+                )?;
             }
         }
 
@@ -172,7 +169,7 @@ impl StakingModule {
 
                     let power = utils::apply_global(
                         info.amount,
-                        &op,
+                        op,
                         &mut context.stateful.global_power,
                         &mut context.stateful.powers,
                     )?;
@@ -184,7 +181,7 @@ impl StakingModule {
                     utils::apply_detail(
                         &info.delegator,
                         info.amount,
-                        &op,
+                        op,
                         &mut context.stateful.delegators,
                         &mut context.stateless.delegation_amount,
                     )?;

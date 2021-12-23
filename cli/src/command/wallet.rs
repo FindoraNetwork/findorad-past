@@ -179,6 +179,7 @@ mod tests {
                 address: "some_address".to_string(),
             }),
         };
+        // because the input address is EthereumAddressFormatError
         assert!(cmd.execute(node_home.path()).is_err());
     }
 }
