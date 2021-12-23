@@ -142,7 +142,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_set_entry_wallet_happy_case() {
+    fn test_get_set_entry_wallet() {
         let home = TempDir::new("test_get_set_entry_wallet_happy_case").unwrap();
         let mut wallets = Wallets::new(home.path()).unwrap();
         helper_setup_wallets(&mut wallets, 3);
@@ -155,6 +155,14 @@ mod tests {
         let got = wallets.get_current().unwrap();
         assert_eq!(want_address, got.address);
         assert!(got.current);
+        assert_eq!(1, wallets.wallets.iter().filter(|w| w.current).count());
+
+        let want_address = "some_address_0";
+        assert!(wallets.set_current(want_address).is_ok());
+        let got = wallets.get_current().unwrap();
+        assert_eq!(want_address, got.address);
+        assert!(got.current);
+        assert_eq!(1, wallets.wallets.iter().filter(|w| w.current).count());
     }
 
     #[test]
