@@ -112,6 +112,7 @@ fn create(cmd: &Create, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn D
         address: wallet.address.to_base64()?,
         public: wallet.public.to_base64()?,
         secret: wallet.secret.to_base64()?,
+        current: false,
     })?;
 
     Ok(Box::new(display_wallet::Display::from((
@@ -159,6 +160,6 @@ mod tests {
                 address: "some_address".to_string(),
             }),
         };
-        assert!(cmd.execute(node_home.path()).is_ok());
+        assert!(cmd.execute(node_home.path()).is_err());
     }
 }

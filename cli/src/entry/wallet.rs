@@ -16,6 +16,7 @@ pub struct Wallet {
     pub address: String,
     pub public: String,
     pub secret: String,
+    pub current: bool,
 }
 
 pub struct ListWallet {
@@ -81,6 +82,43 @@ impl Wallets {
             .with_context(|| format!("delete on save failed: {}", address))?;
         Ok(())
     }
+
+    // O(n) solution, we need to loop all wallets for fixing the uncorrectly changes.
+    pub fn set_current(&mut self, address: &str) -> Result<()> {
+        let mut found = false;
+        let mut loc = 0;
+        let mut unreasonables = Vec::with_capacity(self.wallets.len());
+
+        for i in 0..self.wallets.len() {
+            if self.wallets[i].address == address {
+                found = true;
+                loc = i;
+            } else if self.wallets[i].address != address && self.wallets[i].current {
+                unreasonables.push(i);
+            }
+        }
+
+        if !found {
+            bail!("set_current connot find address: {}", address);
+        }
+
+        for u in unreasonables {
+            self.wallets[u].current = false;
+        }
+
+        self.wallets[loc].current = true;
+        self.save()
+            .with_context(|| format!("set_current on save failed: {}", address))?;
+        Ok(())
+    }
+
+    pub fn get_current(&self) -> Result<Wallet> {
+        let result = self.wallets.iter().find(|w| w.current);
+        match result {
+            Some(w) => Ok(w.clone()),
+            None => bail!("get_current connot find the current one"),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -88,8 +126,39 @@ mod tests {
     use super::*;
     use crate::utils::test_utils::TempDir;
 
+    fn helper_setup_wallets(wallets: &mut Wallets, max: usize) {
+        for i in 0..max {
+            wallets
+                .create(&Wallet {
+                    name: None,
+                    mnemonic: format!("some_mnemonic_{}", i),
+                    address: format!("some_address_{}", i),
+                    public: format!("some_public_{}", i),
+                    secret: format!("some_secret_{}", i),
+                    current: false,
+                })
+                .unwrap()
+        }
+    }
+
     #[test]
-    fn test_entry_wallet() {
+    fn test_get_set_entry_wallet_happy_case() {
+        let home = TempDir::new("test_get_set_entry_wallet_happy_case").unwrap();
+        let mut wallets = Wallets::new(home.path()).unwrap();
+        helper_setup_wallets(&mut wallets, 3);
+
+        // // no current wallet setted yet
+        assert!(wallets.get_current().is_err());
+
+        let want_address = "some_address_1";
+        assert!(wallets.set_current(want_address).is_ok());
+        let got = wallets.get_current().unwrap();
+        assert_eq!(want_address, got.address);
+        assert!(got.current);
+    }
+
+    #[test]
+    fn test_entry_wallet_normal_crud() {
         let home = TempDir::new("test_wallets_crud").unwrap();
         let mut wallets = Wallets::new(home.path()).unwrap();
         assert_eq!(wallets.list().len(), 0);
@@ -100,6 +169,7 @@ mod tests {
             address: "some_address_1".to_string(),
             public: "some_public_1".to_string(),
             secret: "some_secret_1".to_string(),
+            current: false,
         };
 
         assert!(wallets.create(&wallet_1).is_ok());
@@ -114,6 +184,7 @@ mod tests {
             address: "some_address_2".to_string(),
             public: "some_public_2".to_string(),
             secret: "some_secret_2".to_string(),
+            current: false,
         };
         assert!(wallets.create(&wallet_2).is_ok());
         assert_eq!(wallets.list().len(), 2);
