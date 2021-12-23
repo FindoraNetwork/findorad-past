@@ -21,6 +21,8 @@ enum SubCommand {
     Create(Create),
     /// Delete a wallet
     Delete(Delete),
+    /// Use this wallet as current wallet
+    Use(Use),
 }
 
 #[derive(Parser, Debug)]
@@ -47,6 +49,13 @@ struct Delete {
     address: String,
 }
 
+#[derive(Parser, Debug)]
+struct Use {
+    /// The ETH compatible address to do the deletion
+    #[clap(forbid_empty_values = true)]
+    address: String,
+}
+
 impl Command {
     pub fn execute(&self, home: &Path) -> Result<Box<dyn Display>> {
         let mut wallets = entry_wallet::Wallets::new(home)?;
@@ -55,8 +64,18 @@ impl Command {
             SubCommand::Show(cmd) => show(cmd, &wallets),
             SubCommand::Create(cmd) => create(cmd, &mut wallets),
             SubCommand::Delete(cmd) => delete(cmd, &mut wallets),
+            SubCommand::Use(cmd) => use_this(cmd, &mut wallets),
         }
     }
+}
+
+fn use_this(cmd: &Use, wallets: &mut entry_wallet::Wallets) -> Result<Box<dyn Display>> {
+    wallets.set_current(&types::Address::from_eth(&cmd.address)?.to_base64()?)?;
+
+    Ok(Box::new(display_wallet::Display::from((
+        cmd.address.clone(),
+        display_wallet::DisplayType::Use,
+    ))))
 }
 
 fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>> {
