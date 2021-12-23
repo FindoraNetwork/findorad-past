@@ -16,8 +16,7 @@ pub fn mint(
         if let Some(v) = owned_outputs.get_mut(&output.address)? {
             v.push(id.clone());
         } else {
-            let mut v = Vec::new();
-            v.push(id.clone());
+            let v = vec![id.clone()];
             owned_outputs.insert(output.address.clone(), v)?;
         }
     }
