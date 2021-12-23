@@ -87,6 +87,7 @@ Address: {} (ETH Compatible Address)
         let public_key = self.fetcher(&self.contents[0].public_key)?;
         let secret = self.fetcher(&self.contents[0].secret)?;
         let mnemonic = self.fetcher(&self.contents[0].mnemonic)?;
+        // let in_use = self.fetcher(&self.contents[0].in_use)?;
 
         write!(
             f,
@@ -149,7 +150,22 @@ Mnemonic:
     }
 
     fn use_this(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "")
+        if self.contents.is_empty() {
+            return Err(fmt::Error);
+        }
+
+        let addr = self.fetcher(&self.contents[0].eth_compatible_address)?;
+        write!(
+            f,
+            "
+{} {}
+{} ETH Compatible Address: {}
+",
+            Emoji("✨", ":)"),
+            style("Success Settled In Use Wallet").bold().green(),
+            Emoji("★ ", "* "),
+            style(addr).white()
+        )
     }
 }
 
