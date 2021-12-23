@@ -28,14 +28,14 @@ impl Builder {
         address: &Address,
         keypair: &XfrKeyPair,
     ) -> Result<()> {
-        if !self.keypairs.contains_key(&address) {
-            let (ids, outputs) = net::get_owned_outputs(provider, &address).await?;
+        if !self.keypairs.contains_key(address) {
+            let (ids, outputs) = net::get_owned_outputs(provider, address).await?;
 
-            let mut ars = utils::open_outputs(outputs, &keypair)?;
+            let mut ars = utils::open_outputs(outputs, keypair)?;
 
             for ar in &ars {
                 self.mapper.add(
-                    &address,
+                    address,
                     &ar.open_asset_record.asset_type,
                     ar.open_asset_record.amount,
                     false,
@@ -305,7 +305,7 @@ impl Builder {
             let public_key = self
                 .keypairs
                 .get(&address)
-                .ok_or_else(|| Error::BalanceNotEnough)?
+                .ok_or(Error::BalanceNotEnough)?
                 .get_pk();
 
             let record = utils::build_output(

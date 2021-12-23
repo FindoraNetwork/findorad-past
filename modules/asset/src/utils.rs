@@ -5,14 +5,13 @@ use crate::{AssetInfo, AssetIssue, Error, Result};
 
 pub fn check_define(
     asset_infos: &mut impl MapStore<AssetType, AssetInfo>,
-    tx: &Vec<AssetInfo>,
+    tx: &[AssetInfo],
 ) -> Result<()> {
     for define in tx {
-        if let Some(_) = asset_infos.get(&define.asset)? {
+        if asset_infos.get(&define.asset)?.is_some() {
             return Err(Error::AssetTypeAlreadyExists(define.asset));
-        } else {
-            asset_infos.insert(define.asset, define.clone())?;
         }
+        asset_infos.insert(define.asset, define.clone())?;
     }
 
     Ok(())
@@ -20,7 +19,7 @@ pub fn check_define(
 
 pub fn check_issue(
     asset_infos: &impl MapStore<AssetType, AssetInfo>,
-    tx: &Vec<AssetIssue>,
+    tx: &[AssetIssue],
 ) -> Result<()> {
     for issue in tx {
         if let Some(info) = asset_infos.get(&issue.asset)? {
@@ -47,15 +46,15 @@ pub fn check_issue(
 
 pub fn check_transfer(
     asset_infos: &impl MapStore<AssetType, AssetInfo>,
-    tx: &Vec<AssetType>,
+    tx: &[AssetType],
 ) -> Result<()> {
     for asset in tx {
-        if let Some(a) = asset_infos.get(&asset)? {
-            if a.transferable == false {
-                return Err(Error::AssetCantTransfer(asset.clone()));
+        if let Some(a) = asset_infos.get(asset)? {
+            if !a.transferable {
+                return Err(Error::AssetCantTransfer(*asset));
             }
         } else {
-            return Err(Error::AssetTypeNotExists(asset.clone()));
+            return Err(Error::AssetTypeNotExists(*asset));
         }
     }
 

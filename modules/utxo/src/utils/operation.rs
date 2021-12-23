@@ -8,7 +8,7 @@ pub enum OwnedOutputOperation {
     Del(OutputId),
 }
 
-fn get_index(array: &Vec<OutputId>, target: &OutputId) -> Option<usize> {
+fn get_index(array: &[OutputId], target: &OutputId) -> Option<usize> {
     array
         .iter()
         .position(|x| x.txid == target.txid && x.n == target.n)
@@ -22,7 +22,7 @@ pub fn insert_by_operation(
         match op {
             OwnedOutputOperation::Add(v) => {
                 // if v already in target, failed.
-                if let None = get_index(target, &v) {
+                if get_index(target, &v).is_none() {
                     target.push(v);
                 } else {
                     return Err(Error::DuplicateOutput(v));

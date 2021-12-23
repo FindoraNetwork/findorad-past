@@ -1,4 +1,4 @@
-use std::{num::TryFromIntError, fmt::Display};
+use std::{fmt::Display, num::TryFromIntError};
 
 use ruc::RucError;
 
@@ -37,7 +37,9 @@ impl std::error::Error for Error {
         match self {
             Self::OverflowSub => "add overflow",
             Self::OverflowAdd => "sub overflow",
-            Self::MustBeNonConfidentialAssetAmount => "must be use non-confidential asset and non-confidential amount",
+            Self::MustBeNonConfidentialAssetAmount => {
+                "must be use non-confidential asset and non-confidential amount"
+            }
             Self::KeyMustBeSet => "public key must be set.",
             Self::TryFromIntError(_) => "convert int error",
             Self::BalanceNotEnough => "balance not enough",

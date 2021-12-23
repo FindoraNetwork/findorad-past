@@ -13,8 +13,7 @@ use super::{BlockEvidence, ByzantineKind};
 
 fn compute_penalty_amount(amount: Amount, rate: [u64; 2]) -> Option<Amount> {
     let upper = amount.checked_mul(rate[0])?;
-
-    Some(upper.checked_div(rate[1])?)
+    upper.checked_div(rate[1])
 }
 
 pub fn penalty_single(
@@ -28,16 +27,16 @@ pub fn penalty_single(
 ) -> Result<i64> {
     let staker_address = validator_staker
         .get(evidence_validator_address)?
-        .ok_or_else(|| Error::IsOptionNone)?;
+        .ok_or(Error::IsOptionNone)?;
 
     // process delegation detail.
     let delegator_map = delegators
         .get_mut(evidence_validator_address)?
-        .ok_or_else(|| Error::IsOptionNone)?;
+        .ok_or(Error::IsOptionNone)?;
 
     let amount = delegator_map
         .get_mut(&staker_address)
-        .ok_or_else(|| Error::IsOptionNone)?;
+        .ok_or(Error::IsOptionNone)?;
 
     let rate = kind.penalty_rate();
 
@@ -48,12 +47,12 @@ pub fn penalty_single(
     // process validator.
     let amount = validator_powers
         .get_mut(evidence_validator_address)?
-        .ok_or_else(|| Error::IsOptionNone)?;
+        .ok_or(Error::IsOptionNone)?;
 
     let power = amount.checked_sub(penalty_power).unwrap_or_default();
     *amount = power;
 
-    let amount = global_power.get()?.ok_or_else(|| Error::IsOptionNone)?;
+    let amount = global_power.get()?.ok_or(Error::IsOptionNone)?;
 
     // process global_power.
     let a = amount.checked_sub(penalty_power).unwrap_or_default();
@@ -63,10 +62,10 @@ pub fn penalty_single(
     // process delegator.
     let amount = delegation_amount
         .get_mut(&staker_address)?
-        .ok_or_else(|| Error::IsOptionNone)?;
+        .ok_or(Error::IsOptionNone)?;
     *amount = amount.checked_sub(penalty_power).unwrap_or_default();
 
-    return Ok(power.try_into()?);
+    Ok(power.try_into()?)
 }
 
 pub fn penalty(
@@ -85,7 +84,7 @@ pub fn penalty(
         let evidence_validator_address = evidence
             .validator
             .as_ref()
-            .ok_or_else(|| Error::NoTendermintAddress)?;
+            .ok_or(Error::NoTendermintAddress)?;
 
         let power = penalty_single(
             evidence_validator_address,

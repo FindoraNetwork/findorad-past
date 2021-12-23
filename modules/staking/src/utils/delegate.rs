@@ -25,7 +25,7 @@ pub fn apply_delegated(
     } else {
         validator_pubkey
             .get(&op.address)?
-            .ok_or_else(|| Error::MustDoSelfDegegateFirst)?
+            .ok_or(Error::MustDoSelfDegegateFirst)?
             .clone()
     };
 
@@ -40,27 +40,27 @@ pub fn apply_global(
     powers: &mut impl MapStore<TendermintAddress, Power>,
 ) -> Result<Power> {
     // Check amount is in range.
-    if let Some(_) = op.validator {
-        if amount <= FRA_STAKING.validator_min_power && amount >= FRA_STAKING.max_delegate() {
-            return Err(Error::DelegateAmountOutOfRange(
-                FRA_STAKING.validator_min_power,
-                FRA_STAKING.max_delegate(),
-            ));
-        }
-    } else {
-        if amount <= FRA_STAKING.min_delegate && amount >= FRA_STAKING.max_delegate() {
-            return Err(Error::DelegateAmountOutOfRange(
-                FRA_STAKING.min_delegate,
-                FRA_STAKING.max_delegate(),
-            ));
-        }
+    if op.validator.is_some()
+        && amount <= FRA_STAKING.validator_min_power
+        && amount >= FRA_STAKING.max_delegate()
+    {
+        return Err(Error::DelegateAmountOutOfRange(
+            FRA_STAKING.validator_min_power,
+            FRA_STAKING.max_delegate(),
+        ));
+    }
+    if amount <= FRA_STAKING.min_delegate && amount >= FRA_STAKING.max_delegate() {
+        return Err(Error::DelegateAmountOutOfRange(
+            FRA_STAKING.min_delegate,
+            FRA_STAKING.max_delegate(),
+        ));
     }
 
     // Global power.
     let result_global_power = {
         // Compute global_power.
         let result_global_power = if let Some(gp) = global_power.get()? {
-            gp.checked_add(amount).ok_or_else(|| Error::OverflowAdd)?
+            gp.checked_add(amount).ok_or(Error::OverflowAdd)?
         } else {
             amount
         };
@@ -81,19 +81,17 @@ pub fn apply_global(
     let tp = {
         // Get validator's power.
         let result_power = if let Some(power) = powers.get(&op.address)? {
-            power
-                .checked_add(amount)
-                .ok_or_else(|| Error::OverflowAdd)?
+            power.checked_add(amount).ok_or(Error::OverflowAdd)?
         } else {
             amount
         };
 
         let max_delegate_global = (result_global_power as u128)
             .checked_mul(FRA_STAKING.max_percent_per_validator[0] as u128)
-            .ok_or_else(|| Error::OverflowAdd)?;
+            .ok_or(Error::OverflowAdd)?;
         let max_delegate_current = (result_power as u128)
             .checked_mul(FRA_STAKING.max_percent_per_validator[1] as u128)
-            .ok_or_else(|| Error::OverflowAdd)?;
+            .ok_or(Error::OverflowAdd)?;
 
         if max_delegate_current > max_delegate_global {
             return Err(Error::DelegateAmountOutOfRange(

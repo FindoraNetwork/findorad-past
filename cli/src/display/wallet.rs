@@ -37,18 +37,18 @@ impl Display {
     }
 
     fn empty(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
+        writeln!(
             f,
-            "{} {}\n",
+            "{} {}",
             Emoji("❓", ":("),
             style("There is no wallet exists").bold().red()
         )
     }
 
     fn list(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
+        writeln!(
             f,
-            "{} {}\n",
+            "{} {}",
             Emoji("✨", ":)"),
             style("Listing").bold().green()
         )?;
@@ -74,7 +74,7 @@ Address: {} (ETH Compatible Address)
     }
 
     fn show(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.contents.len() == 0 {
+        if self.contents.is_empty() {
             return Err(fmt::Error);
         }
 
@@ -109,7 +109,7 @@ Mnemonic:
     }
 
     fn create(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.contents.len() == 0 {
+        if self.contents.is_empty() {
             return Err(fmt::Error);
         }
 
@@ -128,7 +128,7 @@ Mnemonic:
     }
 
     fn delete(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.contents.len() == 0 {
+        if self.contents.is_empty() {
             return Err(fmt::Error);
         }
 
@@ -149,7 +149,7 @@ Mnemonic:
 
 impl fmt::Display for Display {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.contents.len() == 0 {
+        if self.contents.is_empty() {
             return self.empty(f);
         }
 
