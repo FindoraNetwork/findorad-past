@@ -1,7 +1,7 @@
 use bech32::{FromBase32, ToBase32};
 use primitive_types::H160;
 
-use crate::{Result, Error};
+use crate::{Error, Result};
 
 pub struct Address {
     pub address: H160,
@@ -13,7 +13,11 @@ impl Address {
     }
 
     pub fn to_bech32(&self) -> Result<String> {
-        Ok(bech32::encode("fra1", self.address.0.to_base32(), bech32::Variant::Bech32)?)
+        Ok(bech32::encode(
+            "fra1",
+            self.address.0.to_base32(),
+            bech32::Variant::Bech32,
+        )?)
     }
 
     pub fn to_base64(&self) -> Result<String> {
