@@ -61,12 +61,12 @@ impl Mapper {
         Ok(())
     }
 
-    pub fn to_vec(self) -> Vec<(Address, AssetType, Amount, bool, bool)> {
+    pub fn to_vec(&self) -> Vec<(Address, AssetType, Amount, bool, bool)> {
         let mut v = Vec::new();
 
-        for (address, aa_mapper) in self.inner {
+        for (address, aa_mapper) in self.inner.iter() {
             for (asset, amount) in aa_mapper {
-                v.push((address.clone(), asset, amount.0, amount.1, amount.2));
+                v.push((address.clone(), *asset, amount.0, amount.1, amount.2));
             }
         }
 
