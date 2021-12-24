@@ -58,7 +58,7 @@ impl Builder {
         Ok(())
     }
 
-    pub async fn from_entries<R: RngCore + CryptoRng, P: Provider>(
+    pub async fn from_entities<R: RngCore + CryptoRng, P: Provider>(
         &mut self,
         prng: &mut R,
         provider: &mut P,
