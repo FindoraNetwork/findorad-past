@@ -4,7 +4,9 @@ use crate::entry::wallet as entry_wallet;
 
 use anyhow::Result;
 use clap::{ArgGroup, Parser};
-// use libfn::{entity, types, Builder};
+use libfindora::Address;
+use libfn::{entity, types, Builder};
+use zei::xfr::structs::{AssetType, ASSET_TYPE_LENGTH};
 
 #[derive(Parser, Debug)]
 pub struct Command {
@@ -90,21 +92,33 @@ impl Command {
     }
 }
 
-fn send(_cmd: &Send, _wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>> {
-    // pub from: XfrKeyPair,
+fn send(cmd: &Send, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>> {
+    let wallet = if let Some(addr) = &cmd.from_address {
+        wallets.read().from_address(&addr).build()?
+    } else if let Some(secret) = &cmd.from_secret {
+        wallets.read().from_secret(&secret).build()?
+    } else {
+        // since the clap will check the input cannot be empty by atribute
+        // forbid_empty_values = true
+        unreachable!()
+    };
 
-    // /// Zei's public key, if you want to receive confidential transaction, this field must provide.
-    // pub public_key: Option<XfrPublicKey>,
+    let mut asset_type: [u8; ASSET_TYPE_LENGTH] = Default::default();
+    asset_type.copy_from_slice(cmd.asset_type.as_bytes());
 
-    // pub address: Address,
-
-    // pub amount: u64,
-
-    // pub asset_type: AssetType,
-
-    // pub confidential_amount: bool,
-
-    // pub confidential_asset: bool,
+    let t = entity::Transfer {
+        from: types::SecretKey::from_base64(&wallet.address)?
+            .key
+            .into_keypair(),
+        public_key: Some(types::PublicKey::from_base64(&wallet.public)?.key),
+        address: Address::from(
+            types::Address::from_base64(&entry_wallet::detect_address(&cmd.to_address)?)?.address,
+        ),
+        amount: cmd.amount,
+        asset_type: AssetType(asset_type),
+        confidential_amount: cmd.confidential_amount,
+        confidential_asset: cmd.confidential_asset,
+    };
 
     Ok(Box::new(0))
 }

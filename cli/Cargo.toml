@@ -17,3 +17,7 @@ anyhow = "1.0"
 home = "0.5"
 lazy_static = "1.4"
 console = "0.15"
+
+# need to discuss are below two dependencies needed for transfer command
+libfindora = { path = "../libfindora" }
+zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor-address-v1" }

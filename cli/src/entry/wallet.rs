@@ -52,7 +52,7 @@ impl<'a> ReadBuilder<'a> {
 
     pub fn build(&self) -> Result<Wallet> {
         let result = if let Some(address) = self.address {
-            let addr = self.wallets.detect_address(address)?;
+            let addr = detect_address(address)?;
             self.wallets.wallets.iter().find(|w| w.address == addr)
         } else if let Some(secret) = self.secret {
             self.wallets.wallets.iter().find(|w| w.secret == secret)
@@ -141,29 +141,27 @@ impl Wallets {
     }
 
     pub fn delete(&mut self, address: &str) -> Result<()> {
-        let addr = self
-            .detect_address(address)
-            .context("delete detect_address failed")?;
+        let addr = detect_address(address).context("delete detect_address failed")?;
         self.wallets.retain(|w| w.address != addr);
         self.save()
             .with_context(|| format!("delete on save failed: {}", address))?;
         Ok(())
     }
+}
 
-    fn detect_address(&self, address: &str) -> Result<String> {
-        if address.starts_with("0x") {
-            Ok(types::Address::from_eth(address)
-                .with_context(|| format!("detect_address::from_eth failed: {}", address))?
-                .to_base64()
-                .with_context(|| format!("detect_address::to_base64 failed: {}", address))?)
-        } else if address.starts_with("fra1") {
-            Ok(types::Address::from_bech32(address)
-                .with_context(|| format!("detect_address::from_bech32 failed: {}", address))?
-                .to_base64()
-                .with_context(|| format!("detect_address::to_base64 failed: {}", address))?)
-        } else {
-            bail!("detect_address unknown address format: {}", address)
-        }
+pub fn detect_address(address: &str) -> Result<String> {
+    if address.starts_with("0x") {
+        Ok(types::Address::from_eth(address)
+            .with_context(|| format!("detect_address::from_eth failed: {}", address))?
+            .to_base64()
+            .with_context(|| format!("detect_address::to_base64 failed: {}", address))?)
+    } else if address.starts_with("fra1") {
+        Ok(types::Address::from_bech32(address)
+            .with_context(|| format!("detect_address::from_bech32 failed: {}", address))?
+            .to_base64()
+            .with_context(|| format!("detect_address::to_base64 failed: {}", address))?)
+    } else {
+        bail!("detect_address unknown address format: {}", address)
     }
 }
 
