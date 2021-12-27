@@ -1,10 +1,10 @@
-use std::fmt::Display;
+use std::{fmt::Display, path::Path};
 
-use crate::config::Config;
+use crate::entry::wallet as entry_wallet;
 
 use anyhow::Result;
 use clap::{ArgGroup, Parser};
-use libfn::{entity, types, Builder};
+// use libfn::{entity, types, Builder};
 
 #[derive(Parser, Debug)]
 pub struct Command {
@@ -79,9 +79,10 @@ struct Show {
 }
 
 impl Command {
-    pub fn execute(&self, _config: Config) -> Result<Box<dyn Display>> {
+    pub fn execute(&self, home: &Path) -> Result<Box<dyn Display>> {
+        let wallets = entry_wallet::Wallets::new(home)?;
         match &self.subcmd {
-            SubCommand::Send(cmd) => send(cmd),
+            SubCommand::Send(cmd) => send(cmd, &wallets),
             SubCommand::Save(cmd) => save(cmd),
             SubCommand::Batch(cmd) => batch(cmd),
             SubCommand::Show(cmd) => show(cmd),
@@ -89,7 +90,22 @@ impl Command {
     }
 }
 
-fn send(_cmd: &Send) -> Result<Box<dyn Display>> {
+fn send(_cmd: &Send, _wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>> {
+    // pub from: XfrKeyPair,
+
+    // /// Zei's public key, if you want to receive confidential transaction, this field must provide.
+    // pub public_key: Option<XfrPublicKey>,
+
+    // pub address: Address,
+
+    // pub amount: u64,
+
+    // pub asset_type: AssetType,
+
+    // pub confidential_amount: bool,
+
+    // pub confidential_asset: bool,
+
     Ok(Box::new(0))
 }
 
