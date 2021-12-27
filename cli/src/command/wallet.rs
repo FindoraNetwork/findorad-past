@@ -25,7 +25,10 @@ enum SubCommand {
 
 #[derive(Parser, Debug)]
 struct Show {
-    /// The ETH compatible address to show the wallet information of the specific one
+    /// The
+    /// 1. ETH compatible address (0x...) or
+    /// 2. Findora addreess (fra...)
+    /// to show the wallet detail information of the specific one
     #[clap(short, long, forbid_empty_values = true)]
     address: Option<String>,
 }
@@ -42,7 +45,10 @@ struct Create {
 
 #[derive(Parser, Debug)]
 struct Delete {
-    /// The ETH compatible address to do the deletion
+    /// The
+    /// 1. ETH compatible address (0x...) or
+    /// 2. Findora addreess (fra...)
+    /// to do the deletion
     #[clap(forbid_empty_values = true)]
     address: String,
 }
@@ -62,7 +68,7 @@ impl Command {
 fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>> {
     let result = match &cmd.address {
         Some(addr) => {
-            let wallet = wallets.read(addr)?;
+            let wallet = wallets.read().from_address(addr).build()?;
 
             let c = display_wallet::Content {
                 name: wallet.name.clone(),
