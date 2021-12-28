@@ -1,11 +1,17 @@
+// use std::future::poll_fn;
 use std::{fmt::Display, path::Path};
 
 use crate::entry::wallet as entry_wallet;
 
 use anyhow::Result;
 use clap::{ArgGroup, Parser};
-use libfindora::Address;
 use libfn::{entity, types, Builder};
+
+use abcf_sdk::providers::HttpGetProvider;
+use futures::executor::block_on;
+use libfindora::Address;
+use rand_chacha::rand_core::SeedableRng;
+use rand_chacha::ChaChaRng;
 use zei::xfr::structs::{AssetType, ASSET_TYPE_LENGTH};
 
 #[derive(Parser, Debug)]
@@ -120,6 +126,12 @@ fn send(cmd: &Send, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
         confidential_asset: cmd.confidential_asset,
     };
 
+    let mut prng = ChaChaRng::from_entropy();
+    let mut provider = HttpGetProvider {};
+    let mut builder = Builder::default();
+
+    block_on(builder.from_entities(&mut prng, &mut provider, vec![entity::Entity::Transfer(t)]))?;
+    builder.build(&mut prng)?;
     Ok(Box::new(0))
 }
 
