@@ -100,9 +100,9 @@ impl Command {
 
 fn send(cmd: &Send, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>> {
     let wallet = if let Some(addr) = &cmd.from_address {
-        wallets.read().from_address(&addr).build()?
+        wallets.read().from_address(addr).build()?
     } else if let Some(secret) = &cmd.from_secret {
-        wallets.read().from_secret(&secret).build()?
+        wallets.read().from_secret(secret).build()?
     } else {
         // since the clap will check the input cannot be empty by atribute
         // forbid_empty_values = true
@@ -131,7 +131,8 @@ fn send(cmd: &Send, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
     let mut builder = Builder::default();
 
     block_on(builder.from_entities(&mut prng, &mut provider, vec![entity::Entity::Transfer(t)]))?;
-    builder.build(&mut prng)?;
+    let tx = builder.build(&mut prng)?;
+    tx.serialize()?;
     Ok(Box::new(0))
 }
 
