@@ -5,14 +5,12 @@ use crate::entry::wallet as entry_wallet;
 
 use anyhow::Result;
 use clap::{ArgGroup, Parser};
-use libfn::{entity, types, Builder};
+use libfn::{entity, Builder};
 
 use abcf_sdk::providers::HttpGetProvider;
 use futures::executor::block_on;
-use libfindora::Address;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaChaRng;
-use zei::xfr::structs::{AssetType, ASSET_TYPE_LENGTH};
 
 #[derive(Parser, Debug)]
 pub struct Command {
@@ -56,10 +54,10 @@ struct Send {
     to_address: String,
     /// Make the amount confidential in the transaction
     #[clap(short = 'A', long)]
-    confidential_amount: bool,
+    is_confidential_amount: bool,
     /// Make the asset code confidential in the transaction
     #[clap(short = 'T', long)]
-    confidential_asset: bool,
+    is_confidential_asset: bool,
 }
 
 #[derive(Parser, Debug)]
@@ -109,22 +107,15 @@ fn send(cmd: &Send, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
         unreachable!()
     };
 
-    let mut asset_type: [u8; ASSET_TYPE_LENGTH] = Default::default();
-    asset_type.copy_from_slice(cmd.asset_type.as_bytes());
-
-    let t = entity::Transfer {
-        from: types::SecretKey::from_base64(&wallet.address)?
-            .key
-            .into_keypair(),
-        public_key: Some(types::PublicKey::from_base64(&wallet.public)?.key),
-        address: Address::from(
-            types::Address::from_base64(&entry_wallet::detect_address(&cmd.to_address)?)?.address,
-        ),
-        amount: cmd.amount,
-        asset_type: AssetType(asset_type),
-        confidential_amount: cmd.confidential_amount,
-        confidential_asset: cmd.confidential_asset,
-    };
+    let t = entity::Transfer::builder()
+        .from(&wallet.address)
+        .public_key(&wallet.public)
+        .address(&entry_wallet::detect_address(&cmd.to_address)?)
+        .amount(cmd.amount)
+        .asset_type(&cmd.asset_type)
+        .confidential_amount(cmd.is_confidential_amount)
+        .confidential_asset(cmd.is_confidential_asset)
+        .build()?;
 
     let mut prng = ChaChaRng::from_entropy();
     let mut provider = HttpGetProvider {};

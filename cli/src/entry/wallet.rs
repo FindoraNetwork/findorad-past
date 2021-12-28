@@ -40,12 +40,12 @@ impl<'a> ReadBuilder<'a> {
         }
     }
 
-    pub fn from_address(&mut self, addr: &'a str) -> &'a ReadBuilder {
+    pub fn from_address(&mut self, addr: &'a str) -> &ReadBuilder {
         self.address = Some(addr);
         self
     }
 
-    pub fn from_secret(&mut self, secret: &'a str) -> &'a ReadBuilder {
+    pub fn from_secret(&mut self, secret: &'a str) -> &ReadBuilder {
         self.secret = Some(secret);
         self
     }

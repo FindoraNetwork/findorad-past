@@ -9,6 +9,7 @@ description = "Findora Network command line tool."
 
 [dependencies]
 libfn = { path = "../libfn" }
+abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", features = ["http"] }
 clap = { version = "3.0.0-rc.8", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.5"
@@ -17,10 +18,5 @@ anyhow = "1.0"
 home = "0.5"
 lazy_static = "1.4"
 console = "0.15"
-
-# need to discuss are below two dependencies needed for transfer command
-libfindora = { path = "../libfindora" }
-zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor-address-v1" }
 rand_chacha = "0.2" 
-abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", features = ["http"] }
 futures = "0.3"
