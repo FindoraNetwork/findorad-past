@@ -57,17 +57,20 @@ impl Display {
             let name = self.contents[index].name.as_ref().unwrap_or(&none);
             let eth_compatible_address =
                 self.fetcher(&self.contents[index].eth_compatible_address)?;
+            let fra_address = self.fetcher(&self.contents[index].fra_address)?;
             write!(
                 f,
                 "
 {} [{}]
-Name:    {}
-Address: {} (ETH Compatible Address)
+Name:                   {}
+ETH Compatible Address: {}
+Findora Address:        {}
                 ",
                 Emoji("👛", "$ "),
                 index + 1,
                 style(name).bold().white(),
                 style(eth_compatible_address).bold().white(),
+                style(fra_address).bold().white(),
             )?;
         }
         Ok(())
@@ -90,11 +93,11 @@ Address: {} (ETH Compatible Address)
             f,
             "
 {}
-Name:               {}
-Address:            {} (ETH Compatible)
-Findora Address:    {}
-Findora Public Key: {}
-Secret:             {}
+Name:                   {}
+ETH Compatible Address: {}
+Findora Address:        {}
+Findora Public Key:     {}
+Secret:                 {}
 Mnemonic:
 {}
             ",
@@ -113,17 +116,21 @@ Mnemonic:
             return Err(fmt::Error);
         }
 
-        let addr = self.fetcher(&self.contents[0].eth_compatible_address)?;
+        let eth_addr = self.fetcher(&self.contents[0].eth_compatible_address)?;
+        let fra_addr = self.fetcher(&self.contents[0].fra_address)?;
         write!(
             f,
             "
 {} {}
 {} ETH Compatible Address: {} 
+{} Findora Address:        {}
 ",
             Emoji("✨", ":)"),
             style("Success Created").bold().green(),
             Emoji("★ ", "* "),
-            style(addr).white()
+            style(eth_addr).white(),
+            Emoji("★ ", "* "),
+            style(fra_addr).white()
         )
     }
 
@@ -137,7 +144,7 @@ Mnemonic:
             f,
             "
 {} {}
-{} ETH Compatible Address: {}
+{} Address: {}
 ",
             Emoji("✨", ":)"),
             style("Success Deleted").bold().green(),
@@ -174,13 +181,27 @@ impl From<(String, DisplayType)> for Display {
     }
 }
 
-impl From<Vec<wallet::ListWallet>> for Display {
-    fn from(w: Vec<wallet::ListWallet>) -> Display {
+impl From<(wallet::WalletInfo, DisplayType)> for Display {
+    fn from(w: (wallet::WalletInfo, DisplayType)) -> Display {
+        Display {
+            contents: vec![Content {
+                eth_compatible_address: Some(w.0.eth_compatible_address),
+                fra_address: Some(w.0.fra_address),
+                ..Default::default()
+            }],
+            typ: w.1,
+        }
+    }
+}
+
+impl From<Vec<wallet::WalletInfo>> for Display {
+    fn from(w: Vec<wallet::WalletInfo>) -> Display {
         let contents = w
             .iter()
             .map(|v| Content {
                 name: v.name.clone(),
-                eth_compatible_address: Some(v.address.clone()),
+                eth_compatible_address: Some(v.eth_compatible_address.clone()),
+                fra_address: Some(v.fra_address.clone()),
                 ..Default::default()
             })
             .collect();
