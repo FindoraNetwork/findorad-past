@@ -1,7 +1,5 @@
 use std::fmt::Display;
 
-use crate::config::Config;
-
 use anyhow::{bail, Context, Result};
 use clap::Parser;
 use lazy_static::lazy_static;
@@ -20,18 +18,24 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn execute(&self, config: Config) -> Result<Box<dyn Display>> {
+    pub fn execute(&self, config: crate::config::Config) -> Result<Box<dyn Display>> {
         let mut config = config;
+        let mut result = vec![];
 
         if let Some(addr) = &self.set_rpc_server_address {
             if !is_address_validate(addr) {
                 bail!("address is not valid: {}", addr)
             }
+            result.push((
+                "RPC Server Address".to_string(),
+                config.node.address.clone(),
+                addr.clone(),
+            ));
             config.node.address = addr.clone();
-            config.save().context("save rpc_server_address failed")?;
         }
 
-        Ok(Box::new(0))
+        config.save().context("save rpc_server_address failed")?;
+        Ok(Box::new(crate::display::setup::Display::from(result)))
     }
 }
 

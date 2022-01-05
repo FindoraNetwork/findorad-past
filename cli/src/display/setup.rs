@@ -19,7 +19,7 @@ impl Display {
         writeln!(
             f,
             "{} {}",
-            Emoji("⚠️", "!?"),
+            Emoji("💡", "!?"),
             style("No changes made").bold().yellow()
         )
     }
@@ -30,15 +30,13 @@ impl Display {
                 f,
                 "
 {} {}
-Change from
-{}
-to
-{}
+{} {} {}
             ",
                 Emoji("📃", "!!"),
                 style(content.name.clone()).bold().white(),
-                style(content.before.clone()),
-                style(content.after.clone()),
+                style(content.before.clone()).bold().magenta(),
+                Emoji("➤ ", "->"),
+                style(content.after.clone()).bold().green(),
             )?
         }
         Ok(())
