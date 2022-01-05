@@ -18,8 +18,7 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn execute(&self, config: crate::config::Config) -> Result<Box<dyn Display>> {
-        let mut config = config;
+    pub fn execute(&self, config: &mut crate::config::Config) -> Result<Box<dyn Display>> {
         let mut result = vec![];
 
         if let Some(addr) = &self.set_rpc_server_address {
@@ -34,7 +33,7 @@ impl Command {
             config.node.address = addr.clone();
         }
 
-        config.save().context("save rpc_server_address failed")?;
+        config.save().context("save setup configs failed")?;
         Ok(Box::new(crate::display::setup::Display::from(result)))
     }
 }
@@ -45,4 +44,26 @@ impl Command {
 // 2. regex crate can be re-used in other places but url crate is not
 fn is_address_validate(addr: &str) -> bool {
     RPC_ADDR_REGEX.is_match(addr)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::Config;
+    use crate::utils::test_utils::TempDir;
+
+    #[test]
+    fn test_command_setup_execute_set_rpc_server_address() {
+        let home_path = TempDir::new("test_command_setup_execute_set_rpc_server_address").unwrap();
+        let mut cfg = Config::load(home_path.path()).unwrap();
+
+        let mut cmd = Command {
+            set_rpc_server_address: None,
+        };
+        assert!(cmd.execute(&mut cfg).is_ok());
+        cmd.set_rpc_server_address = Some("http://localhost:9090".to_string());
+        assert!(cmd.execute(&mut cfg).is_ok());
+        cmd.set_rpc_server_address = Some("invalid url".to_string());
+        assert!(cmd.execute(&mut cfg).is_err());
+    }
 }
