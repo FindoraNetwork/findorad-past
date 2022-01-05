@@ -2,14 +2,14 @@ use std::fmt::Display;
 
 use crate::config::Config;
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use clap::Parser;
 use lazy_static::lazy_static;
 use regex::Regex;
 
 lazy_static! {
     static ref RPC_ADDR_REGEX: Regex =
-        Regex::new(r"^(?:http(s)?://)?[\w.-]+(?:\.[\w\.-]+)*:\d*").unwrap();
+        Regex::new(r"(?:https?)://[-a-zA-Z0-9.]+:?([0-9]+)?").unwrap();
 }
 
 #[derive(Parser, Debug)]
@@ -28,7 +28,7 @@ impl Command {
                 bail!("address is not valid: {}", addr)
             }
             config.node.address = addr.clone();
-            config.save()?;
+            config.save().context("save rpc_server_address failed")?;
         }
 
         Ok(Box::new(0))
