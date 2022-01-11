@@ -1,4 +1,6 @@
+use crate::evm::EvmMemo;
+
 #[derive(Debug)]
 pub enum Memo {
-    Ethereum(Vec<u8>),
+    Ethereum(EvmMemo),
 }

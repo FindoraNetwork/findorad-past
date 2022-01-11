@@ -1,9 +1,9 @@
 mod evm;
 mod input;
+mod memo;
 mod output;
 mod proof;
 mod signature;
-mod memo;
 
 use crate::{transaction::Transaction, transaction_capnp::transaction, Result};
 use primitive_types::H512;

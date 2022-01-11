@@ -6,6 +6,8 @@ pub enum Error {
     Bs3Error(abcf::bs3::Error),
     NoOutputIndex,
     OutputOperationMustBeEvm,
+    RlpError(rlp::DecoderError),
+    OnlySupportLegacyTransaction,
 }
 
 impl From<abcf::bs3::Error> for Error {
@@ -32,7 +34,18 @@ impl From<Error> for abcf::Error {
                 80005,
                 format!("Output operation must be evm call."),
             ),
+            Error::RlpError(e) => abcf::Error::ABCIApplicationError(80005, format!("{:?}", e)),
+            Error::OnlySupportLegacyTransaction => abcf::Error::ABCIApplicationError(
+                80005,
+                format!("Only support legact transaction."),
+            ),
         }
+    }
+}
+
+impl From<rlp::DecoderError> for Error {
+    fn from(e: rlp::DecoderError) -> Self {
+        Self::RlpError(e)
     }
 }
 

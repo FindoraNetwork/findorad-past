@@ -1,8 +1,8 @@
 #![feature(generic_associated_types)]
 
-mod findorad;
-mod evm;
 mod config;
+mod evm;
+mod findorad;
 
 fn main() {
     env_logger::init();

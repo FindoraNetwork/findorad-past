@@ -2,20 +2,22 @@ use std::convert::TryFrom;
 
 use libfindora::{
     evm::Action,
-    transaction::{InputOperation, OutputOperation},
+    transaction::{InputOperation, OutputOperation, Memo},
     utxo::OutputId,
     Address,
 };
-
 use crate::Error;
 
 #[derive(Debug, Default)]
 pub struct EvmTransaction {
-    pub from: OutputId,
+    pub chain_id: Option<u64>,
+    pub from: Option<Address>,
+    pub from_output: Option<OutputId>,
     pub to: Address,
     pub nonce: u64,
     pub data: Vec<u8>,
     pub action: Action,
+    pub gas_limit: u64,
 }
 
 #[derive(Debug, Default)]
@@ -31,10 +33,44 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
     }
 }
 
+// fn parse_ethereum_to_tx(bytes: &[u8]) -> EvmTransaction {
+    // use rlp::Decodable;
+    //
+    // let rlp = rlp::Rlp::new(bytes);
+    //
+    // let eth = ethereum::TransactionV2::decode(&rlp)?;
+    //
+    // match eth {
+    //     ethereum::TransactionV2::Legacy(e) => EvmTransaction {
+    //         from: Address::Eth(e.)
+    //     }
+    // }
+// }
+
 fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
     let mut txs = Vec::new();
 
+    // verify ethereum memo.
+
+    for memo in &tx.memos {
+        match memo {
+            Memo::Ethereum(bytes) => {
+                // verify tx signature.
+
+                // verify utxo type.
+
+                // parse ethereum.
+//                 let rlp = Rlp::new(&bytes.tx);
+                // match ethereum::TransactionV2::decode(&rlp)? {
+                //     TransactionV2::Legacy(e) => {},
+                //     _ => return Err(Error::OnlySupportLegacyTransaction);
+//                 }
+            }
+        }
+    }
+
     for input in &tx.inputs {
+
         if let InputOperation::EvmCall(a) = &input.operation {
             let from = OutputId {
                 txid: input.txid,
@@ -47,19 +83,19 @@ fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
             let to = output.core.address.clone();
 
             if let OutputOperation::EvmCall(e) = &output.operation {
-                let nonce = e.nonce;
-                let data = e.data.clone();
-                let action = e.action.clone();
-
-                let etx = EvmTransaction {
-                    from,
-                    to,
-                    nonce,
-                    data,
-                    action,
-                };
-
-                txs.push(etx);
+//                 let nonce = e.nonce;
+                // let data = e.data.clone();
+                // let action = e.action.clone();
+                //
+                // let etx = EvmTransaction {
+                //     from,
+                //     to,
+                //     nonce,
+                //     data,
+                //     action,
+                // };
+                //
+//                 txs.push(etx);
             } else {
                 return Err(Error::OutputOperationMustBeEvm);
             }

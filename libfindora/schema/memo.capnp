@@ -2,6 +2,7 @@
 
 struct Ethereum {
     data @0: Data;
+    n @1: UInt32;
 }
 
 struct Memo {

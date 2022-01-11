@@ -10,7 +10,7 @@ use crate::{transaction_capnp, Address, Error, Result};
 use super::{
     bytes::{deserialize, serialize},
     signature::Signature,
-    FraSignature, Input, Output, Memo,
+    FraSignature, Input, Memo, Output,
 };
 
 #[derive(Debug)]
@@ -95,6 +95,14 @@ impl Transaction {
         self.txid = H512::from_slice(txid.as_slice());
 
         Ok(())
+    }
+
+    pub fn verify(&self, _bytes: &[u8]) -> Result<bool> {
+        // verify tx signature using  here.
+
+        // skip memo for ethereum.
+
+        Ok(true)
     }
 }
 

@@ -3,6 +3,12 @@ use primitive_types::H256;
 use crate::asset::Amount;
 
 #[derive(Debug, Clone)]
+pub struct EvmMemo {
+    pub tx: Vec<u8>,
+    pub n: u32,
+}
+
+#[derive(Debug, Clone)]
 pub struct Input {
     pub n: u32,
 }

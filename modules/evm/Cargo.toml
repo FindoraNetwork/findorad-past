@@ -21,3 +21,8 @@ libfindora = { path = "../../libfindora" }
 fm-utxo = { path = "../utxo" }
 
 primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
+
+rlp = "0.5.1"
+ethereum = "0.10.0"
+
+libsecp256k1 = "0.7.0"
