@@ -21,19 +21,16 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
         for output in &tx.outputs {
             let core = &output.core;
 
-            match output.operation {
-                libfindora::OutputOperation::Fee => {
-                    if core.asset == FRA.asset_type && core.address == Address::BlockHole {
-                        let n = core
-                            .amount
-                            .get_amount()
-                            .ok_or_else(|| Error::MustBeNonConfidentialAmount)?;
-                        amount = amount.checked_add(n).ok_or_else(|| Error::OverflowAdd)?;
-                    } else {
-                        return Err(Error::MustUseFraAndBlockHole.into());
-                    }
+            if let libfindora::OutputOperation::Fee = output.operation {
+                if core.asset == FRA.asset_type && core.address == Address::BlockHole {
+                    let n = core
+                        .amount
+                        .get_amount()
+                        .ok_or(Error::MustBeNonConfidentialAmount)?;
+                    amount = amount.checked_add(n).ok_or(Error::OverflowAdd)?;
+                } else {
+                    return Err(Error::MustUseFraAndBlockHole.into());
                 }
-                _ => {}
             }
         }
 

@@ -1,10 +1,12 @@
 use libfindora::Address;
 
+use crate::types;
+
 use rand_core::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
 
 use zei::xfr::asset_record::AssetRecordType;
-use zei::xfr::structs::AssetType;
+use zei::xfr::structs::{AssetType, ASSET_TYPE_LENGTH};
 use zei::xfr::{
     sig::{XfrKeyPair, XfrPublicKey},
     structs::{AssetRecord, AssetRecordTemplate},
@@ -30,7 +32,74 @@ pub struct Transfer {
     pub confidential_asset: bool,
 }
 
+#[derive(Default)]
+pub struct TransferBuilder<'a> {
+    from: &'a str,
+    public_key: &'a str,
+    address: &'a str,
+    amount: u64,
+    asset_type: &'a str,
+    confidential_amount: bool,
+    confidential_asset: bool,
+}
+
+impl<'a> TransferBuilder<'a> {
+    pub fn from(mut self, f: &'a str) -> TransferBuilder {
+        self.from = f;
+        self
+    }
+
+    pub fn public_key(mut self, key: &'a str) -> TransferBuilder {
+        self.public_key = key;
+        self
+    }
+
+    pub fn address(mut self, addr: &'a str) -> TransferBuilder {
+        self.address = addr;
+        self
+    }
+
+    pub fn amount(mut self, a: u64) -> TransferBuilder<'a> {
+        self.amount = a;
+        self
+    }
+
+    pub fn asset_type(mut self, typ: &'a str) -> TransferBuilder {
+        self.asset_type = typ;
+        self
+    }
+
+    pub fn confidential_amount(mut self, b: bool) -> TransferBuilder<'a> {
+        self.confidential_amount = b;
+        self
+    }
+
+    pub fn confidential_asset(mut self, b: bool) -> TransferBuilder<'a> {
+        self.confidential_asset = b;
+        self
+    }
+
+    pub fn build(self) -> Result<Transfer> {
+        let mut asset_type: [u8; ASSET_TYPE_LENGTH] = Default::default();
+        asset_type.copy_from_slice(self.asset_type.as_bytes());
+
+        Ok(Transfer {
+            from: types::SecretKey::from_base64(self.from)?.key.into_keypair(),
+            public_key: Some(types::PublicKey::from_base64(self.public_key)?.key),
+            address: Address::from(types::Address::from_base64(self.address)?.address),
+            amount: self.amount,
+            asset_type: AssetType(asset_type),
+            confidential_amount: self.confidential_amount,
+            confidential_asset: self.confidential_asset,
+        })
+    }
+}
+
 impl Transfer {
+    pub fn builder() -> TransferBuilder<'static> {
+        TransferBuilder::default()
+    }
+
     pub fn to_output_asset_record<R: CryptoRng + RngCore>(
         &self,
         prng: &mut R,
@@ -50,7 +119,7 @@ impl Transfer {
                 let asset_record_type =
                     AssetRecordType::from_flags(self.confidential_amount, self.confidential_asset);
                 (
-                    self.public_key.ok_or_else(|| Error::KeyMustBeSet)?,
+                    self.public_key.ok_or(Error::KeyMustBeSet)?,
                     asset_record_type,
                 )
             }

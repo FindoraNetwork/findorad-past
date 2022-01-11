@@ -57,7 +57,7 @@ impl Application for UtxoModule {
             &mut self.params,
             &mut self.prng,
             &mut context.stateful.outputs_set,
-            &tx,
+            tx,
         )?;
 
         // TODO: 此代码可优化，倾向于删除同一个地址下的全部输出

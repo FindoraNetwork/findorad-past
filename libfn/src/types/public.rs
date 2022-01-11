@@ -1,8 +1,9 @@
 use bech32::{FromBase32, ToBase32};
 use primitive_types::H160;
-use ruc::*;
 use sha3::Digest;
 use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrPublicKey};
+
+use crate::{Error, Result};
 
 use super::Address;
 
@@ -12,12 +13,11 @@ pub struct PublicKey {
 
 impl PublicKey {
     pub fn to_bech32(&self) -> Result<String> {
-        bech32::encode(
+        Ok(bech32::encode(
             "fra",
             self.key.zei_to_bytes().to_base32(),
             bech32::Variant::Bech32,
-        )
-        .c(d!())
+        )?)
     }
 
     pub fn to_base64(&self) -> Result<String> {
@@ -25,13 +25,13 @@ impl PublicKey {
     }
 
     pub fn from_bech32(s: &str) -> Result<Self> {
-        let (prefix, key, _) = bech32::decode(s).c(d!())?;
+        let (prefix, key, _) = bech32::decode(s)?;
 
         if prefix != "fra" {
-            return Err(eg!("fra public key must be fra"));
+            return Err(Error::FraAddressFormatError);
         }
 
-        let key = Vec::from_base32(&key).c(d!())?;
+        let key = Vec::from_base32(&key)?;
 
         Ok(PublicKey {
             key: XfrPublicKey::zei_from_bytes(&key)?,
@@ -39,7 +39,7 @@ impl PublicKey {
     }
 
     pub fn from_base64(s: &str) -> Result<Self> {
-        let key = base64::decode(s).c(d!())?;
+        let key = base64::decode(s)?;
 
         Ok(PublicKey {
             key: XfrPublicKey::zei_from_bytes(&key)?,

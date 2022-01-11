@@ -1,7 +1,8 @@
 use bip0039::{Language, Mnemonic};
 use ed25519_dalek_bip32::{DerivationPath, ExtendedSecretKey};
-use ruc::*;
 use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrSecretKey};
+
+use crate::Result;
 
 use super::PublicKey;
 
@@ -15,7 +16,7 @@ impl SecretKey {
     }
 
     pub fn from_base64(s: &str) -> Result<Self> {
-        let key = base64::decode(s).c(d!())?;
+        let key = base64::decode(s)?;
 
         Ok(SecretKey {
             key: XfrSecretKey::zei_from_bytes(&key)?,
@@ -23,15 +24,12 @@ impl SecretKey {
     }
 
     pub fn from_mnemonic(s: &str) -> Result<Self> {
-        let mnemonic = Mnemonic::from_phrase_in(Language::English, s).c(d!())?;
+        let mnemonic = Mnemonic::from_phrase_in(Language::English, s)?;
         let seed = mnemonic.to_seed("");
-        let dp = DerivationPath::bip44(917, 0, 0, 0).map_err(|e| eg!(e))?;
-        let esk = ExtendedSecretKey::from_seed(&seed)
-            .map_err(|e| eg!(e))?
-            .derive(&dp)
-            .map_err(|e| eg!(e))?;
+        let dp = DerivationPath::bip44(917, 0, 0, 0)?;
+        let esk = ExtendedSecretKey::from_seed(&seed)?.derive(&dp)?;
 
-        let key = XfrSecretKey::zei_from_bytes(&esk.secret_key.to_bytes()[..]).c(d!())?;
+        let key = XfrSecretKey::zei_from_bytes(&esk.secret_key.to_bytes()[..])?;
         Ok(SecretKey { key })
     }
 

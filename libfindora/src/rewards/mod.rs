@@ -31,35 +31,32 @@ impl TryFrom<&transaction::Transaction> for Transaction {
         let mut infos = Vec::new();
 
         for output in &tx.outputs {
-            match &output.operation {
-                transaction::OutputOperation::ClaimReward(op) => {
-                    if output.core.asset != FRA.asset_type {
-                        return Err(abcf::Error::ABCIApplicationError(
-                            90001,
-                            String::from("Undelegate asset type must be FRA"),
-                        ));
-                    }
-
-                    let delegator = output.core.address.clone();
-                    let amount = if let XfrAmount::NonConfidential(v) = output.core.amount {
-                        v
-                    } else {
-                        return Err(abcf::Error::ABCIApplicationError(
-                            90001,
-                            String::from("Undelegate amount must be Non-confidential"),
-                        ));
-                    };
-                    let operation = Operation::Claim(op.clone());
-
-                    let info = RewardInfo {
-                        delegator,
-                        amount,
-                        operation,
-                    };
-
-                    infos.push(info);
+            if let transaction::OutputOperation::ClaimReward(op) = &output.operation {
+                if output.core.asset != FRA.asset_type {
+                    return Err(abcf::Error::ABCIApplicationError(
+                        90001,
+                        String::from("Undelegate asset type must be FRA"),
+                    ));
                 }
-                _ => {}
+
+                let delegator = output.core.address.clone();
+                let amount = if let XfrAmount::NonConfidential(v) = output.core.amount {
+                    v
+                } else {
+                    return Err(abcf::Error::ABCIApplicationError(
+                        90001,
+                        String::from("Undelegate amount must be Non-confidential"),
+                    ));
+                };
+                let operation = Operation::Claim(op.clone());
+
+                let info = RewardInfo {
+                    delegator,
+                    amount,
+                    operation,
+                };
+
+                infos.push(info);
             }
         }
 

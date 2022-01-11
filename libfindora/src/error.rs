@@ -1,4 +1,4 @@
-use std::{array::TryFromSliceError, num::TryFromIntError};
+use std::{array::TryFromSliceError, fmt::Display, num::TryFromIntError};
 
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -14,6 +14,29 @@ pub enum Error {
     Unknown,
     MustBeNonConfidentialAsset,
     AlreadySign,
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl std::error::Error for Error {
+    fn description(&self) -> &str {
+        match self {
+            Self::CapnpError(_) => "capnp error",
+            Self::CapnpNotInSchema(_) => "capnp not in schema",
+            Self::RucError(_) => "error cause by ruc",
+            Self::TryFromSliceError(_) => "try from slice error",
+            Self::TryFromIntError(_) => "try from int error",
+            Self::ChaumPedersenProofParseError => "chaum pedersen proof parse error",
+            Self::OverflowAdd => "add overflow",
+            Self::Unknown => "unknown error",
+            Self::MustBeNonConfidentialAsset => "must be use non-confidential asset",
+            Self::AlreadySign => "already sign",
+        }
+    }
 }
 
 impl From<capnp::Error> for Error {

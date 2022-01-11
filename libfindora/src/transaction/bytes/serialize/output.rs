@@ -94,7 +94,7 @@ pub fn build_output(output: &Output, builder: output::Builder) -> Result<()> {
                         let mut k = key.reborrow().init_key();
                         match v {
                             ValidatorPublicKey::Ed25519(v) => {
-                                k.set_ed25519(&v);
+                                k.set_ed25519(v);
                             }
                             ValidatorPublicKey::Secp256k1(v) => {
                                 k.set_secp256k1(v);
