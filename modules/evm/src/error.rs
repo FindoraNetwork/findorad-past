@@ -8,6 +8,7 @@ pub enum Error {
     OutputOperationMustBeEvm,
     RlpError(rlp::DecoderError),
     OnlySupportLegacyTransaction,
+    Secp256k1Error(libsecp256k1::Error),
 }
 
 impl From<abcf::bs3::Error> for Error {
@@ -19,6 +20,12 @@ impl From<abcf::bs3::Error> for Error {
 impl From<TryFromIntError> for Error {
     fn from(e: TryFromIntError) -> Self {
         Self::TryFromIntError(e)
+    }
+}
+
+impl From<libsecp256k1::Error> for Error {
+    fn from(e: libsecp256k1::Error) -> Self {
+        Self::Secp256k1Error(e)
     }
 }
 
@@ -39,6 +46,7 @@ impl From<Error> for abcf::Error {
                 80005,
                 format!("Only support legact transaction."),
             ),
+            Error::Secp256k1Error(e) => abcf::Error::ABCIApplicationError(80005, format!("{:?}", e)),
         }
     }
 }

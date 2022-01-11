@@ -14,4 +14,3 @@ pub use signature::{FraSignature, Signature};
 
 mod memo;
 pub use memo::Memo;
-

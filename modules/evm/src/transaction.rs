@@ -1,12 +1,12 @@
 use std::convert::TryFrom;
 
+use crate::Error;
 use libfindora::{
     evm::Action,
-    transaction::{InputOperation, OutputOperation, Memo},
+    transaction::{InputOperation, Memo, OutputOperation},
     utxo::OutputId,
     Address,
 };
-use crate::Error;
 
 #[derive(Debug, Default)]
 pub struct EvmTransaction {
@@ -33,20 +33,6 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
     }
 }
 
-// fn parse_ethereum_to_tx(bytes: &[u8]) -> EvmTransaction {
-    // use rlp::Decodable;
-    //
-    // let rlp = rlp::Rlp::new(bytes);
-    //
-    // let eth = ethereum::TransactionV2::decode(&rlp)?;
-    //
-    // match eth {
-    //     ethereum::TransactionV2::Legacy(e) => EvmTransaction {
-    //         from: Address::Eth(e.)
-    //     }
-    // }
-// }
-
 fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
     let mut txs = Vec::new();
 
@@ -60,17 +46,16 @@ fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
                 // verify utxo type.
 
                 // parse ethereum.
-//                 let rlp = Rlp::new(&bytes.tx);
+                //                 let rlp = Rlp::new(&bytes.tx);
                 // match ethereum::TransactionV2::decode(&rlp)? {
                 //     TransactionV2::Legacy(e) => {},
                 //     _ => return Err(Error::OnlySupportLegacyTransaction);
-//                 }
+                //                 }
             }
         }
     }
 
     for input in &tx.inputs {
-
         if let InputOperation::EvmCall(a) = &input.operation {
             let from = OutputId {
                 txid: input.txid,
@@ -83,7 +68,7 @@ fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
             let to = output.core.address.clone();
 
             if let OutputOperation::EvmCall(e) = &output.operation {
-//                 let nonce = e.nonce;
+                //                 let nonce = e.nonce;
                 // let data = e.data.clone();
                 // let action = e.action.clone();
                 //
@@ -95,7 +80,7 @@ fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
                 //     action,
                 // };
                 //
-//                 txs.push(etx);
+                //                 txs.push(etx);
             } else {
                 return Err(Error::OutputOperationMustBeEvm);
             }

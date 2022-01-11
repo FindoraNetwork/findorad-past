@@ -1,11 +1,38 @@
-use rlp::{Rlp, Decodable};
+use ethereum::{TransactionV2, LegacyTransactionMessage};
+use libfindora::Address;
+use primitive_types::{H160, H256};
+use rlp::{Decodable, Rlp};
+use sha3::{Digest, Keccak256};
 
-use crate::{Result, transaction::EvmTransaction};
+use crate::{transaction::EvmTransaction, Result, Error};
 
-pub fn convert_to_ethereum_tx(bytes: &[u8]) -> Result<EvmTransaction> {
+use super::crypto::recover_address;
+
+pub fn convert_from_ethereum_tx(bytes: &[u8]) -> Result<EvmTransaction> {
     let rlp = Rlp::new(bytes);
 
-    let etx = ethereum::TransactionV2::decode(&rlp)?;
+    let etx = match TransactionV2::decode(&rlp)? {
+        TransactionV2::Legacy(tx) => tx,
+        _ => return Err(Error::OnlySupportLegacyTransaction),
+    };
 
-    // let address =
+    let msg = LegacyTransactionMessage::from(etx.clone()).hash().0;
+
+    let signature = &etx.signature;
+
+    let pubkey = recover_address(signature, &msg)?;
+
+    let mut res = [0u8; 64];
+    res.copy_from_slice(&pubkey.serialize()[1..65]);
+
+    let eaddr = H160::from(H256::from_slice(&Keccak256::digest(&res)));
+
+    let chain_id = etx.signature.chain_id();
+    let from = Some(Address::Eth(eaddr));
+    let from_output = None;
+    // let to = Address::Eth()
+
+    // let eaddr =
+
+    Ok(Default::default())
 }
