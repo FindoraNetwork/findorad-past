@@ -39,12 +39,12 @@ pub struct Opts {
 
 impl Opts {
     pub fn execute(&self) -> Result<Box<dyn Display>> {
-        let config = Config::load(&self.home)?;
+        let mut config = Config::load(&self.home)?;
 
         match &self.subcmd {
             SubCommand::Asset(c) => c.execute(config),
             SubCommand::Delegate(c) => c.execute(config),
-            SubCommand::Setup(c) => c.execute(config),
+            SubCommand::Setup(c) => c.execute(&mut config),
             SubCommand::Transfer(c) => c.execute(&self.home),
             SubCommand::Wallet(c) => c.execute(&self.home),
         }
