@@ -1,4 +1,4 @@
-use ethereum::{TransactionV2, LegacyTransactionMessage};
+use ethereum::{TransactionV2, LegacyTransactionMessage, TransactionAction};
 use libfindora::Address;
 use primitive_types::{H160, H256};
 use rlp::{Decodable, Rlp};
@@ -29,7 +29,16 @@ pub fn convert_from_ethereum_tx(bytes: &[u8]) -> Result<EvmTransaction> {
 
     let chain_id = etx.signature.chain_id();
     let from = Some(Address::Eth(eaddr));
-    let from_output = None;
+    // let from_output = None;
+    let nonce = etx.nonce;
+    let data = etx.input;
+    let gas_limit = etx.gas_limit;
+
+    match etx.action {
+        TransactionAction::Create => {},
+        TransactionAction::Call(e) => {},
+    }
+
     // let to = Address::Eth()
 
     // let eaddr =
