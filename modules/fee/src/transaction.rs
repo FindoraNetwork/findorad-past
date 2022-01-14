@@ -1,6 +1,5 @@
 use libfindora::{
     asset::{Amount, FRA},
-    Address,
 };
 
 use crate::Error;
@@ -22,7 +21,7 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
             let core = &output.core;
 
             if let libfindora::OutputOperation::Fee = output.operation {
-                if core.asset == FRA.asset_type && core.address == Address::BlockHole {
+                if core.asset == FRA.asset_type && core.address.is_blockhole() {
                     let n = core
                         .amount
                         .get_amount()
