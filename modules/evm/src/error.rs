@@ -46,7 +46,9 @@ impl From<Error> for abcf::Error {
                 80005,
                 format!("Only support legact transaction."),
             ),
-            Error::Secp256k1Error(e) => abcf::Error::ABCIApplicationError(80005, format!("{:?}", e)),
+            Error::Secp256k1Error(e) => {
+                abcf::Error::ABCIApplicationError(80005, format!("{:?}", e))
+            }
         }
     }
 }

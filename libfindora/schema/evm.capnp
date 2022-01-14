@@ -8,15 +8,20 @@ struct Input {
     n @0: UInt32;
 }
 
-struct Output {
-    nonce @0 : UInt64;
-    gasLimit @1: UInt64;
-    data @2: Data;
-    action :union {
-        call @3: Void;
-        create @4: Void;
-        create2 @5: Create;
+struct Action {
+    action: union {
+        call @0: Void;
+        create @1: Void;
+        create2 @2: Create;
     }
+}
+
+struct Output {
+    chainId @0 :UInt64;
+    nonce @1 : UInt64;
+    gasLimit @2: UInt64;
+    data @3: Data;
+    action @4: Action;
 }
 
 

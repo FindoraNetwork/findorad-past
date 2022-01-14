@@ -1,10 +1,10 @@
-use ethereum::{TransactionV2, LegacyTransactionMessage, TransactionAction};
+use ethereum::{LegacyTransactionMessage, TransactionAction, TransactionV2};
 use libfindora::Address;
 use primitive_types::{H160, H256};
 use rlp::{Decodable, Rlp};
 use sha3::{Digest, Keccak256};
 
-use crate::{transaction::EvmTransaction, Result, Error};
+use crate::{transaction::EvmTransaction, Error, Result};
 
 use super::crypto::recover_address;
 
@@ -35,8 +35,8 @@ pub fn convert_from_ethereum_tx(bytes: &[u8]) -> Result<EvmTransaction> {
     let gas_limit = etx.gas_limit;
 
     match etx.action {
-        TransactionAction::Create => {},
-        TransactionAction::Call(e) => {},
+        TransactionAction::Create => {}
+        TransactionAction::Call(e) => {}
     }
 
     // let to = Address::Eth()

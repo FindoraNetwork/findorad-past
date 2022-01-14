@@ -10,7 +10,7 @@ use libfindora::{
 
 #[derive(Debug, Default)]
 pub struct EvmTransaction {
-    pub chain_id: Option<u64>,
+    pub chain_id: u64,
     pub from: Option<Address>,
     pub from_output: Option<OutputId>,
     pub to: Address,
@@ -39,7 +39,7 @@ fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
     // verify ethereum memo.
     for memo in &tx.memos {
         match memo {
-            Memo::Ethereum(bytes) => {
+            Memo::Ethereum(_) => {
                 // verify tx signature.
 
                 // verify utxo type.
@@ -67,19 +67,24 @@ fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
             let to = output.core.address.clone();
 
             if let OutputOperation::EvmCall(e) = &output.operation {
-                //                 let nonce = e.nonce;
-                // let data = e.data.clone();
-                // let action = e.action.clone();
-                //
-                // let etx = EvmTransaction {
-                //     from,
-                //     to,
-                //     nonce,
-                //     data,
-                //     action,
-                // };
-                //
-                //                 txs.push(etx);
+                let nonce = e.nonce;
+                let data = e.data.clone();
+                let action = e.action.clone();
+                let gas_limit = e.gas_limit;
+                let chain_id = e.chain_id;
+
+                let etx = EvmTransaction {
+                    from: None,
+                    from_output: Some(from),
+                    to,
+                    nonce,
+                    data,
+                    action,
+                    gas_limit,
+                    chain_id,
+                };
+
+                txs.push(etx);
             } else {
                 return Err(Error::OutputOperationMustBeEvm);
             }

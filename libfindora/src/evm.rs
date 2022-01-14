@@ -37,4 +37,5 @@ pub struct Evm {
     pub gas_limit: Amount,
     pub data: Vec<u8>,
     pub action: Action,
+    pub chain_id: u64,
 }
