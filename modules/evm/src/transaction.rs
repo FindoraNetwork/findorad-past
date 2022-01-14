@@ -37,7 +37,6 @@ fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
     let mut txs = Vec::new();
 
     // verify ethereum memo.
-
     for memo in &tx.memos {
         match memo {
             Memo::Ethereum(bytes) => {
