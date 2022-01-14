@@ -9,6 +9,7 @@ pub enum Error {
     RlpError(rlp::DecoderError),
     OnlySupportLegacyTransaction,
     Secp256k1Error(libsecp256k1::Error),
+    AmountTypeMustBeNonConfidential,
 }
 
 impl From<abcf::bs3::Error> for Error {
@@ -49,6 +50,10 @@ impl From<Error> for abcf::Error {
             Error::Secp256k1Error(e) => {
                 abcf::Error::ABCIApplicationError(80005, format!("{:?}", e))
             }
+            Error::AmountTypeMustBeNonConfidential => abcf::Error::ABCIApplicationError(
+                80005,
+                format!("Amount type must be non-confidential."),
+            ),
         }
     }
 }

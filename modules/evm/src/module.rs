@@ -1,7 +1,7 @@
 use abcf::{
-    bs3::{merkle::append_only::AppendOnlyMerkle, model::Value, MapStore},
+    bs3::{merkle::append_only::AppendOnlyMerkle, model::Value},
     module::types::{
-        RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx, ResponseEndBlock,
+        RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx
     },
     Application, TxnContext,
 };
@@ -29,20 +29,18 @@ impl Application for EvmModule {
 
     async fn check_tx(
         &mut self,
-        context: &mut TxnContext<'_, Self>,
-        req: &RequestCheckTx<Self::Transaction>,
+        _context: &mut TxnContext<'_, Self>,
+        _req: &RequestCheckTx<Self::Transaction>,
     ) -> abcf::Result<ResponseCheckTx> {
-        let tx = &req.tx;
-
-        for account in &tx.txs {}
+        // let tx = &req.tx;
 
         Ok(Default::default())
     }
 
     async fn deliver_tx(
         &mut self,
-        context: &mut TxnContext<'_, Self>,
-        req: &RequestDeliverTx<Self::Transaction>,
+        _context: &mut TxnContext<'_, Self>,
+        _req: &RequestDeliverTx<Self::Transaction>,
     ) -> abcf::Result<ResponseDeliverTx> {
         Ok(Default::default())
     }

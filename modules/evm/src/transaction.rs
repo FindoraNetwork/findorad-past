@@ -1,20 +1,18 @@
-use std::convert::TryFrom;
+use std::{collections::BTreeMap, convert::TryFrom};
 
 use crate::Error;
 use libfindora::{
-    evm::Action,
-    transaction::{InputOperation, Memo, OutputOperation},
-    utxo::OutputId,
-    Address,
+    asset::XfrAmount, evm::Action, transaction::OutputOperation, utxo::OutputId, Address,
 };
 
 #[derive(Debug, Default)]
 pub struct EvmTransaction {
     pub chain_id: u64,
     pub from: Option<Address>,
-    pub from_output: Option<OutputId>,
+    pub from_output: Vec<OutputId>,
     pub to: Address,
     pub nonce: u64,
+    pub amount: u64,
     pub data: Vec<u8>,
     pub action: Action,
     pub gas_limit: u64,
@@ -36,58 +34,64 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
 fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
     let mut txs = Vec::new();
 
-    // verify ethereum memo.
-    for memo in &tx.memos {
-        match memo {
-            Memo::Ethereum(_) => {
-                // verify tx signature.
+    let mut out_indexes: BTreeMap<u32, Vec<OutputId>> = BTreeMap::new();
 
-                // verify utxo type.
+    // Verify signature for evm.
 
-                // parse ethereum.
-                //                 let rlp = Rlp::new(&bytes.tx);
-                // match ethereum::TransactionV2::decode(&rlp)? {
-                //     TransactionV2::Legacy(e) => {},
-                //     _ => return Err(Error::OnlySupportLegacyTransaction);
-                //                 }
-            }
+    for input in &tx.inputs {
+        if let Some(value) = out_indexes.get_mut(&input.n) {
+            value.push(OutputId {
+                txid: input.txid,
+                n: input.n,
+            });
+        } else {
+            let mut value = Vec::new();
+            value.push(OutputId {
+                txid: input.txid,
+                n: input.n,
+            });
+            out_indexes.insert(input.n, value);
         }
     }
 
-    for input in &tx.inputs {
-        if let InputOperation::EvmCall(a) = &input.operation {
-            let from = OutputId {
-                txid: input.txid,
-                n: input.n,
-            };
+    for index in 0..tx.outputs.len() {
+        let output = &tx.outputs[index];
 
-            let n: usize = a.n.try_into()?;
-
-            let output = tx.outputs.get(n).ok_or_else(|| Error::NoOutputIndex)?;
+        if let OutputOperation::EvmCall(e) = &output.operation {
+            let nonce = e.nonce;
+            let data = e.data.clone();
+            let action = e.action.clone();
+            let gas_limit = e.gas_limit;
+            let chain_id = e.chain_id;
             let to = output.core.address.clone();
 
-            if let OutputOperation::EvmCall(e) = &output.operation {
-                let nonce = e.nonce;
-                let data = e.data.clone();
-                let action = e.action.clone();
-                let gas_limit = e.gas_limit;
-                let chain_id = e.chain_id;
+            let index: u32 = index.try_into()?;
 
-                let etx = EvmTransaction {
-                    from: None,
-                    from_output: Some(from),
-                    to,
-                    nonce,
-                    data,
-                    action,
-                    gas_limit,
-                    chain_id,
-                };
-
-                txs.push(etx);
+            let from_output = if let Some(v) = out_indexes.get(&index) {
+                v.clone()
             } else {
-                return Err(Error::OutputOperationMustBeEvm);
-            }
+                return Err(Error::NoOutputIndex);
+            };
+
+            let amount = if let XfrAmount::NonConfidential(amount) = output.core.amount {
+                amount
+            } else {
+                return Err(Error::AmountTypeMustBeNonConfidential);
+            };
+
+            let etx = EvmTransaction {
+                from: None,
+                from_output,
+                to,
+                nonce,
+                amount,
+                data,
+                action,
+                gas_limit,
+                chain_id,
+            };
+
+            txs.push(etx);
         }
     }
 

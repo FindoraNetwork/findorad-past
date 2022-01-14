@@ -2,7 +2,7 @@ use primitive_types::H256;
 
 use crate::{
     evm::{Action, Create2, Evm},
-    evm_capnp::{output, action::action},
+    evm_capnp::{action::action, output},
     Result,
 };
 
