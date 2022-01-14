@@ -36,8 +36,6 @@ fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
 
     let mut out_indexes: BTreeMap<u32, Vec<OutputId>> = BTreeMap::new();
 
-    // Verify signature for evm.
-
     for input in &tx.inputs {
         if let Some(value) = out_indexes.get_mut(&input.n) {
             value.push(OutputId {
@@ -90,6 +88,8 @@ fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
                 gas_limit,
                 chain_id,
             };
+
+            // Verify signature for evm.
 
             txs.push(etx);
         }
