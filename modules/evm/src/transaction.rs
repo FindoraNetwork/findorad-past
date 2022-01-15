@@ -89,7 +89,7 @@ fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
                 chain_id,
             };
 
-            // Verify signature for evm.
+            // Verify signature and arguments for evm.
 
             txs.push(etx);
         }
