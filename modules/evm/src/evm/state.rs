@@ -1,15 +1,15 @@
 use abcf::bs3::{DoubleKeyMapStore, MapStore};
 use evm::{
     backend::{Backend, Basic},
-    executor::stack::StackSubstateMetadata,
+    executor::stack::{StackState, StackSubstateMetadata},
+    ExitError, Transfer,
 };
 use libfindora::{
+    asset::XfrAmount,
     utxo::{Output, OutputId},
-    Address, asset::XfrAmount,
+    Address,
 };
 use primitive_types::{H160, H256, U256};
-
-use crate::Result;
 
 use super::{account::Account, vicinity::Vicinity};
 
@@ -21,7 +21,7 @@ pub struct SubstackState<'config, A, S, OO, OS> {
     pub outputs_set: OS,
 }
 
-pub struct StackState<'config, A, S, OO, OS> {
+pub struct State<'config, A, S, OO, OS> {
     pub vicinity: Vicinity,
     pub substacks: Vec<SubstackState<'config, A, S, OO, OS>>,
 }
@@ -32,14 +32,18 @@ impl<
         S,
         OO: MapStore<Address, Vec<OutputId>>,
         OS: MapStore<OutputId, Output>,
-    > StackState<'config, A, S, OO, OS>
+    > State<'config, A, S, OO, OS>
 {
     fn latest_substate(&self) -> &SubstackState<'config, A, S, OO, OS> {
         let index = self.substacks.len() - 1;
         &self.substacks[index]
     }
 
-    fn basic_resulted(&self, address: H160) -> Result<Basic> {
+    fn latest_substate_mut(&mut self) -> &mut SubstackState<'config, A, S, OO, OS> {
+        let index = self.substacks.len() - 1;
+        &mut self.substacks[index]
+    }
+    fn basic_resulted(&self, address: H160) -> crate::Result<Basic> {
         let ua = Address::from(address);
         let balance = if let Some(v) = self.latest_substate().owned_outputs.get(&ua)? {
             let mut balance = 0;
@@ -75,7 +79,7 @@ impl<
         S: DoubleKeyMapStore<H160, H256, H256>,
         OO: MapStore<Address, Vec<OutputId>>,
         OS: MapStore<OutputId, Output>,
-    > Backend for StackState<'config, A, S, OO, OS>
+    > Backend for State<'config, A, S, OO, OS>
 {
     fn gas_price(&self) -> U256 {
         self.vicinity.gas_price
@@ -157,5 +161,109 @@ impl<
                 None
             }
         }
+    }
+}
+
+impl<
+        'config,
+        A: MapStore<H160, Account>,
+        S: DoubleKeyMapStore<H160, H256, H256>,
+        OO: MapStore<Address, Vec<OutputId>>,
+        OS: MapStore<OutputId, Output>,
+    > StackState<'config> for State<'config, A, S, OO, OS>
+{
+    fn metadata(&self) -> &StackSubstateMetadata<'config> {
+        &self.latest_substate().metadata
+    }
+
+    fn metadata_mut(&mut self) -> &mut StackSubstateMetadata<'config> {
+        &mut self.latest_substate_mut().metadata
+    }
+
+    fn enter(&mut self, gas_limit: u64, is_static: bool) {
+        // enter stack.
+    }
+
+    fn exit_commit(&mut self) -> Result<(), ExitError> {
+        // commit stack.
+        Ok(())
+    }
+
+    fn exit_revert(&mut self) -> Result<(), ExitError> {
+        // revert stack.
+        Ok(())
+    }
+
+    fn exit_discard(&mut self) -> Result<(), ExitError> {
+        // discard stack.
+        Ok(())
+    }
+
+    fn is_empty(&self, address: H160) -> bool {
+        let r0 = false;
+
+        let r1 = match self.latest_substate().accounts.get(&address) {
+            Ok(Some(account)) => account.code.len() == 0 && account.nonce == 0,
+            Ok(None) => true,
+            Err(e) => {
+                log::error!("read account error: {:?}", e);
+                true
+            }
+        };
+
+        r0 && r1
+    }
+
+    fn deleted(&self, address: H160) -> bool {
+        false
+    }
+
+    fn is_cold(&self, address: H160) -> bool {
+        false
+    }
+
+    fn is_storage_cold(&self, address: H160, key: H256) -> bool {
+        false
+    }
+
+    fn inc_nonce(&mut self, address: H160) {
+        let accounts = &mut self.latest_substate_mut().accounts;
+
+        match accounts.get_mut(&address) {
+            Ok(Some(e)) => e.nonce += 1,
+            Ok(None) => {
+                accounts.insert(
+                    address,
+                    Account {
+                        code: Vec::new(),
+                        nonce: 1,
+                        reset: false,
+                    },
+                );
+            }
+            Err(e) => {
+                log::error!("read account error: {:?}", e);
+            }
+        }
+    }
+
+    fn set_storage(&mut self, address: H160, key: H256, value: H256) {}
+
+    fn reset_storage(&mut self, address: H160) {}
+
+    fn log(&mut self, address: H160, topics: Vec<H256>, data: Vec<u8>) {}
+
+    fn set_deleted(&mut self, address: H160) {}
+
+    fn set_code(&mut self, address: H160, code: Vec<u8>) {}
+
+    fn transfer(&mut self, transfer: Transfer) -> Result<(), ExitError> {
+        Ok(())
+    }
+
+    fn reset_balance(&mut self, address: H160) {}
+
+    fn touch(&mut self, address: H160) {
+        // Empty impl.
     }
 }
