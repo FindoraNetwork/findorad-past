@@ -60,6 +60,7 @@ impl From<Option<crypto::PublicKey>> for ValidatorPublicKey {
                 match sum {
                     crypto::public_key::Sum::Ed25519(e) => Self::Ed25519(e.clone()),
                     crypto::public_key::Sum::Secp256k1(s) => Self::Secp256k1(s.clone()),
+                    crypto::public_key::Sum::Sr25519(_s) => Self::Unknown,
                 }
             } else {
                 Self::Unknown
