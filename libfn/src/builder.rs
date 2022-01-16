@@ -275,7 +275,7 @@ impl Builder {
                 .blind_asset_record
                 .asset_type
                 .clone(),
-            address: Address::BlockHole,
+            address: Address::blockhole(),
             owner_memo: record.owner_memo.clone(),
         };
 
@@ -285,7 +285,7 @@ impl Builder {
         };
 
         self.mapper.sub(
-            &Address::BlockHole,
+            &Address::blockhole(),
             &record.open_asset_record.asset_type,
             record.open_asset_record.amount,
             false,
@@ -324,7 +324,7 @@ impl Builder {
                     .blind_asset_record
                     .asset_type
                     .clone(),
-                address: Address::BlockHole,
+                address: Address::blockhole(),
                 owner_memo: record.owner_memo.clone(),
             };
             self.outputs.push(Output {

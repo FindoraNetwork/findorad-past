@@ -40,12 +40,12 @@ impl<'a> ReadBuilder<'a> {
         }
     }
 
-    pub fn from_address(&mut self, addr: &'a str) -> &ReadBuilder {
+    pub fn address_to(&mut self, addr: &'a str) -> &ReadBuilder {
         self.address = Some(addr);
         self
     }
 
-    pub fn from_secret(&mut self, secret: &'a str) -> &ReadBuilder {
+    pub fn secret_to(&mut self, secret: &'a str) -> &ReadBuilder {
         self.secret = Some(secret);
         self
     }
@@ -186,21 +186,21 @@ mod tests {
 
         let got = wallets
             .read()
-            .from_address("0x07fda471ddf402da8c3c4c9310efc8ddfcd517ea")
+            .address_to("0x07fda471ddf402da8c3c4c9310efc8ddfcd517ea")
             .build()
             .unwrap();
         assert_eq!(got.public, wallet.public);
 
         let got = wallets
             .read()
-            .from_address("fra11ql76guwa7spd4rpufjf3pm7gmh7d29l249t3dr")
+            .address_to("fra11ql76guwa7spd4rpufjf3pm7gmh7d29l249t3dr")
             .build()
             .unwrap();
         assert_eq!(got.public, wallet.public);
 
         let got = wallets
             .read()
-            .from_secret("/J3/PTVi3F642FIN4giagoo+kKgusZCKbg9mlE6IZds=")
+            .secret_to("/J3/PTVi3F642FIN4giagoo+kKgusZCKbg9mlE6IZds=")
             .build()
             .unwrap();
         assert_eq!(got.public, wallet.public);
@@ -244,13 +244,13 @@ mod tests {
         assert_eq!(wallets.list().unwrap().len(), 1);
         let got = wallets
             .read()
-            .from_address("0x07fda471ddf402da8c3c4c9310efc8ddfcd517ea")
+            .address_to("0x07fda471ddf402da8c3c4c9310efc8ddfcd517ea")
             .build()
             .unwrap();
         assert_eq!(wallet_1, got);
         assert!(wallets
             .read()
-            .from_address("not_exists_address")
+            .address_to("not_exists_address")
             .build()
             .is_err());
 
@@ -270,7 +270,7 @@ mod tests {
 
         let got = wallets
             .read()
-            .from_address("0x78e7b9d36ebe7a84898b9105d989d439d6b56adb")
+            .address_to("0x78e7b9d36ebe7a84898b9105d989d439d6b56adb")
             .build()
             .unwrap();
         assert_eq!(wallet_2, got);

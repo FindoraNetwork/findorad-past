@@ -52,11 +52,7 @@ struct ClaimData {
 }
 
 struct Address {
-    union {
-        blockHole @0: Void;
-        eth @1: Data;
-        fra @2: Data;
-    }
+    address @0: Data;
 }
 
 struct Output {
