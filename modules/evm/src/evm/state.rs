@@ -1,40 +1,79 @@
-use abcf::bs3::MapStore;
+use abcf::bs3::{DoubleKeyMapStore, MapStore};
 use evm::{
     backend::{Backend, Basic},
     executor::stack::StackSubstateMetadata,
 };
+use libfindora::{
+    utxo::{Output, OutputId},
+    Address,
+};
 use primitive_types::{H160, H256, U256};
+
+use crate::Result;
 
 use super::{account::Account, vicinity::Vicinity};
 
-pub struct SubstackState<'config, A, S, D, L> {
+pub struct SubstackState<'config, A, S, OO, OS> {
     pub metadata: StackSubstateMetadata<'config>,
     pub accounts: A,
     pub storages: S,
-    pub deletes: D,
-    pub logs: L,
+    pub owned_outputs: OO,
+    pub outputs_set: OS,
 }
 
-pub struct StackState<'config, A, S, D, L> {
+pub struct StackState<'config, A, S, OO, OS> {
     pub vicinity: Vicinity,
-    pub substacks: Vec<SubstackState<'config, A, S, D, L>>,
+    pub substacks: Vec<SubstackState<'config, A, S, OO, OS>>,
 }
 
-impl<'config, A, S, D, L> StackState<'config, A, S, D, L> {
-    fn latest_substate(&self) -> &SubstackState<'config, A, S, D, L> {
+impl<
+        'config,
+        A: MapStore<H160, Account>,
+        S,
+        OO: MapStore<Address, Vec<OutputId>>,
+        OS: MapStore<OutputId, Output>,
+    > StackState<'config, A, S, OO, OS>
+{
+    fn latest_substate(&self) -> &SubstackState<'config, A, S, OO, OS> {
         let index = self.substacks.len() - 1;
         &self.substacks[index]
     }
+
+    fn basic_resulted(&self, address: H160) -> Result<Basic> {
+        let ua = Address::Fra(address);
+        let balance = if let Some(v) = self.latest_substate().owned_outputs.get(&ua)? {
+            0
+        } else {
+            0
+        };
+
+        let nonce = match self.latest_substate().accounts.get(&address)? {
+            Some(e) => e.nonce,
+            None => 0,
+        };
+
+        Ok(Basic {
+            balance: U256::from(balance),
+            nonce: U256::from(nonce),
+        })
+    }
 }
 
-impl<'config, A: MapStore<H160, Account>, S, D, L> Backend for StackState<'config, A, S, D, L> {
+impl<
+        'config,
+        A: MapStore<H160, Account>,
+        S: DoubleKeyMapStore<H160, H256, H256>,
+        OO: MapStore<Address, Vec<OutputId>>,
+        OS: MapStore<OutputId, Output>,
+    > Backend for StackState<'config, A, S, OO, OS>
+{
     fn gas_price(&self) -> U256 {
         self.vicinity.gas_price
     }
     fn origin(&self) -> H160 {
         self.vicinity.origin
     }
-    fn block_hash(&self, number: U256) -> H256 {
+    fn block_hash(&self, _number: U256) -> H256 {
         self.vicinity.block_hash
     }
     fn block_number(&self) -> U256 {
@@ -65,35 +104,48 @@ impl<'config, A: MapStore<H160, Account>, S, D, L> Backend for StackState<'confi
         match self.latest_substate().accounts.get(&address) {
             Ok(e) => e.is_some(),
             Err(e) => {
-                log::error!("read account error: {}", 1);
+                log::error!("read account error: {:?}", e);
                 false
             }
         }
     }
 
     fn basic(&self, address: H160) -> Basic {
-        self.substate
-            .known_basic(address)
-            .unwrap_or_else(|| self.vicinity.basic(address))
+        match self.basic_resulted(address) {
+            Ok(e) => e,
+            Err(e) => {
+                log::error!("read basic error: {:?}", e);
+                Basic::default()
+            }
+        }
     }
 
     fn code(&self, address: H160) -> Vec<u8> {
-        self.substate
-            .known_code(address)
-            .unwrap_or_else(|| self.vicinity.code(address))
+        match self.latest_substate().accounts.get(&address) {
+            Ok(Some(e)) => e.code.clone(),
+            Ok(None) => Vec::new(),
+            Err(e) => {
+                log::error!("read code error: {:?}", e);
+                Vec::new()
+            }
+        }
     }
 
     fn storage(&self, address: H160, key: H256) -> H256 {
-        self.substate
-            .known_storage(address, key)
-            .unwrap_or_else(|| self.vicinity.storage(address, key))
+        match self.original_storage(address, key) {
+            Some(e) => e,
+            None => H256::default(),
+        }
     }
 
     fn original_storage(&self, address: H160, key: H256) -> Option<H256> {
-        if let Some(value) = self.substate.known_original_storage(address, key) {
-            return Some(value);
+        match self.latest_substate().storages.get(&address, &key) {
+            Ok(Some(e)) => Some(e.clone()),
+            Ok(None) => None,
+            Err(e) => {
+                log::error!("read code error: {:?}", e);
+                None
+            }
         }
-
-        self.vicinity.original_storage(address, key)
     }
 }
