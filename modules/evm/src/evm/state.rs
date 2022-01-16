@@ -5,7 +5,7 @@ use evm::{
 };
 use libfindora::{
     utxo::{Output, OutputId},
-    Address,
+    Address, asset::XfrAmount,
 };
 use primitive_types::{H160, H256, U256};
 
@@ -40,9 +40,19 @@ impl<
     }
 
     fn basic_resulted(&self, address: H160) -> Result<Basic> {
-        let ua = Address::Fra(address);
+        let ua = Address::from(address);
         let balance = if let Some(v) = self.latest_substate().owned_outputs.get(&ua)? {
-            0
+            let mut balance = 0;
+
+            for output_id in v.as_ref() {
+                if let Some(output) = self.latest_substate().outputs_set.get(&output_id)? {
+                    if let XfrAmount::NonConfidential(e) = &output.amount {
+                        balance += e;
+                    }
+                }
+            }
+
+            balance
         } else {
             0
         };
