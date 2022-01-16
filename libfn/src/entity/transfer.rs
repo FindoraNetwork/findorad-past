@@ -104,7 +104,6 @@ impl Transfer {
         &self,
         prng: &mut R,
     ) -> Result<AssetRecord> {
-
         let (pk, asset_record_type) = match self.public_key {
             None => {
                 // If to ETH address, It only a placeholder to fit zei.
@@ -119,10 +118,7 @@ impl Transfer {
             Some(pk) => {
                 let asset_record_type =
                     AssetRecordType::from_flags(self.confidential_amount, self.confidential_asset);
-                (
-                    pk,
-                    asset_record_type,
-                )
+                (pk, asset_record_type)
             }
         };
         let template = AssetRecordTemplate::with_no_asset_tracing(

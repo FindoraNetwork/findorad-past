@@ -42,4 +42,3 @@ impl AsRef<[u8]> for Address {
         self.0.as_bytes()
     }
 }
-

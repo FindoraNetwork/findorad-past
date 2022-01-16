@@ -1,6 +1,4 @@
-use libfindora::{
-    asset::{Amount, FRA},
-};
+use libfindora::asset::{Amount, FRA};
 
 use crate::Error;
 
