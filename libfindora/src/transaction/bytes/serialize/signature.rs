@@ -1,4 +1,4 @@
-use crate::{transaction::Signature, transaction_capnp::signature, Address, Result};
+use crate::{transaction::Signature, transaction_capnp::signature, Result};
 use zei::serialization::ZeiFromToBytes;
 
 pub fn build_signature(signature: &Signature, builder: signature::Builder) -> Result<()> {
@@ -11,11 +11,7 @@ pub fn build_signature(signature: &Signature, builder: signature::Builder) -> Re
 
             let mut builder = b.init_address();
 
-            match &s.address {
-                Address::Eth(a) => builder.set_eth(a.0.as_ref()),
-                Address::Fra(a) => builder.set_fra(a.0.as_ref()),
-                Address::BlockHole => builder.set_block_hole(()),
-            }
+            builder.set_address(s.address.as_ref());
         }
     }
 

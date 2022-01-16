@@ -2,7 +2,7 @@ use crate::{
     staking::ValidatorPublicKey,
     transaction::{Output, OutputOperation},
     transaction_capnp::output,
-    Address, Result,
+    Result,
 };
 use zei::{
     serialization::ZeiFromToBytes,
@@ -16,11 +16,7 @@ pub fn build_output(output: &Output, builder: output::Builder) -> Result<()> {
 
     {
         let mut builder = builder.reborrow().init_address();
-        match &output.core.address {
-            Address::Eth(a) => builder.set_eth(a.0.as_ref()),
-            Address::Fra(a) => builder.set_fra(a.0.as_ref()),
-            Address::BlockHole => builder.set_block_hole(()),
-        }
+        builder.set_address(output.core.address.as_ref())
     }
 
     {

@@ -104,8 +104,8 @@ impl Transfer {
         &self,
         prng: &mut R,
     ) -> Result<AssetRecord> {
-        let (pk, asset_record_type) = match self.address {
-            Address::Eth(_e) => {
+        let (pk, asset_record_type) = match self.public_key {
+            None => {
                 // If to ETH address, It only a placeholder to fit zei.
                 // We need a zeilite.
                 if !self.confidential_amount && !self.confidential_asset {
@@ -115,13 +115,10 @@ impl Transfer {
                     return Err(Error::MustBeNonConfidentialAssetAmount);
                 }
             }
-            Address::Fra(_) | Address::BlockHole => {
+            Some(pk) => {
                 let asset_record_type =
                     AssetRecordType::from_flags(self.confidential_amount, self.confidential_asset);
-                (
-                    self.public_key.ok_or(Error::KeyMustBeSet)?,
-                    asset_record_type,
-                )
+                (pk, asset_record_type)
             }
         };
         let template = AssetRecordTemplate::with_no_asset_tracing(

@@ -1,4 +1,4 @@
-use primitive_types::{H160, U256};
+use primitive_types::U256;
 
 use crate::{
     asset::AssetMeta,
@@ -180,17 +180,6 @@ fn from_amount(reader: output::amount::Reader) -> Result<XfrAmount> {
 }
 
 pub fn from_address(reader: address::Reader) -> Result<Address> {
-    Ok(match reader.which()? {
-        address::Which::Eth(a) => {
-            let reader = a?;
-            let inner = reader.try_into()?;
-            Address::Eth(H160(inner))
-        }
-        address::Which::Fra(a) => {
-            let reader = a?;
-            let inner = reader.try_into()?;
-            Address::Fra(H160(inner))
-        }
-        address::Which::BlockHole(_) => Address::BlockHole,
-    })
+    let bytes = reader.get_address()?;
+    Ok(Address::from(bytes))
 }
