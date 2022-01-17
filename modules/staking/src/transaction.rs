@@ -32,6 +32,7 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
         let mut infos = Vec::new();
         let mut outputs = Vec::new();
 
+        /// since taking comes first, you must determine if the operation is related to delegation before performing the conversion.
         for output in tx.outputs.iter(){
             match &output.operation {
                 libfindora::OutputOperation::Delegate(_) | libfindora::OutputOperation::Undelegate(_) => {outputs.push(output.clone())}
@@ -41,7 +42,7 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
 
         if !outputs.is_empty() {
             for output in outputs.iter() {
-                if output.core.asset == FRA.asset_type {
+                if output.core.asset != FRA.asset_type {
                     return Err(Error::MustBeFra.into());
                 }
 

@@ -288,10 +288,10 @@ impl Builder {
             operation: OutputOperation::Fee,
         };
 
+        /// add a handling fee for each operation initiator
         let addr_vec = self.mapper.inner.iter().map(|(addr,_)|{
             addr.clone()
         }).collect::<Vec<Address>>();
-
         for addr in addr_vec.iter() {
             self.mapper.sub(
                 addr,
@@ -327,6 +327,7 @@ impl Builder {
                 public_key,
             )?;
 
+            /// get change for your own utxo
             let core = utxo::Output {
                 amount: record.open_asset_record.blind_asset_record.amount.clone(),
                 asset: record
