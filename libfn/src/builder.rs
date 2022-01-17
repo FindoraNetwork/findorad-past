@@ -138,7 +138,7 @@ impl Builder {
                             .blind_asset_record
                             .asset_type
                             .clone(),
-                        address,
+                        address:t.address.clone(),
                         owner_memo: record.owner_memo.clone(),
                     };
 
