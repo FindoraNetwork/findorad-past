@@ -20,6 +20,8 @@ zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor-add
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 rand_chacha = "0.2.2"
 log = "0.4.14"
+tendermint-sys = { git = "https://github.com/FindoraNetwork/tendermint-sys.git" }
+
 
 fm-utxo = { path = "../modules/utxo" }
 fm-coinbase = { path = "../modules/coinbase" }

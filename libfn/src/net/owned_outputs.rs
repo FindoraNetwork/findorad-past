@@ -36,7 +36,7 @@ pub async fn get_owned_outputs<P: Provider>(
     let hex_address = hex::encode(address_bytes);
 
     let path = format!("stateless/utxo/owned_outputs/0x{}", hex_address);
-    let hex_path = "0x".to_string() + hex::encode(path.as_bytes().to_vec()).as_str();
+    let hex_path = "0x".to_string() + hex::encode(path.as_bytes()).as_str();
 
     let params = serde_json::json!({
         "path": hex_path,
@@ -51,7 +51,7 @@ pub async fn get_owned_outputs<P: Provider>(
         let hex_outputid = hex::encode(outputid_bytes);
 
         let path = format!("stateful/utxo/outputs_set/0x{}", hex_outputid);
-        let hex_path = "0x".to_string() + hex::encode(path.as_bytes().to_vec()).as_str();
+        let hex_path = "0x".to_string() + hex::encode(path.as_bytes()).as_str();
 
         let params = serde_json::json!({
             "path": hex_path,

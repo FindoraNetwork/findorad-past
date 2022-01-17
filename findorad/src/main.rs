@@ -9,6 +9,7 @@ use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use sha3::Sha3_512;
 use std::{collections::BTreeMap, marker::PhantomData};
+use tendermint_sys::NodeType;
 use zei::setup::PublicParams;
 
 use fm_asset::AssetModule;
@@ -51,6 +52,8 @@ fn main() {
 
     let manager = Findorad::<SledBackend>::new(staking, asset, fee, coinbase, utxo);
 
+    let asset_backend = bs3::backend::sled_db_open(Some("./target/findorad/asset")).unwrap();
+    let fee_backend = bs3::backend::sled_db_open(Some("./target/findorad/fee")).unwrap();
     let staking_backend = bs3::backend::sled_db_open(Some("./target/findorad/staking")).unwrap();
     let coinbase_backend = bs3::backend::sled_db_open(Some("./target/findorad/coinbase")).unwrap();
     let utxo_backend = bs3::backend::sled_db_open(Some("./target/findorad/utxo")).unwrap();
@@ -88,7 +91,7 @@ fn main() {
         asset: abcf::Stateful::<AssetModule<SledBackend, Sha3_512>> {
             asset_infos: bs3::SnapshotableStorage::new(
                 Default::default(),
-                SledBackend::open_tree(&staking_backend, "validator_addr_pubkey").unwrap(),
+                SledBackend::open_tree(&asset_backend, "validator_addr_pubkey").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,
@@ -97,7 +100,7 @@ fn main() {
         fee: abcf::Stateful::<FeeModule<SledBackend, Sha3_512>> {
             sf_value: abcf::bs3::SnapshotableStorage::new(
                 Default::default(),
-                SledBackend::open_tree(&staking_backend, "pending_outputs").unwrap(),
+                SledBackend::open_tree(&fee_backend, "pending_outputs").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,
@@ -106,7 +109,7 @@ fn main() {
         coinbase: abcf::Stateful::<CoinbaseModule<SledBackend, Sha3_512>> {
             pending_outputs: abcf::bs3::SnapshotableStorage::new(
                 Default::default(),
-                SledBackend::open_tree(&staking_backend, "pending_outputs").unwrap(),
+                SledBackend::open_tree(&coinbase_backend, "pending_outputs").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,
@@ -136,7 +139,7 @@ fn main() {
         asset: abcf::Stateless::<AssetModule<SledBackend, Sha3_512>> {
             sl_value: bs3::SnapshotableStorage::new(
                 Default::default(),
-                SledBackend::open_tree(&staking_backend, "validator_addr_pubkey").unwrap(),
+                SledBackend::open_tree(&asset_backend, "asset_infos").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,
@@ -145,7 +148,7 @@ fn main() {
         fee: abcf::Stateless::<FeeModule<SledBackend, Sha3_512>> {
             sl_value: abcf::bs3::SnapshotableStorage::new(
                 Default::default(),
-                SledBackend::open_tree(&staking_backend, "pending_outputs").unwrap(),
+                SledBackend::open_tree(&fee_backend, "pending_outputs").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,
@@ -154,7 +157,7 @@ fn main() {
         coinbase: abcf::Stateless::<CoinbaseModule<SledBackend, Sha3_512>> {
             sl_value: abcf::bs3::SnapshotableStorage::new(
                 Default::default(),
-                SledBackend::open_tree(&utxo_backend, "sl_value").unwrap(),
+                SledBackend::open_tree(&coinbase_backend, "sl_value").unwrap(),
             )
             .unwrap(),
             __marker_s: PhantomData,
@@ -172,7 +175,7 @@ fn main() {
     };
 
     let entry = abcf::entry::Node::new(stateless, stateful, manager);
-    let node = abcf_node::Node::new(entry, "./target/findorad/abcf").unwrap();
+    let node = abcf_node::Node::new(entry, "./target/findorad/abcf", NodeType::Validator).unwrap();
     node.start().unwrap();
     std::thread::park();
 }

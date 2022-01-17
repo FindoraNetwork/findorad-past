@@ -106,7 +106,7 @@ impl Builder {
                     self.zei_inputs.push(record);
 
                     let mut index: u32 = self.outputs.len().try_into()?;
-                    index = index - 1;
+                    index -= 1;
 
                     self.inputs.push(Input {
                         txid: primitive_types::H512::zero(),
@@ -351,7 +351,7 @@ impl Builder {
 
         // build xfr body.
 
-        let body = if self.zei_inputs.len() != 0 {
+        let body = if !self.zei_inputs.is_empty() {
             gen_xfr_body(prng, &self.zei_inputs, &self.zei_outputs)?
         } else {
             XfrBody {
