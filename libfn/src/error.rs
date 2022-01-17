@@ -24,6 +24,7 @@ pub enum Error {
     Bip0039Error(bip0039::Error),
     ED25519BipError(ed25519_dalek_bip32::Error),
     DerivationPathError(derivation_path::DerivationPathError),
+    AbcfSdkError(String),
 }
 
 impl Display for Error {
@@ -57,6 +58,7 @@ impl std::error::Error for Error {
             Self::Bip0039Error(_) => "bip0039 error",
             Self::ED25519BipError(_) => "ed25519 bip error",
             Self::DerivationPathError(_) => "derivation_path error",
+            Self::AbcfSdkError(_) => "abcf sdk error",
         }
     }
 }
