@@ -30,42 +30,49 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
 
     fn try_from(tx: &libfindora::Transaction) -> Result<Transaction, Self::Error> {
         let mut infos = Vec::new();
+        let mut outputs = Vec::new();
 
-        for output in &tx.outputs {
-            if output.core.asset == FRA.asset_type {
-                return Err(Error::MustBeFra.into());
-            }
-
-            let amount = output
-                .core
-                .amount
-                .get_amount()
-                .ok_or(Error::MustBeNonConfidentialAmount)?;
-
-            let delegator = output.core.address.clone();
-
+        for output in tx.outputs.iter(){
             match &output.operation {
-                libfindora::OutputOperation::Delegate(op) => {
-                    let info = StakingInfo {
-                        amount,
-                        delegator,
-                        operation: Operation::Delegate(op.clone()),
-                    };
+                libfindora::OutputOperation::Delegate(_) | libfindora::OutputOperation::Undelegate(_) => {outputs.push(output.clone())}
+                _ => {continue}
+            }
+        };
 
-                    infos.push(info);
+        if !outputs.is_empty() {
+            for output in outputs.iter() {
+                if output.core.asset == FRA.asset_type {
+                    return Err(Error::MustBeFra.into());
                 }
-                libfindora::OutputOperation::Undelegate(op) => {
-                    let info = StakingInfo {
-                        amount,
-                        delegator,
-                        operation: Operation::Undelegate(op.clone()),
-                    };
 
-                    infos.push(info);
-                }
-                _ => {}
+                let amount = output
+                    .core
+                    .amount
+                    .get_amount()
+                    .ok_or(Error::MustBeNonConfidentialAmount)?;
+
+                let delegator = output.core.address.clone();
+
+                let op = match &output.operation {
+                    libfindora::OutputOperation::Delegate(op) => {
+                        Operation::Delegate(op.clone())
+                    }
+                    libfindora::OutputOperation::Undelegate(op) => {
+                        Operation::Undelegate(op.clone())
+                    }
+                    _ => {
+                        return Err(abcf::Error::ABCIApplicationError(90009,"staking module internal errors".to_string()))
+                    }
+                };
+                let info = StakingInfo {
+                    amount,
+                    delegator,
+                    operation: op,
+                };
+                infos.push(info);
             }
         }
+
 
         Ok(Transaction { infos })
     }
