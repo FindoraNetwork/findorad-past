@@ -1,5 +1,5 @@
 use serde_json::Value;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use abcf_sdk::providers::Provider;
 use abcf_sdk::jsonrpc::endpoint::abci_query::Response;
 use crate::{Result, Error};
