@@ -9,8 +9,8 @@ use libfindora::{
 };
 use primitive_types::H512;
 use rand_core::{CryptoRng, RngCore};
-use zei::xfr::{lib::gen_xfr_body, sig::XfrKeyPair, structs::AssetRecord};
 use zei::xfr::structs::{AssetTypeAndAmountProof, XfrBody, XfrProofs};
+use zei::xfr::{lib::gen_xfr_body, sig::XfrKeyPair, structs::AssetRecord};
 
 #[derive(Debug, Default)]
 pub struct Builder {
@@ -105,8 +105,8 @@ impl Builder {
 
                     self.zei_inputs.push(record);
 
-                    let mut index:u32 = self.outputs.len().try_into()?;
-                    index = index -1;
+                    let mut index: u32 = self.outputs.len().try_into()?;
+                    index = index - 1;
 
                     self.inputs.push(Input {
                         txid: primitive_types::H512::zero(),
@@ -139,7 +139,7 @@ impl Builder {
                             .blind_asset_record
                             .asset_type
                             .clone(),
-                        address:t.address.clone(),
+                        address: t.address.clone(),
                         owner_memo: record.owner_memo.clone(),
                     };
 
@@ -288,10 +288,13 @@ impl Builder {
             operation: OutputOperation::Fee,
         };
 
-        /// add a handling fee for each operation initiator
-        let addr_vec = self.mapper.inner.iter().map(|(addr,_)|{
-            addr.clone()
-        }).collect::<Vec<Address>>();
+        // add a handling fee for each operation initiator
+        let addr_vec = self
+            .mapper
+            .inner
+            .iter()
+            .map(|(addr, _)| addr.clone())
+            .collect::<Vec<Address>>();
         for addr in addr_vec.iter() {
             self.mapper.sub(
                 addr,
@@ -327,7 +330,7 @@ impl Builder {
                 public_key,
             )?;
 
-            /// get change for your own utxo
+            // get change for your own utxo
             let core = utxo::Output {
                 amount: record.open_asset_record.blind_asset_record.amount.clone(),
                 asset: record
@@ -351,13 +354,16 @@ impl Builder {
         let body = if self.zei_inputs.len() != 0 {
             gen_xfr_body(prng, &self.zei_inputs, &self.zei_outputs)?
         } else {
-            XfrBody{
+            XfrBody {
                 inputs: vec![],
                 outputs: vec![],
-                proofs: XfrProofs { asset_type_and_amount_proof: AssetTypeAndAmountProof::NoProof, asset_tracing_proof: Default::default() },
+                proofs: XfrProofs {
+                    asset_type_and_amount_proof: AssetTypeAndAmountProof::NoProof,
+                    asset_tracing_proof: Default::default(),
+                },
                 asset_tracing_memos: vec![],
                 owners_memos: vec![],
-                input_public_keys: vec![]
+                input_public_keys: vec![],
             }
         };
 

@@ -9,6 +9,8 @@ mod builder;
 pub use builder::Builder;
 
 mod net;
+pub use net::_send_tx;
+pub use net::get_owned_outputs;
 
 pub mod entity;
 

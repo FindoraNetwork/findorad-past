@@ -32,13 +32,14 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
         let mut infos = Vec::new();
         let mut outputs = Vec::new();
 
-        /// since taking comes first, you must determine if the operation is related to delegation before performing the conversion.
-        for output in tx.outputs.iter(){
+        // since taking comes first, you must determine if the operation is related to delegation before performing the conversion.
+        for output in tx.outputs.iter() {
             match &output.operation {
-                libfindora::OutputOperation::Delegate(_) | libfindora::OutputOperation::Undelegate(_) => {outputs.push(output.clone())}
-                _ => {continue}
+                libfindora::OutputOperation::Delegate(_)
+                | libfindora::OutputOperation::Undelegate(_) => outputs.push(output.clone()),
+                _ => continue,
             }
-        };
+        }
 
         if !outputs.is_empty() {
             for output in outputs.iter() {
@@ -55,14 +56,15 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
                 let delegator = output.core.address.clone();
 
                 let op = match &output.operation {
-                    libfindora::OutputOperation::Delegate(op) => {
-                        Operation::Delegate(op.clone())
-                    }
+                    libfindora::OutputOperation::Delegate(op) => Operation::Delegate(op.clone()),
                     libfindora::OutputOperation::Undelegate(op) => {
                         Operation::Undelegate(op.clone())
                     }
                     _ => {
-                        return Err(abcf::Error::ABCIApplicationError(90009,"staking module internal errors".to_string()))
+                        return Err(abcf::Error::ABCIApplicationError(
+                            90009,
+                            "staking module internal errors".to_string(),
+                        ))
                     }
                 };
                 let info = StakingInfo {
@@ -73,7 +75,6 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
                 infos.push(info);
             }
         }
-
 
         Ok(Transaction { infos })
     }

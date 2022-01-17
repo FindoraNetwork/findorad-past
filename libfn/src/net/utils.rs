@@ -1,18 +1,18 @@
-use serde_json::Value;
-use serde::Deserialize;
-use abcf_sdk::providers::Provider;
+use crate::{Error, Result};
 use abcf_sdk::jsonrpc::endpoint::abci_query::Response;
-use crate::{Result, Error};
+use abcf_sdk::providers::Provider;
+use serde::Deserialize;
+use serde_json::Value;
 
-pub async fn abci_query<T,P>(params: Value, provider: &mut P,) -> Result<T>
-    where
-        T: for<'de> Deserialize<'de>,
-        P: Provider,
-
+pub async fn abci_query<T, P>(params: Value, provider: &mut P) -> Result<T>
+where
+    T: for<'de> Deserialize<'de>,
+    P: Provider,
 {
-    let result = provider.request::<Value, Response>("abci_query", &params)
+    let result = provider
+        .request::<Value, Response>("abci_query", &params)
         .await
-        .map_err(|e|Error::AbcfSdkError(format!("{:?}",e)))?;
+        .map_err(|e| Error::AbcfSdkError(format!("{:?}", e)))?;
 
     if let Some(val) = result {
         let base64_str = base64::encode(&val.response.value);
