@@ -104,9 +104,12 @@ impl Builder {
 
                     self.zei_inputs.push(record);
 
+                    let mut index:u32 = self.outputs.len().try_into()?;
+                    index = index -1;
+
                     self.inputs.push(Input {
                         txid: primitive_types::H512::zero(),
-                        n: self.outputs.len().try_into()?,
+                        n: index,
                         operation: InputOperation::TransferAsset,
                     });
 
