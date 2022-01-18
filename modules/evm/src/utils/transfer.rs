@@ -1,0 +1,46 @@
+use abcf::bs3::MapStore;
+use libfindora::{
+    asset::{Amount, AssetType, XfrAmount, XfrAssetType},
+    utxo::{Output, OutputId},
+    Address,
+};
+use primitive_types::H512;
+
+use crate::{Result, Error};
+
+pub fn transfer(
+    from: Address,
+    to: Address,
+    amount: Amount,
+    asset: AssetType,
+    outputs_sets: &mut impl MapStore<OutputId, Output>,
+    owned_outputs: &mut impl MapStore<Address, Vec<OutputId>>,
+) -> Result<()> {
+    let mut target_amount = amount;
+
+    if let Some(ids) = owned_outputs.get_mut(&from)? {
+        while let Some(id) = ids.pop() {
+            if let Some(output) = outputs_sets.get_mut(&id)? {
+                if let (XfrAmount::NonConfidential(am), XfrAssetType::NonConfidential(at)) =
+                    (&mut output.amount, &output.asset)
+                {
+                    if at == &asset {
+                        if *am < target_amount {
+                            target_amount = target_amount.checked_sub(*am).ok_or_else(|| Error::SubOverflow)?;
+                            // remove output.
+                            outputs_sets.remove(&id)?;
+                        } else {
+                            *am = am.checked_sub(target_amount).ok_or_else(|| Error::SubOverflow)?;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if target_amount != 0 {
+        return Err(Error::InsufficientBalance);
+    }
+
+    Ok(())
+}

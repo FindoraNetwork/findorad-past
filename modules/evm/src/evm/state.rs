@@ -1,9 +1,11 @@
+use std::collections::BTreeMap;
+
 use abcf::bs3::{DoubleKeyMapStore, MapStore};
 use ethereum::Log;
 use evm::{
     backend::{Backend, Basic},
     executor::stack::{StackState, StackSubstateMetadata},
-    ExitError, Transfer,
+    ExitError,
 };
 use libfindora::{
     asset::XfrAmount,
@@ -11,6 +13,8 @@ use libfindora::{
     Address,
 };
 use primitive_types::{H160, H256, U256};
+
+use crate::Error;
 
 use super::{account::Account, vicinity::Vicinity};
 
@@ -21,18 +25,20 @@ pub struct SubstackState<'config, A, S, OO, OS> {
     pub owned_outputs: OO,
     pub outputs_set: OS,
     pub logs: Vec<Log>,
+    pub error: Vec<Error>,
 }
 
 pub struct State<'config, A, S, OO, OS> {
     pub vicinity: Vicinity,
     pub substacks: Vec<SubstackState<'config, A, S, OO, OS>>,
     pub logs: Vec<Log>,
+    pub error: Vec<Error>,
 }
 
 impl<
         'config,
         A: MapStore<H160, Account>,
-        S,
+        S: MapStore<H160, BTreeMap<H256, H256>>,
         OO: MapStore<Address, Vec<OutputId>>,
         OS: MapStore<OutputId, Output>,
     > State<'config, A, S, OO, OS>
@@ -79,7 +85,7 @@ impl<
 impl<
         'config,
         A: MapStore<H160, Account>,
-        S: DoubleKeyMapStore<H160, H256, H256>,
+        S: MapStore<H160, BTreeMap<H256, H256>>,
         OO: MapStore<Address, Vec<OutputId>>,
         OS: MapStore<OutputId, Output>,
     > Backend for State<'config, A, S, OO, OS>
@@ -156,8 +162,14 @@ impl<
     }
 
     fn original_storage(&self, address: H160, key: H256) -> Option<H256> {
-        match self.latest_substate().storages.get(&address, &key) {
-            Ok(Some(e)) => Some(e.clone()),
+        match self.latest_substate().storages.get(&address) {
+            Ok(Some(e)) => {
+                if let Some(r) = e.get(&key) {
+                    Some(r.clone())
+                } else {
+                    None
+                }
+            }
             Ok(None) => None,
             Err(e) => {
                 log::error!("read code error: {:?}", e);
@@ -170,7 +182,7 @@ impl<
 impl<
         'config,
         A: MapStore<H160, Account>,
-        S: DoubleKeyMapStore<H160, H256, H256>,
+        S: MapStore<H160, BTreeMap<H256, H256>>,
         OO: MapStore<Address, Vec<OutputId>>,
         OS: MapStore<OutputId, Output>,
     > State<'config, A, S, OO, OS>
@@ -195,7 +207,11 @@ impl<
     }
 
     fn _is_empty(&self, address: H160) -> crate::Result<bool> {
-        let r0 = if let Some(v) = self.latest_substate().owned_outputs.get(&Address::from(address))? {
+        let r0 = if let Some(v) = self
+            .latest_substate()
+            .owned_outputs
+            .get(&Address::from(address))?
+        {
             v.len() == 0
         } else {
             true
@@ -228,25 +244,41 @@ impl<
         if let Some(e) = accounts.get_mut(&address)? {
             e.nonce += 1;
         } else {
-            accounts.insert(address, Account {
-                code: Vec::new(),
-                nonce: 1,
-            })?;
+            accounts.insert(
+                address,
+                Account {
+                    code: Vec::new(),
+                    nonce: 1,
+                },
+            )?;
         }
 
         Ok(())
     }
 
     fn _set_storage(&mut self, address: H160, key: H256, value: H256) -> crate::Result<()> {
-        self.latest_substate_mut().storages.insert(address, key, value)?;
+        if let Some(m) = self.latest_substate_mut().storages.get_mut(&address)? {
+            m.insert(key, value);
+        } else {
+            let mut m = BTreeMap::new();
+            m.insert(key, value);
+            self.latest_substate_mut().storages.insert(address, m)?;
+        }
         Ok(())
     }
 
-    fn _reset_storage(&mut self, address: H160) {}
+    fn _reset_storage(&mut self, address: H160) -> crate::Result<()> {
+        if let Some(m) = self.latest_substate_mut().storages.get_mut(&address)? {
+            std::mem::take(m);
+        }
+        Ok(())
+    }
 
     fn _log(&mut self, address: H160, topics: Vec<H256>, data: Vec<u8>) {
         self.latest_substate_mut().logs.push(Log {
-            address, topics, data,
+            address,
+            topics,
+            data,
         });
     }
 
@@ -256,20 +288,23 @@ impl<
         if let Some(v) = self.latest_substate_mut().accounts.get_mut(&address)? {
             v.code = code;
         } else {
-            self.latest_substate_mut().accounts.insert(address, Account {
-                nonce: 0,
-                code,
-            })?;
+            self.latest_substate_mut()
+                .accounts
+                .insert(address, Account { nonce: 0, code })?;
         }
         Ok(())
     }
 
-    fn _transfer(&mut self, transfer: Transfer) -> Result<(), ExitError> {
+    fn _transfer(&mut self, transfer: evm::Transfer) -> crate::Result<()> {
         Ok(())
     }
 
     fn _reset_balance(&mut self, address: H160) -> crate::Result<()> {
-        let output_ids = if let Some(v) = self.latest_substate_mut().owned_outputs.get_mut(&Address::from(address))? {
+        let output_ids = if let Some(v) = self
+            .latest_substate_mut()
+            .owned_outputs
+            .get_mut(&Address::from(address))?
+        {
             std::mem::take(v)
         } else {
             Vec::new()
@@ -283,10 +318,13 @@ impl<
     }
 
     fn _touch(&mut self, address: H160) -> crate::Result<()> {
-        self.latest_substate_mut().accounts.insert(address, Account {
-            code: Vec::new(),
-            nonce: 0,
-        })?;
+        self.latest_substate_mut().accounts.insert(
+            address,
+            Account {
+                code: Vec::new(),
+                nonce: 0,
+            },
+        )?;
         Ok(())
     }
 }
@@ -294,7 +332,7 @@ impl<
 impl<
         'config,
         A: MapStore<H160, Account>,
-        S: DoubleKeyMapStore<H160, H256, H256>,
+        S: MapStore<H160, BTreeMap<H256, H256>>,
         OO: MapStore<Address, Vec<OutputId>>,
         OS: MapStore<OutputId, Output>,
     > StackState<'config> for State<'config, A, S, OO, OS>
@@ -348,9 +386,17 @@ impl<
         false
     }
 
-    fn inc_nonce(&mut self, address: H160) {}
+    fn inc_nonce(&mut self, address: H160) {
+        if let Err(e) = self._inc_nonce(address) {
+            log::error!("increase nonce error: {:?}", e);
+        }
+    }
 
-    fn set_storage(&mut self, address: H160, key: H256, value: H256) {}
+    fn set_storage(&mut self, address: H160, key: H256, value: H256) {
+        if let Err(e) = self._set_storage(address, key, value) {
+            log::error!("set address error: {:?}", e);
+        }
+    }
 
     fn reset_storage(&mut self, address: H160) {}
 
@@ -360,13 +406,19 @@ impl<
 
     fn set_code(&mut self, address: H160, code: Vec<u8>) {}
 
-    fn transfer(&mut self, transfer: Transfer) -> Result<(), ExitError> {
+    fn transfer(&mut self, transfer: evm::Transfer) -> Result<(), ExitError> {
         Ok(())
     }
 
-    fn reset_balance(&mut self, address: H160) {}
+    fn reset_balance(&mut self, address: H160) {
+        if let Err(e) = self._reset_balance(address) {
+            log::error!("reset account error: {:?}", e);
+        }
+    }
 
     fn touch(&mut self, address: H160) {
-        // Empty impl.
+        if let Err(e) = self._touch(address) {
+            log::error!("create account error: {:?}", e);
+        }
     }
 }

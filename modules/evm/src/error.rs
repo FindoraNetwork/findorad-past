@@ -10,6 +10,10 @@ pub enum Error {
     OnlySupportLegacyTransaction,
     Secp256k1Error(libsecp256k1::Error),
     AmountTypeMustBeNonConfidential,
+    EvmExitError(evm::ExitError),
+    AddOverflow,
+    SubOverflow,
+    InsufficientBalance,
 }
 
 impl From<abcf::bs3::Error> for Error {
@@ -54,6 +58,16 @@ impl From<Error> for abcf::Error {
                 80005,
                 format!("Amount type must be non-confidential."),
             ),
+            Error::EvmExitError(e) => abcf::Error::ABCIApplicationError(80005, format!("{:?}", e)),
+            Error::AddOverflow => {
+                abcf::Error::ABCIApplicationError(80005, format!("Add overflow."))
+            }
+            Error::SubOverflow => {
+                abcf::Error::ABCIApplicationError(80005, format!("Sub overflow."))
+            }
+            Error::InsufficientBalance => {
+                abcf::Error::ABCIApplicationError(80005, format!("Sub overflow."))
+            }
         }
     }
 }
