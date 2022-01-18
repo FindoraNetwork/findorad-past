@@ -1,4 +1,5 @@
 use abcf::bs3::{DoubleKeyMapStore, MapStore};
+use ethereum::Log;
 use evm::{
     backend::{Backend, Basic},
     executor::stack::{StackState, StackSubstateMetadata},
@@ -19,11 +20,13 @@ pub struct SubstackState<'config, A, S, OO, OS> {
     pub storages: S,
     pub owned_outputs: OO,
     pub outputs_set: OS,
+    pub logs: Vec<Log>,
 }
 
 pub struct State<'config, A, S, OO, OS> {
     pub vicinity: Vicinity,
     pub substacks: Vec<SubstackState<'config, A, S, OO, OS>>,
+    pub logs: Vec<Log>,
 }
 
 impl<
@@ -170,6 +173,130 @@ impl<
         S: DoubleKeyMapStore<H160, H256, H256>,
         OO: MapStore<Address, Vec<OutputId>>,
         OS: MapStore<OutputId, Output>,
+    > State<'config, A, S, OO, OS>
+{
+    fn _enter(&mut self, gas_limit: u64, is_static: bool) {
+        // enter stack.
+    }
+
+    fn _exit_commit(&mut self) -> Result<(), ExitError> {
+        // commit stack.
+        Ok(())
+    }
+
+    fn _exit_revert(&mut self) -> Result<(), ExitError> {
+        // revert stack.
+        Ok(())
+    }
+
+    fn _exit_discard(&mut self) -> Result<(), ExitError> {
+        // discard stack.
+        Ok(())
+    }
+
+    fn _is_empty(&self, address: H160) -> crate::Result<bool> {
+        let r0 = if let Some(v) = self.latest_substate().owned_outputs.get(&Address::from(address))? {
+            v.len() == 0
+        } else {
+            true
+        };
+
+        let r1 = if let Some(account) = self.latest_substate().accounts.get(&address)? {
+            account.code.len() == 0 && account.nonce == 0
+        } else {
+            true
+        };
+
+        Ok(r0 && r1)
+    }
+
+    fn _deleted(&self, address: H160) -> bool {
+        false
+    }
+
+    fn _is_cold(&self, address: H160) -> bool {
+        false
+    }
+
+    fn _is_storage_cold(&self, address: H160, key: H256) -> bool {
+        false
+    }
+
+    fn _inc_nonce(&mut self, address: H160) -> crate::Result<()> {
+        let accounts = &mut self.latest_substate_mut().accounts;
+
+        if let Some(e) = accounts.get_mut(&address)? {
+            e.nonce += 1;
+        } else {
+            accounts.insert(address, Account {
+                code: Vec::new(),
+                nonce: 1,
+            })?;
+        }
+
+        Ok(())
+    }
+
+    fn _set_storage(&mut self, address: H160, key: H256, value: H256) -> crate::Result<()> {
+        self.latest_substate_mut().storages.insert(address, key, value)?;
+        Ok(())
+    }
+
+    fn _reset_storage(&mut self, address: H160) {}
+
+    fn _log(&mut self, address: H160, topics: Vec<H256>, data: Vec<u8>) {
+        self.latest_substate_mut().logs.push(Log {
+            address, topics, data,
+        });
+    }
+
+    fn _set_deleted(&mut self, address: H160) {}
+
+    fn _set_code(&mut self, address: H160, code: Vec<u8>) -> crate::Result<()> {
+        if let Some(v) = self.latest_substate_mut().accounts.get_mut(&address)? {
+            v.code = code;
+        } else {
+            self.latest_substate_mut().accounts.insert(address, Account {
+                nonce: 0,
+                code,
+            })?;
+        }
+        Ok(())
+    }
+
+    fn _transfer(&mut self, transfer: Transfer) -> Result<(), ExitError> {
+        Ok(())
+    }
+
+    fn _reset_balance(&mut self, address: H160) -> crate::Result<()> {
+        let output_ids = if let Some(v) = self.latest_substate_mut().owned_outputs.get_mut(&Address::from(address))? {
+            std::mem::take(v)
+        } else {
+            Vec::new()
+        };
+
+        for output_id in output_ids {
+            self.latest_substate_mut().outputs_set.remove(&output_id)?;
+        }
+
+        Ok(())
+    }
+
+    fn _touch(&mut self, address: H160) -> crate::Result<()> {
+        self.latest_substate_mut().accounts.insert(address, Account {
+            code: Vec::new(),
+            nonce: 0,
+        })?;
+        Ok(())
+    }
+}
+
+impl<
+        'config,
+        A: MapStore<H160, Account>,
+        S: DoubleKeyMapStore<H160, H256, H256>,
+        OO: MapStore<Address, Vec<OutputId>>,
+        OS: MapStore<OutputId, Output>,
     > StackState<'config> for State<'config, A, S, OO, OS>
 {
     fn metadata(&self) -> &StackSubstateMetadata<'config> {
@@ -200,18 +327,13 @@ impl<
     }
 
     fn is_empty(&self, address: H160) -> bool {
-        let r0 = false;
-
-        let r1 = match self.latest_substate().accounts.get(&address) {
-            Ok(Some(account)) => account.code.len() == 0 && account.nonce == 0,
-            Ok(None) => true,
+        match self._is_empty(address) {
+            Ok(e) => e,
             Err(e) => {
                 log::error!("read account error: {:?}", e);
                 true
             }
-        };
-
-        r0 && r1
+        }
     }
 
     fn deleted(&self, address: H160) -> bool {
@@ -226,26 +348,7 @@ impl<
         false
     }
 
-    fn inc_nonce(&mut self, address: H160) {
-        let accounts = &mut self.latest_substate_mut().accounts;
-
-        match accounts.get_mut(&address) {
-            Ok(Some(e)) => e.nonce += 1,
-            Ok(None) => {
-                accounts.insert(
-                    address,
-                    Account {
-                        code: Vec::new(),
-                        nonce: 1,
-                        reset: false,
-                    },
-                );
-            }
-            Err(e) => {
-                log::error!("read account error: {:?}", e);
-            }
-        }
-    }
+    fn inc_nonce(&mut self, address: H160) {}
 
     fn set_storage(&mut self, address: H160, key: H256, value: H256) {}
 

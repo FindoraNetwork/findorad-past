@@ -4,5 +4,4 @@ use serde::{Deserialize, Serialize};
 pub struct Account {
     pub nonce: u64,
     pub code: Vec<u8>,
-    pub reset: bool,
 }
