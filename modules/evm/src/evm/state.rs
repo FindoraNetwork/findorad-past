@@ -406,11 +406,11 @@ impl<
     }
 
     fn is_cold(&self, address: H160) -> bool {
-        false
+        self._is_cold(address)
     }
 
     fn is_storage_cold(&self, address: H160, key: H256) -> bool {
-        false
+        self._is_storage_cold(address, key)
     }
 
     fn inc_nonce(&mut self, address: H160) {
