@@ -165,7 +165,7 @@ pub fn start_findorad() {
     };
 
     let entry = abcf::entry::Node::new(stateless, stateful, manager);
-    let node = abcf_node::Node::new(entry, "./target/findorad/abcf").unwrap();
+    let node = abcf_node::Node::new(entry, "./target/findorad/abcf", abcf_node::NodeType::Validator).unwrap();
     node.start().unwrap();
     std::thread::park();
 }
