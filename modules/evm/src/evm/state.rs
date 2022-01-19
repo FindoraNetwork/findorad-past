@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use abcf::bs3::{DoubleKeyMapStore, MapStore};
 use ethereum::Log;
@@ -14,8 +14,6 @@ use libfindora::{
 };
 use primitive_types::{H160, H256, U256};
 
-use crate::Error;
-
 use super::{account::Account, vicinity::Vicinity};
 
 pub struct SubstackState<'config, A, S, OO, OS> {
@@ -25,14 +23,12 @@ pub struct SubstackState<'config, A, S, OO, OS> {
     pub owned_outputs: OO,
     pub outputs_set: OS,
     pub logs: Vec<Log>,
-    pub error: Vec<Error>,
+    pub deletes: BTreeSet<H160>,
 }
 
 pub struct State<'config, A, S, OO, OS> {
     pub vicinity: Vicinity,
-    pub substacks: Vec<SubstackState<'config, A, S, OO, OS>>,
-    pub logs: Vec<Log>,
-    pub error: Vec<Error>,
+    pub substates: Vec<SubstackState<'config, A, S, OO, OS>>,
 }
 
 impl<
@@ -44,13 +40,13 @@ impl<
     > State<'config, A, S, OO, OS>
 {
     fn latest_substate(&self) -> &SubstackState<'config, A, S, OO, OS> {
-        let index = self.substacks.len() - 1;
-        &self.substacks[index]
+        let index = self.substates.len() - 1;
+        &self.substates[index]
     }
 
     fn latest_substate_mut(&mut self) -> &mut SubstackState<'config, A, S, OO, OS> {
-        let index = self.substacks.len() - 1;
-        &mut self.substacks[index]
+        let index = self.substates.len() - 1;
+        &mut self.substates[index]
     }
     fn basic_resulted(&self, address: H160) -> crate::Result<Basic> {
         let ua = Address::from(address);
@@ -227,15 +223,44 @@ impl<
     }
 
     fn _deleted(&self, address: H160) -> bool {
+        for state in self.substates.iter().rev() {
+            if state.deletes.contains(&address) {
+                return true;
+            }
+        }
         false
     }
 
     fn _is_cold(&self, address: H160) -> bool {
-        false
+        for substate in self.substates.iter().rev() {
+            let local_is_accessed = substate
+                .metadata
+                .accessed()
+                .as_ref()
+                .map(|a| a.accessed_addresses.contains(&address)).unwrap_or(false);
+
+            if local_is_accessed {
+                return false;
+            }
+        }
+
+        true
     }
 
     fn _is_storage_cold(&self, address: H160, key: H256) -> bool {
-        false
+        for substate in self.substates.iter().rev() {
+            let local_is_accessed = substate
+                .metadata
+                .accessed()
+                .as_ref()
+                .map(|a| a.accessed_storage.contains(&(address, key))).unwrap_or(false);
+
+            if local_is_accessed {
+                return false;
+            }
+        }
+
+        true
     }
 
     fn _inc_nonce(&mut self, address: H160) -> crate::Result<()> {
@@ -282,7 +307,9 @@ impl<
         });
     }
 
-    fn _set_deleted(&mut self, address: H160) {}
+    fn _set_deleted(&mut self, address: H160) {
+        self.latest_substate_mut().deletes.insert(address);
+    }
 
     fn _set_code(&mut self, address: H160, code: Vec<u8>) -> crate::Result<()> {
         if let Some(v) = self.latest_substate_mut().accounts.get_mut(&address)? {
@@ -375,7 +402,7 @@ impl<
     }
 
     fn deleted(&self, address: H160) -> bool {
-        false
+        self._deleted(address)
     }
 
     fn is_cold(&self, address: H160) -> bool {
@@ -398,13 +425,25 @@ impl<
         }
     }
 
-    fn reset_storage(&mut self, address: H160) {}
+    fn reset_storage(&mut self, address: H160) {
+        if let Err(e) = self._reset_storage(address) {
+            log::error!("reset storage error: {:?}", e);
+        }
+    }
 
-    fn log(&mut self, address: H160, topics: Vec<H256>, data: Vec<u8>) {}
+    fn log(&mut self, address: H160, topics: Vec<H256>, data: Vec<u8>) {
+        self._log(address, topics, data)
+    }
 
-    fn set_deleted(&mut self, address: H160) {}
+    fn set_deleted(&mut self, address: H160) {
+        self._set_deleted(address)
+    }
 
-    fn set_code(&mut self, address: H160, code: Vec<u8>) {}
+    fn set_code(&mut self, address: H160, code: Vec<u8>) {
+        if let Err(e) = self._set_code(address, code) {
+            log::error!("set code error: {:?}", e);
+        }
+    }
 
     fn transfer(&mut self, transfer: evm::Transfer) -> Result<(), ExitError> {
         Ok(())

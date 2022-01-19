@@ -4,9 +4,8 @@ use libfindora::{
     utxo::{Output, OutputId},
     Address,
 };
-use primitive_types::H512;
 
-use crate::{Result, Error};
+use crate::{Error, Result};
 
 pub fn transfer(
     from: Address,
@@ -27,11 +26,15 @@ pub fn transfer(
                 {
                     if at == &asset {
                         if *am < target_amount {
-                            target_amount = target_amount.checked_sub(*am).ok_or_else(|| Error::SubOverflow)?;
+                            target_amount = target_amount
+                                .checked_sub(*am)
+                                .ok_or_else(|| Error::SubOverflow)?;
                             // remove output.
                             outputs_sets.remove(&id)?;
                         } else {
-                            *am = am.checked_sub(target_amount).ok_or_else(|| Error::SubOverflow)?;
+                            *am = am
+                                .checked_sub(target_amount)
+                                .ok_or_else(|| Error::SubOverflow)?;
                         }
                     }
                 }
