@@ -3,7 +3,10 @@ pub use validate::ValidateTransaction;
 
 use std::convert::TryFrom;
 
-use libfindora::utxo::{Output, OutputId};
+use libfindora::{
+    utxo::{Output, OutputId},
+    Address,
+};
 use primitive_types::H512;
 use zei::xfr::structs::AssetTypeAndAmountProof;
 
@@ -49,7 +52,14 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
             match output.operation {
                 libfindora::OutputOperation::TransferAsset => outputs.push(output.core.clone()),
                 libfindora::OutputOperation::Fee => outputs.push(output.core.clone()),
-                libfindora::OutputOperation::Delegate(_) => outputs.push(output.core.clone()),
+                libfindora::OutputOperation::Delegate(_) => {
+                    // Here you need to do something, change the address in the output to blockhole,
+                    // previously this address was delegator, if no change is made here,
+                    // this money will be treated as a reasonable utxo.
+                    let mut output_new = output.core.clone();
+                    output_new.address = Address::blockhole();
+                    outputs.push(output_new);
+                }
                 _ => {}
             }
         }

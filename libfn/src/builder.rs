@@ -12,13 +12,20 @@ use rand_core::{CryptoRng, RngCore};
 use zei::xfr::structs::{AssetTypeAndAmountProof, XfrBody, XfrProofs};
 use zei::xfr::{lib::gen_xfr_body, sig::XfrKeyPair, structs::AssetRecord};
 
+/// Transaction builder
 #[derive(Debug, Default)]
 pub struct Builder {
+    /// Transaction input
     pub inputs: Vec<Input>,
+    /// Transaction output
     pub outputs: Vec<Output>,
+    /// zei input Calculating zei XfrBody requires
     pub zei_inputs: Vec<AssetRecord>,
+    /// zei output Calculating zei XfrBody requires
     pub zei_outputs: Vec<AssetRecord>,
+    /// MAP of the transaction originator
     pub keypairs: BTreeMap<Address, XfrKeyPair>,
+    /// Objects of calculation for utxo
     pub mapper: Mapper,
 }
 
@@ -44,6 +51,7 @@ impl Builder {
                 )?;
             }
 
+            // Here the utxo of the person who initiated the transaction is fetched and put into the input of the transaction
             self.zei_inputs.append(&mut ars);
 
             for index in ids {
@@ -249,18 +257,23 @@ impl Builder {
 
                     self.outputs.push(Output {
                         operation: OutputOperation::IssueAsset,
-                        core,
+                        core: core.clone(),
                     });
 
                     self.zei_inputs.push(record);
 
-                    let mut index:u32 = self.outputs.len().try_into()?;
-                    index = index -1;
+                    let mut index: u32 = self.outputs.len().try_into()?;
+                    index -= 1;
 
                     self.inputs.push(Input {
                         txid: primitive_types::H512::zero(),
                         n: index,
                         operation: InputOperation::TransferAsset,
+                    });
+
+                    self.outputs.push(Output {
+                        core,
+                        operation: OutputOperation::Undelegate(e.to_operation()?),
                     });
 
                     self.keypairs.insert(address, keypair);
