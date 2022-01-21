@@ -12,11 +12,14 @@ pub struct SecretKey {
 
 impl SecretKey {
     pub fn to_base64(&self) -> Result<String> {
-        Ok(base64::encode(&self.key.zei_to_bytes()))
+        Ok(base64::encode_config(
+            &self.key.zei_to_bytes(),
+            base64::URL_SAFE,
+        ))
     }
 
     pub fn from_base64(s: &str) -> Result<Self> {
-        let key = base64::decode(s)?;
+        let key = base64::decode_config(s, base64::URL_SAFE)?;
 
         Ok(SecretKey {
             key: XfrSecretKey::zei_from_bytes(&key)?,
