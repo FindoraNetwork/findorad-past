@@ -21,7 +21,7 @@ impl Address {
     }
 
     pub fn to_base64(&self) -> Result<String> {
-        Ok(base64::encode(&self.address.0))
+        Ok(base64::encode_config(&self.address.0, base64::URL_SAFE))
     }
 
     pub fn from_eth(s: &str) -> Result<Self> {
@@ -57,7 +57,7 @@ impl Address {
     }
 
     pub fn from_base64(s: &str) -> Result<Self> {
-        let address = base64::decode(s)?;
+        let address = base64::decode_config(s, base64::URL_SAFE)?;
 
         let address = H160::from_slice(&address);
 
