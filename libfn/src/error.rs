@@ -17,13 +17,14 @@ pub enum Error {
     FraAddressFormatError,
     MnemonicFormatError,
     UnsupportMnemonicLanguage,
-    RucError(Box<dyn RucError>),
+    RucError(String),
     Bech32Error(bech32::Error),
     FromHexError(hex::FromHexError),
     Base64DecodeError(base64::DecodeError),
     Bip0039Error(bip0039::Error),
     ED25519BipError(ed25519_dalek_bip32::Error),
     DerivationPathError(derivation_path::DerivationPathError),
+    AbcfSdkError(String),
 }
 
 impl Display for Error {
@@ -57,6 +58,7 @@ impl std::error::Error for Error {
             Self::Bip0039Error(_) => "bip0039 error",
             Self::ED25519BipError(_) => "ed25519 bip error",
             Self::DerivationPathError(_) => "derivation_path error",
+            Self::AbcfSdkError(_) => "abcf sdk error",
         }
     }
 }
@@ -99,7 +101,7 @@ impl From<bech32::Error> for Error {
 
 impl From<Box<dyn RucError>> for Error {
     fn from(e: Box<dyn RucError>) -> Self {
-        Error::RucError(e)
+        Error::RucError(format!("{}", e))
     }
 }
 

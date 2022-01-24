@@ -68,7 +68,7 @@ impl Command {
 fn show(cmd: &Show, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>> {
     let result = match &cmd.address {
         Some(addr) => {
-            let wallet = wallets.read().address_to(addr).build()?;
+            let wallet = wallets.read().by_address(addr).build()?;
 
             let c = display_wallet::Content {
                 name: wallet.name.clone(),

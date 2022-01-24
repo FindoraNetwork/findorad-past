@@ -9,15 +9,23 @@ use libfindora::{
 };
 use primitive_types::H512;
 use rand_core::{CryptoRng, RngCore};
+use zei::xfr::structs::{AssetTypeAndAmountProof, XfrBody, XfrProofs};
 use zei::xfr::{lib::gen_xfr_body, sig::XfrKeyPair, structs::AssetRecord};
 
+/// Transaction builder
 #[derive(Debug, Default)]
 pub struct Builder {
+    /// Transaction input
     pub inputs: Vec<Input>,
+    /// Transaction output
     pub outputs: Vec<Output>,
+    /// zei input Calculating zei XfrBody requires
     pub zei_inputs: Vec<AssetRecord>,
+    /// zei output Calculating zei XfrBody requires
     pub zei_outputs: Vec<AssetRecord>,
+    /// MAP of the transaction originator
     pub keypairs: BTreeMap<Address, XfrKeyPair>,
+    /// Objects of calculation for utxo
     pub mapper: Mapper,
 }
 
@@ -43,6 +51,7 @@ impl Builder {
                 )?;
             }
 
+            // Here the utxo of the person who initiated the transaction is fetched and put into the input of the transaction
             self.zei_inputs.append(&mut ars);
 
             for index in ids {
@@ -104,9 +113,12 @@ impl Builder {
 
                     self.zei_inputs.push(record);
 
+                    let mut index: u32 = self.outputs.len().try_into()?;
+                    index -= 1;
+
                     self.inputs.push(Input {
                         txid: primitive_types::H512::zero(),
-                        n: self.outputs.len().try_into()?,
+                        n: index,
                         operation: InputOperation::TransferAsset,
                     });
 
@@ -135,7 +147,7 @@ impl Builder {
                             .blind_asset_record
                             .asset_type
                             .clone(),
-                        address,
+                        address: t.address.clone(),
                         owner_memo: record.owner_memo.clone(),
                     };
 
@@ -245,15 +257,23 @@ impl Builder {
 
                     self.outputs.push(Output {
                         operation: OutputOperation::IssueAsset,
-                        core,
+                        core: core.clone(),
                     });
 
                     self.zei_inputs.push(record);
 
+                    let mut index: u32 = self.outputs.len().try_into()?;
+                    index -= 1;
+
                     self.inputs.push(Input {
                         txid: primitive_types::H512::zero(),
-                        n: self.outputs.len().try_into()?,
+                        n: index,
                         operation: InputOperation::TransferAsset,
+                    });
+
+                    self.outputs.push(Output {
+                        core,
+                        operation: OutputOperation::Undelegate(e.to_operation()?),
                     });
 
                     self.keypairs.insert(address, keypair);
@@ -284,13 +304,22 @@ impl Builder {
             operation: OutputOperation::Fee,
         };
 
-        self.mapper.sub(
-            &Address::blockhole(),
-            &record.open_asset_record.asset_type,
-            record.open_asset_record.amount,
-            false,
-            false,
-        )?;
+        // add a handling fee for each operation initiator
+        let addr_vec = self
+            .mapper
+            .inner
+            .iter()
+            .map(|(addr, _)| addr.clone())
+            .collect::<Vec<Address>>();
+        for addr in addr_vec.iter() {
+            self.mapper.sub(
+                addr,
+                &record.open_asset_record.asset_type,
+                record.open_asset_record.amount,
+                false,
+                false,
+            )?;
+        }
 
         self.outputs.push(output);
         self.zei_outputs.push(record);
@@ -317,6 +346,7 @@ impl Builder {
                 public_key,
             )?;
 
+            // get change for your own utxo
             let core = utxo::Output {
                 amount: record.open_asset_record.blind_asset_record.amount.clone(),
                 asset: record
@@ -324,7 +354,7 @@ impl Builder {
                     .blind_asset_record
                     .asset_type
                     .clone(),
-                address: Address::blockhole(),
+                address,
                 owner_memo: record.owner_memo.clone(),
             };
             self.outputs.push(Output {
@@ -337,7 +367,21 @@ impl Builder {
 
         // build xfr body.
 
-        let body = gen_xfr_body(prng, &self.zei_inputs, &self.zei_outputs)?;
+        let body = if !self.zei_inputs.is_empty() {
+            gen_xfr_body(prng, &self.zei_inputs, &self.zei_outputs)?
+        } else {
+            XfrBody {
+                inputs: vec![],
+                outputs: vec![],
+                proofs: XfrProofs {
+                    asset_type_and_amount_proof: AssetTypeAndAmountProof::NoProof,
+                    asset_tracing_proof: Default::default(),
+                },
+                asset_tracing_memos: vec![],
+                owners_memos: vec![],
+                input_public_keys: vec![],
+            }
+        };
 
         // build transaction.
 

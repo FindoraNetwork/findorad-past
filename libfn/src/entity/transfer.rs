@@ -21,6 +21,7 @@ pub struct Transfer {
     /// Zei's public key, if you want to receive confidential transaction, this field must provide.
     pub public_key: Option<XfrPublicKey>,
 
+    /// to
     pub address: Address,
 
     pub amount: u64,

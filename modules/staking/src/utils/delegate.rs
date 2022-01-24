@@ -119,12 +119,14 @@ pub fn apply_detail(
     delegators: &mut impl MapStore<TendermintAddress, BTreeMap<Address, Amount>>,
     delegation_amount: &mut impl MapStore<Address, Amount>,
 ) -> Result<()> {
+    // increase in delegator amount
     if let Some(a) = delegation_amount.get_mut(delegator)? {
         *a += amount;
     } else {
         delegation_amount.insert(delegator.clone(), amount)?;
     }
 
+    // increase the amount of delegator under validator
     if let Some(v) = delegators.get_mut(&op.address)? {
         if let Some(a) = v.get_mut(delegator) {
             *a += amount;

@@ -17,7 +17,9 @@ pub fn apply_undelegate_amount(
     global_power: &mut impl ValueStore<Power>,
     powers: &mut impl MapStore<TendermintAddress, Power>,
     delegation_amount: &mut impl MapStore<Address, Amount>,
-) -> Result<()> {
+) -> Result<Vec<(TendermintAddress, Power)>> {
+    let mut addr_power_vec = Vec::new();
+
     if let Some(v) = delegators.get_mut(&op.address)? {
         if let Some(a) = v.get_mut(delegator) {
             let undelegate_amount = a
@@ -45,6 +47,7 @@ pub fn apply_undelegate_amount(
         *v = v
             .checked_sub(amount)
             .ok_or(Error::DelegateAmountNotEnough)?;
+        addr_power_vec.push((op.address.clone(), *v));
     } else {
         return Err(Error::DelegateAmountNotEnough);
     }
@@ -57,5 +60,5 @@ pub fn apply_undelegate_amount(
         return Err(Error::DelegateAmountNotEnough);
     }
 
-    Ok(())
+    Ok(addr_power_vec)
 }
