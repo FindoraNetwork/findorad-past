@@ -57,19 +57,22 @@ pub fn define_issue_fra(entry: &mut dyn tm_abci::Application) {
     });
 
     let rt = tokio::runtime::Runtime::new().unwrap();
+    let mut p = EmptyP {};
+    let mut prng = ChaChaRng::from_entropy();
+    let mut builder = Builder::default();
 
     rt.block_on(async {
-        let mut p = EmptyP {};
-        let mut prng = ChaChaRng::from_entropy();
-        let mut builder = Builder::default();
         builder
             .from_entities(&mut prng, &mut p, vec![define_entry, issue_entry])
             .await
             .unwrap();
-        let tx = builder.build(&mut prng).unwrap();
-        let tx = tx.to_bytes().unwrap();
-        let req_tx = RequestDeliverTx { tx };
+    });
 
+    let tx = builder.build(&mut prng).unwrap();
+    let tx = tx.to_bytes().unwrap();
+    let req_tx = RequestDeliverTx { tx };
+
+    rt.block_on(async {
         let r = entry.deliver_tx(req_tx).await;
 
         log::debug!("code:{:?}", r.code);

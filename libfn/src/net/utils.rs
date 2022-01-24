@@ -13,14 +13,15 @@ where
         .request::<Value, Response>("abci_query", &params)
         .await
         .map_err(|e| Error::AbcfSdkError(format!("{:?}", e)))?;
-
-    if let Some(val) = result {
+    if let Some(val) = &result {
+        if val.response.value.is_empty() {
+            return Ok(None);
+        }
         let base64_str = base64::encode(&val.response.value);
         let bytes = base64::decode(&base64_str)?;
         let t = serde_json::from_slice::<T>(&bytes)?;
         Ok(Some(t))
     } else {
-        log::debug!("request abci_query response:{:?}", result);
         Ok(None)
     }
 }

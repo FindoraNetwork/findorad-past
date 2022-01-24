@@ -21,3 +21,11 @@ console = "0.15"
 rand_chacha = "0.2" 
 futures = "0.3"
 regex = { version = "1.5", default-features = false, features = ["std"] }
+primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
+tokio = { version = "1", features = ["full"] }
+tm-abci = { git = "https://github.com/FindoraNetwork/tendermint-sys.git" }
+rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
+abcf = { git = "https://github.com/FindoraNetwork/abcf.git" }
+libfindora = { path = "../libfindora" }
+async-trait = "0.1.51"
+env_logger = "0.9.0"

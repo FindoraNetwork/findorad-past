@@ -97,6 +97,7 @@ impl Command {
 }
 
 fn send(cmd: &Send, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>> {
+    let server_url = "http://127.0.0.1:26657";
     let wallet = if let Some(addr) = &cmd.from_address {
         wallets.read().by_address(addr).build()?
     } else if let Some(secret) = &cmd.from_secret {
@@ -118,7 +119,9 @@ fn send(cmd: &Send, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
         .build()?;
 
     let mut prng = ChaChaRng::from_entropy();
-    let mut provider = HttpGetProvider {};
+    let mut provider = HttpGetProvider {
+        url: server_url.to_string(),
+    };
     let mut builder = Builder::default();
 
     block_on(builder.from_entities(&mut prng, &mut provider, vec![entity::Entity::Transfer(t)]))?;

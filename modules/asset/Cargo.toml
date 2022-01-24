@@ -6,9 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-abcf = { git = "https://github.com/FindoraNetwork/abcf.git" }
-abcf-node = { git = "https://github.com/FindoraNetwork/abcf.git" }
-abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git" }
+abcf = { git = "https://github.com/FindoraNetwork/abcf.git"}
+abcf-node = { git = "https://github.com/FindoraNetwork/abcf.git"}
+abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git"}
 async-trait = "0.1.51"
 log = "0.4.14"
 serde = { version = "1.0", features = ["derive", "alloc"], default-features = false }

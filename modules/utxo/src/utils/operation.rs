@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use crate::{Error, Result};
 use libfindora::{utxo::OutputId, Address};
 
+#[derive(Debug)]
 pub enum OwnedOutputOperation {
     Add(OutputId),
     Del(OutputId),

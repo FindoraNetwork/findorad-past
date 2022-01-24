@@ -17,7 +17,7 @@ pub enum Error {
     FraAddressFormatError,
     MnemonicFormatError,
     UnsupportMnemonicLanguage,
-    RucError(Box<dyn RucError>),
+    RucError(String),
     Bech32Error(bech32::Error),
     FromHexError(hex::FromHexError),
     Base64DecodeError(base64::DecodeError),
@@ -101,7 +101,7 @@ impl From<bech32::Error> for Error {
 
 impl From<Box<dyn RucError>> for Error {
     fn from(e: Box<dyn RucError>) -> Self {
-        Error::RucError(e)
+        Error::RucError(e.to_string())
     }
 }
 

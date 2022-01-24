@@ -8,6 +8,7 @@ use lazy_static::lazy_static;
 
 pub(crate) mod asset;
 pub(crate) mod delegate;
+pub(crate) mod dev;
 pub(crate) mod setup;
 pub(crate) mod transfer;
 pub(crate) mod wallet;
@@ -47,6 +48,7 @@ impl Opts {
             SubCommand::Setup(c) => c.execute(&mut config),
             SubCommand::Transfer(c) => c.execute(&self.home),
             SubCommand::Wallet(c) => c.execute(&self.home),
+            SubCommand::Dev(c) => c.execute(),
         }
     }
 }
@@ -63,4 +65,6 @@ enum SubCommand {
     Transfer(transfer::Command),
     /// Manage wallet
     Wallet(wallet::Command),
+    /// Development environment
+    Dev(dev::Command),
 }

@@ -8,6 +8,7 @@ pub(crate) mod entry;
 pub(crate) mod utils;
 
 fn main() {
+    env_logger::init();
     let opts = command::Opts::parse();
 
     match opts.execute() {

@@ -232,7 +232,6 @@ impl Builder {
 
                     self.keypairs.insert(address, keypair);
                 }
-
                 Entity::Undelegate(e) => {
                     let record = e.to_output(prng)?;
 
