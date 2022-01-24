@@ -237,7 +237,8 @@ impl<
                 .metadata
                 .accessed()
                 .as_ref()
-                .map(|a| a.accessed_addresses.contains(&address)).unwrap_or(false);
+                .map(|a| a.accessed_addresses.contains(&address))
+                .unwrap_or(false);
 
             if local_is_accessed {
                 return false;
@@ -253,7 +254,8 @@ impl<
                 .metadata
                 .accessed()
                 .as_ref()
-                .map(|a| a.accessed_storage.contains(&(address, key))).unwrap_or(false);
+                .map(|a| a.accessed_storage.contains(&(address, key)))
+                .unwrap_or(false);
 
             if local_is_accessed {
                 return false;
