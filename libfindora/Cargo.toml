@@ -7,6 +7,8 @@ edition = "2021"
 
 [dependencies]
 zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor-address-v1" }
+ruc = "1.0.2"
+
 ed25519-dalek = "1"
 curve25519-dalek = { version =  "3" }
 abcf = { git = "https://github.com/FindoraNetwork/abcf.git" }
@@ -21,7 +23,6 @@ log = "0.4.14"
 hex = "0.4.3"
 base64 = "0.10"
 primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
-ruc = { git = "https://github.com/FindoraNetwork/RUC.git", branch = "master" }
 
 [build-dependencies]
 capnpc = "0.14"
