@@ -1,6 +1,4 @@
 use bech32::{FromBase32, ToBase32};
-use primitive_types::H160;
-use sha3::Digest;
 use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrPublicKey};
 
 use crate::{Error, Result};
@@ -21,7 +19,10 @@ impl PublicKey {
     }
 
     pub fn to_base64(&self) -> Result<String> {
-        Ok(base64::encode(&self.key.zei_to_bytes()))
+        Ok(base64::encode_config(
+            &self.key.zei_to_bytes(),
+            base64::URL_SAFE,
+        ))
     }
 
     pub fn from_bech32(s: &str) -> Result<Self> {
@@ -39,7 +40,7 @@ impl PublicKey {
     }
 
     pub fn from_base64(s: &str) -> Result<Self> {
-        let key = base64::decode(s)?;
+        let key = base64::decode_config(s, base64::URL_SAFE)?;
 
         Ok(PublicKey {
             key: XfrPublicKey::zei_from_bytes(&key)?,
@@ -47,11 +48,8 @@ impl PublicKey {
     }
 
     pub fn to_address(&self) -> Result<Address> {
-        let bytes = self.key.zei_to_bytes();
-        let result = sha3::Sha3_256::digest(bytes.as_slice());
-        let address = &result[0..20];
-        Ok(Address {
-            address: H160::from_slice(address),
-        })
+        let address = libfindora::Address::from(self.key);
+
+        Ok(Address { address: address.0 })
     }
 }

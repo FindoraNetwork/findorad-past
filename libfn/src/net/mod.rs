@@ -1,6 +1,5 @@
-mod owned_outputs;
+pub mod owned_outputs;
 mod tx;
 mod utils;
 
-pub use owned_outputs::get_owned_outputs;
-pub use tx::_send_tx;
+pub use tx::send_tx;

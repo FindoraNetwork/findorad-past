@@ -40,12 +40,12 @@ impl<'a> ReadBuilder<'a> {
         }
     }
 
-    pub fn address_to(&mut self, addr: &'a str) -> &ReadBuilder {
+    pub fn by_address(&mut self, addr: &'a str) -> &ReadBuilder {
         self.address = Some(addr);
         self
     }
 
-    pub fn secret_to(&mut self, secret: &'a str) -> &ReadBuilder {
+    pub fn by_secret(&mut self, secret: &'a str) -> &ReadBuilder {
         self.secret = Some(secret);
         self
     }
@@ -178,29 +178,29 @@ mod tests {
         let wallet = Wallet {
             name: Some("wallet_test".to_string()),
             mnemonic: "some_mnemonic_1".to_string(),
-            address: "B/2kcd30AtqMPEyTEO/I3fzVF+o=".to_string(),
-            public: "oNveVIDjJWbNA6BzyqN30KzyZtC61Sbu0oV553JiD1g=".to_string(),
-            secret: "/J3/PTVi3F642FIN4giagoo+kKgusZCKbg9mlE6IZds=".to_string(),
+            address: "-NH6fGqK9KePhiyscv4F3g4wgRc=".to_string(),
+            public: "LMimn8X5Hutu0cRTfuf9_vwL3CW4QIpDm824VgZyFs0=".to_string(),
+            secret: "z1h5yLzOQ2VBjcfeUGSL8yWqDUHv3_U67_ltRuR_EBY=".to_string(),
         };
         assert!(wallets.create(&wallet).is_ok());
 
         let got = wallets
             .read()
-            .address_to("0x07fda471ddf402da8c3c4c9310efc8ddfcd517ea")
+            .by_address("0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117")
             .build()
             .unwrap();
         assert_eq!(got.public, wallet.public);
 
         let got = wallets
             .read()
-            .address_to("fra11ql76guwa7spd4rpufjf3pm7gmh7d29l249t3dr")
+            .by_address("fra11lrgl5lr23t620rux9jk89ls9mc8rpqghw0g9pm")
             .build()
             .unwrap();
         assert_eq!(got.public, wallet.public);
 
         let got = wallets
             .read()
-            .secret_to("/J3/PTVi3F642FIN4giagoo+kKgusZCKbg9mlE6IZds=")
+            .by_secret("z1h5yLzOQ2VBjcfeUGSL8yWqDUHv3_U67_ltRuR_EBY=")
             .build()
             .unwrap();
         assert_eq!(got.public, wallet.public);
@@ -211,17 +211,17 @@ mod tests {
         let wallet = Wallet {
             name: Some("wallet_test".to_string()),
             mnemonic: "some_mnemonic_1".to_string(),
-            address: "B/2kcd30AtqMPEyTEO/I3fzVF+o=".to_string(),
-            public: "oNveVIDjJWbNA6BzyqN30KzyZtC61Sbu0oV553JiD1g=".to_string(),
-            secret: "/J3/PTVi3F642FIN4giagoo+kKgusZCKbg9mlE6IZds=".to_string(),
+            address: "-NH6fGqK9KePhiyscv4F3g4wgRc=".to_string(),
+            public: "LMimn8X5Hutu0cRTfuf9_vwL3CW4QIpDm824VgZyFs0=".to_string(),
+            secret: "z1h5yLzOQ2VBjcfeUGSL8yWqDUHv3_U67_ltRuR_EBY=".to_string(),
         };
 
         assert_eq!(
-            "0x07fda471ddf402da8c3c4c9310efc8ddfcd517ea",
+            "0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117",
             wallet.to_eth_address().unwrap()
         );
         assert_eq!(
-            "fra11ql76guwa7spd4rpufjf3pm7gmh7d29l249t3dr",
+            "fra11lrgl5lr23t620rux9jk89ls9mc8rpqghw0g9pm",
             wallet.to_fra_address().unwrap()
         )
     }
@@ -235,42 +235,42 @@ mod tests {
         let wallet_1 = Wallet {
             name: Some("wallet_1".to_string()),
             mnemonic: "some_mnemonic_1".to_string(),
-            address: "B/2kcd30AtqMPEyTEO/I3fzVF+o=".to_string(),
-            public: "oNveVIDjJWbNA6BzyqN30KzyZtC61Sbu0oV553JiD1g=".to_string(),
-            secret: "/J3/PTVi3F642FIN4giagoo+kKgusZCKbg9mlE6IZds=".to_string(),
+            address: "-NH6fGqK9KePhiyscv4F3g4wgRc=".to_string(),
+            public: "LMimn8X5Hutu0cRTfuf9_vwL3CW4QIpDm824VgZyFs0=".to_string(),
+            secret: "z1h5yLzOQ2VBjcfeUGSL8yWqDUHv3_U67_ltRuR_EBY=".to_string(),
         };
 
         assert!(wallets.create(&wallet_1).is_ok());
         assert_eq!(wallets.list().unwrap().len(), 1);
         let got = wallets
             .read()
-            .address_to("0x07fda471ddf402da8c3c4c9310efc8ddfcd517ea")
+            .by_address("0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117")
             .build()
             .unwrap();
         assert_eq!(wallet_1, got);
         assert!(wallets
             .read()
-            .address_to("not_exists_address")
+            .by_address("not_exists_address")
             .build()
             .is_err());
 
         let wallet_2 = Wallet {
             name: None,
             mnemonic: "some_mnemonic_2".to_string(),
-            address: "eOe5026+eoSJi5EF2YnUOda1ats=".to_string(),
-            public: "lkucMadbGAy82AgGcqpg1Bh6iU732Ht6Ybfov99k7rw=".to_string(),
-            secret: "P2cW1GEzeyuWrxzqTgZy+rYNeTabpUh9MTV7Upth2B0=".to_string(),
+            address: "0bvFxryFzCzKuCWp2JnHjzgZtK4=".to_string(),
+            public: "6s7_XgADb_TwIFt20WK92hQzvmUE1VAqjEz1lI4kJrM=".to_string(),
+            secret: "Vkxqu7bvbBQ1cX6DsprRD4arisDxxhsUL97ckWbdkCM=".to_string(),
         };
         assert!(wallets.create(&wallet_2).is_ok());
         assert_eq!(wallets.list().unwrap().len(), 2);
         assert!(wallets
-            .delete("0x07fda471ddf402da8c3c4c9310efc8ddfcd517ea")
+            .delete("0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117")
             .is_ok());
         assert_eq!(wallets.list().unwrap().len(), 1);
 
         let got = wallets
             .read()
-            .address_to("0x78e7b9d36ebe7a84898b9105d989d439d6b56adb")
+            .by_address("0xd1bbc5c6bc85cc2ccab825a9d899c78f3819b4ae")
             .build()
             .unwrap();
         assert_eq!(wallet_2, got);

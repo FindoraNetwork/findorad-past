@@ -1,0 +1,33 @@
+[package]
+name = "fm-evm"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+abcf = { git = "https://github.com/FindoraNetwork/abcf.git" }
+abcf-node = { git = "https://github.com/FindoraNetwork/abcf.git" }
+abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git" }
+
+async-trait = "0.1.51"
+log = "0.4.14"
+
+rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
+rand_chacha = "0.2.2"
+
+serde = { version = "1.0", features = ["derive", "alloc"], default-features = false }
+serde_json = "1.0.68"
+
+libfindora = { path = "../../libfindora" }
+fm-utxo = { path = "../utxo" }
+
+primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
+
+rlp = "0.5.1"
+ethereum = "0.10.0"
+
+sha3 = "0.10.0"
+libsecp256k1 = "0.7.0"
+
+evm = "0.33.0"

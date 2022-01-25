@@ -3,6 +3,7 @@ use abcf::{
     bs3::{
         merkle::append_only::AppendOnlyMerkle,
         model::{Map, Value},
+        MapStore,
     },
     module::types::RequestBeginBlock,
     module::types::{
@@ -19,7 +20,7 @@ use libfindora::{
     utxo::Output,
     Address,
 };
-use std::{collections::BTreeMap, mem};
+use std::{collections::BTreeMap, mem, ops::Deref};
 
 #[abcf::module(
     name = "staking",
@@ -186,15 +187,26 @@ impl StakingModule {
                         &mut context.stateless.delegation_amount,
                     )?;
                 }
-                Operation::Undelegate(op) => utils::apply_undelegate_amount(
-                    info.amount,
-                    &info.delegator,
-                    op,
-                    &mut context.stateful.delegators,
-                    &mut context.stateful.global_power,
-                    &mut context.stateful.powers,
-                    &mut context.stateless.delegation_amount,
-                )?,
+                Operation::Undelegate(op) => {
+                    let addr_power_vec = utils::apply_undelegate_amount(
+                        info.amount,
+                        &info.delegator,
+                        op,
+                        &mut context.stateful.delegators,
+                        &mut context.stateful.global_power,
+                        &mut context.stateful.powers,
+                        &mut context.stateless.delegation_amount,
+                    )?;
+
+                    for (addr, power) in addr_power_vec.into_iter() {
+                        if let Some(validator_pubkey) =
+                            context.stateful.validator_pubkey.get(&addr)?
+                        {
+                            let td_power: i64 = power.try_into()?;
+                            res.insert(validator_pubkey.deref().clone(), td_power);
+                        }
+                    }
+                }
             }
         }
 

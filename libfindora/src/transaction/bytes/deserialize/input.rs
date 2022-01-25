@@ -1,6 +1,7 @@
 use primitive_types::H512;
 
 use crate::{
+    evm,
     transaction::{Input, InputOperation},
     transaction_capnp::input,
     Result,
@@ -14,10 +15,15 @@ pub fn from_input(input: input::Reader) -> Result<Input> {
     };
 
     let n = input.get_n();
-    let operation = match input.get_operation()? {
-        input::Operation::TransferAsset => InputOperation::TransferAsset,
-        input::Operation::Undelegate => InputOperation::Undelegate,
-        input::Operation::ClaimReward => InputOperation::ClaimReward,
+    let operation = match input.get_operation().which()? {
+        input::operation::Which::TransferAsset(_) => InputOperation::TransferAsset,
+        input::operation::Which::EvmCall(a) => {
+            let reader = a?;
+
+            let n = reader.get_n();
+
+            InputOperation::EvmCall(evm::Input { n })
+        }
     };
 
     Ok(Input { txid, n, operation })

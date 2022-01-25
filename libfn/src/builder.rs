@@ -12,13 +12,20 @@ use rand_core::{CryptoRng, RngCore};
 use zei::xfr::structs::{AssetTypeAndAmountProof, XfrBody, XfrProofs};
 use zei::xfr::{lib::gen_xfr_body, sig::XfrKeyPair, structs::AssetRecord};
 
+/// Transaction builder
 #[derive(Debug, Default)]
 pub struct Builder {
+    /// Transaction input
     pub inputs: Vec<Input>,
+    /// Transaction output
     pub outputs: Vec<Output>,
+    /// zei input Calculating zei XfrBody requires
     pub zei_inputs: Vec<AssetRecord>,
+    /// zei output Calculating zei XfrBody requires
     pub zei_outputs: Vec<AssetRecord>,
+    /// MAP of the transaction originator
     pub keypairs: BTreeMap<Address, XfrKeyPair>,
+    /// Objects of calculation for utxo
     pub mapper: Mapper,
 }
 
@@ -30,7 +37,7 @@ impl Builder {
         keypair: &XfrKeyPair,
     ) -> Result<()> {
         if !self.keypairs.contains_key(address) {
-            let (ids, outputs) = net::get_owned_outputs(provider, address).await?;
+            let (ids, outputs) = net::owned_outputs::get(provider, address).await?;
 
             let mut ars = utils::open_outputs(outputs, keypair)?;
 
@@ -44,6 +51,7 @@ impl Builder {
                 )?;
             }
 
+            // Here the utxo of the person who initiated the transaction is fetched and put into the input of the transaction
             self.zei_inputs.append(&mut ars);
 
             for index in ids {
@@ -249,15 +257,23 @@ impl Builder {
 
                     self.outputs.push(Output {
                         operation: OutputOperation::IssueAsset,
-                        core,
+                        core: core.clone(),
                     });
 
                     self.zei_inputs.push(record);
 
+                    let mut index: u32 = self.outputs.len().try_into()?;
+                    index -= 1;
+
                     self.inputs.push(Input {
                         txid: primitive_types::H512::zero(),
-                        n: self.outputs.len().try_into()?,
+                        n: index,
                         operation: InputOperation::TransferAsset,
+                    });
+
+                    self.outputs.push(Output {
+                        core,
+                        operation: OutputOperation::Undelegate(e.to_operation()?),
                     });
 
                     self.keypairs.insert(address, keypair);
@@ -375,6 +391,7 @@ impl Builder {
             outputs: self.outputs,
             proof: body.proofs.asset_type_and_amount_proof,
             signatures: Vec::new(),
+            memos: Vec::new(),
         };
 
         // signature.

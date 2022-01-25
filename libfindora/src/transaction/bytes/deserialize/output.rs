@@ -4,7 +4,7 @@ use crate::{
     asset::AssetMeta,
     rewards,
     staking::{self, TendermintAddress, ValidatorPublicKey},
-    transaction::{Output, OutputOperation},
+    transaction::{bytes::deserialize::evm::from_evm, Output, OutputOperation},
     transaction_capnp::{address, output},
     utxo, Address, Result,
 };
@@ -138,6 +138,11 @@ fn from_operation(reader: output::operation::Reader) -> Result<OutputOperation> 
             OutputOperation::ClaimReward(rewards::Claim {
                 validator: td_address,
             })
+        }
+        operation::Which::EvmCall(a) => {
+            let reader = a?;
+
+            OutputOperation::EvmCall(from_evm(reader)?)
         }
     };
     Ok(operation)

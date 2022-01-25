@@ -35,14 +35,10 @@ impl Undelegate {
         )?)
     }
 
-    pub fn to_operation(&self) -> Result<staking::Delegate> {
+    pub fn to_operation(&self) -> Result<staking::Undelegate> {
         let address = self.validator.clone();
 
-        Ok(staking::Delegate {
-            address,
-            memo: None,
-            validator: None,
-        })
+        Ok(staking::Undelegate { address })
     }
 
     pub fn to_keypair(&self) -> XfrKeyPair {

@@ -9,10 +9,16 @@ pub fn build_input(input: &Input, builder: input::Builder) -> Result<()> {
 
     builder.set_txid(input.txid.0.as_ref());
     builder.set_n(input.n);
-    match input.operation {
-        InputOperation::TransferAsset => builder.set_operation(input::Operation::TransferAsset),
-        InputOperation::Undelegate => builder.set_operation(input::Operation::Undelegate),
-        InputOperation::ClaimReward => builder.set_operation(input::Operation::ClaimReward),
+
+    let mut operation = builder.init_operation();
+
+    match &input.operation {
+        InputOperation::TransferAsset => operation.set_transfer_asset(()),
+        InputOperation::EvmCall(e) => {
+            let mut call = operation.init_evm_call();
+
+            call.set_n(e.n);
+        }
     }
 
     Ok(())

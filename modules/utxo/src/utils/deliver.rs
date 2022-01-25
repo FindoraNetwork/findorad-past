@@ -49,8 +49,6 @@ pub fn deliver_tx(
         .verify(prng, params)
         .map_err(|e| Error::UtxoBalanceError(format!("Balance error: {:?}", e)))?;
 
-    // let mut res = Vec::new();
-
     for i in 0..tx.outputs.len() {
         let output = &tx.outputs[i];
         let txid = &tx.txid;
