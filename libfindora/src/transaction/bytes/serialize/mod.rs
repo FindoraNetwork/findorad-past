@@ -1,9 +1,13 @@
+mod evm;
 mod input;
+mod memo;
 mod output;
 mod proof;
 mod signature;
 
 use crate::{transaction::Transaction, transaction_capnp::transaction, Result};
+
+use self::memo::build_memos;
 
 pub fn build_transaction(tx: &Transaction, builder: transaction::Builder) -> Result<()> {
     let mut builder = builder;
@@ -30,12 +34,15 @@ pub fn build_transaction(tx: &Transaction, builder: transaction::Builder) -> Res
     proof::build_proof(&tx.proof, proof_builder)?;
 
     let signature_len = tx.signatures.len().try_into()?;
-    let mut siganture_builder = builder.init_signature(signature_len);
+    let mut siganture_builder = builder.reborrow().init_signature(signature_len);
     for index in 0..tx.signatures.len() {
         let builder = siganture_builder.reborrow().get(index.try_into()?);
         let signature = &tx.signatures[index];
         signature::build_signature(signature, builder)?;
     }
+
+    let memos = builder.init_memo();
+    build_memos(&tx.memos, memos)?;
 
     Ok(())
 }

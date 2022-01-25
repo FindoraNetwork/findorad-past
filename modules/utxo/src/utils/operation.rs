@@ -47,6 +47,7 @@ pub fn insert_owned_outputs_map(
     output_id: OwnedOutputOperation,
 ) {
     if let Some(v) = map.get_mut(&owner) {
+        log::info!("target address: {:?}", owner);
         v.push(output_id);
     } else {
         let v = vec![output_id];

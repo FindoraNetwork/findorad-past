@@ -37,7 +37,7 @@ impl Builder {
         keypair: &XfrKeyPair,
     ) -> Result<()> {
         if !self.keypairs.contains_key(address) {
-            let (ids, outputs) = net::get_owned_outputs(provider, address).await?;
+            let (ids, outputs) = net::owned_outputs::get(provider, address).await?;
 
             let mut ars = utils::open_outputs(outputs, keypair)?;
 
@@ -391,6 +391,7 @@ impl Builder {
             outputs: self.outputs,
             proof: body.proofs.asset_type_and_amount_proof,
             signatures: Vec::new(),
+            memos: Vec::new(),
         };
 
         // signature.

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use zei::{serialization::ZeiFromToBytes, xfr::sig::XfrPublicKey};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, PartialOrd, Ord, Default)]
-pub struct Address(H160);
+pub struct Address(pub H160);
 
 impl Address {
     pub fn blockhole() -> Self {

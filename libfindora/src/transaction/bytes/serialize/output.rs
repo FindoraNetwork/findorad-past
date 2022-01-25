@@ -9,6 +9,8 @@ use zei::{
     xfr::structs::{XfrAmount, XfrAssetType},
 };
 
+use super::evm::build_evm;
+
 pub fn build_output(output: &Output, builder: output::Builder) -> Result<()> {
     let mut builder = builder;
 
@@ -109,6 +111,10 @@ pub fn build_output(output: &Output, builder: output::Builder) -> Result<()> {
             OutputOperation::ClaimReward(a) => {
                 let mut claim = operation.init_claim_reward();
                 claim.set_validator(a.validator.0.as_ref());
+            }
+            OutputOperation::EvmCall(a) => {
+                let builder = operation.init_evm_call();
+                build_evm(a, builder)?;
             }
         }
     }
