@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use abcf::bs3::{DoubleKeyMapStore, MapStore};
+use abcf::bs3::{MapStore};
 use ethereum::Log;
 use evm::{
     backend::{Backend, Basic},
@@ -119,7 +119,6 @@ impl<
     }
 
     fn exists(&self, address: H160) -> bool {
-        // let substate =
         match self.latest_substate().accounts.get(&address) {
             Ok(e) => e.is_some(),
             Err(e) => {
@@ -177,28 +176,69 @@ impl<
 
 impl<
         'config,
-        A: MapStore<H160, Account>,
-        S: MapStore<H160, BTreeMap<H256, H256>>,
-        OO: MapStore<Address, Vec<OutputId>>,
-        OS: MapStore<OutputId, Output>,
+        A: MapStore<H160, Account> + Clone,
+        S: MapStore<H160, BTreeMap<H256, H256>> + Clone,
+        OO: MapStore<Address, Vec<OutputId>> + Clone,
+        OS: MapStore<OutputId, Output> + Clone,
     > State<'config, A, S, OO, OS>
 {
     fn _enter(&mut self, gas_limit: u64, is_static: bool) {
-        // enter stack.
+        let latest_substate = self.latest_substate_mut();
+
+
+        let metadata = latest_substate.metadata.spit_child(gas_limit, is_static);
+
+        let accounts = latest_substate.accounts.clone();
+        let logs = std::mem::take(&mut latest_substate.logs);
+        let deletes = std::mem::take(&mut latest_substate.deletes);
+        let outputs_set = latest_substate.outputs_set.clone();
+        let owned_outputs = latest_substate.owned_outputs.clone();
+        let storages = latest_substate.storages.clone();
+
+
+        let substate = SubstackState {
+            accounts, logs, deletes, metadata, outputs_set, owned_outputs, storages,
+        };
+        self.substates.push(substate);
     }
 
     fn _exit_commit(&mut self) -> Result<(), ExitError> {
-        // commit stack.
+        if let Some(mut pop_substate) = self.substates.pop() {
+            let latest_substate = self.latest_substate_mut();
+
+            latest_substate.metadata.swallow_commit(pop_substate.metadata)?;
+            latest_substate.logs.append(&mut pop_substate.logs);
+            latest_substate.deletes.append(&mut pop_substate.deletes);
+
+        } else {
+            return Err(ExitError::Other("Cannot commit on root substate".into()))
+        }
         Ok(())
     }
 
     fn _exit_revert(&mut self) -> Result<(), ExitError> {
+        if let Some(pop_substate) = self.substates.pop() {
+            let latest_substate = self.latest_substate_mut();
+
+            latest_substate.metadata.swallow_revert(pop_substate.metadata)?;
+
+        } else {
+            return Err(ExitError::Other("Cannot commit on root substate".into()))
+        }
+
         // revert stack.
         Ok(())
     }
 
     fn _exit_discard(&mut self) -> Result<(), ExitError> {
-        // discard stack.
+         if let Some(pop_substate) = self.substates.pop() {
+            let latest_substate = self.latest_substate_mut();
+
+            latest_substate.metadata.swallow_discard(pop_substate.metadata)?;
+
+        } else {
+            return Err(ExitError::Other("Cannot commit on root substate".into()))
+        }
         Ok(())
     }
 
@@ -360,10 +400,10 @@ impl<
 
 impl<
         'config,
-        A: MapStore<H160, Account>,
-        S: MapStore<H160, BTreeMap<H256, H256>>,
-        OO: MapStore<Address, Vec<OutputId>>,
-        OS: MapStore<OutputId, Output>,
+        A: MapStore<H160, Account> + Clone,
+        S: MapStore<H160, BTreeMap<H256, H256>> + Clone,
+        OO: MapStore<Address, Vec<OutputId>> + Clone,
+        OS: MapStore<OutputId, Output> + Clone,
     > StackState<'config> for State<'config, A, S, OO, OS>
 {
     fn metadata(&self) -> &StackSubstateMetadata<'config> {
@@ -375,7 +415,7 @@ impl<
     }
 
     fn enter(&mut self, gas_limit: u64, is_static: bool) {
-        // enter stack.
+        self._enter(gas_limit, is_static)
     }
 
     fn exit_commit(&mut self) -> Result<(), ExitError> {
