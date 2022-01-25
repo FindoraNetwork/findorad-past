@@ -7,3 +7,20 @@ pub fn no_impl() -> Error {
         data: None,
     }
 }
+
+pub fn sdk_error(e: abcf_sdk::error::Error) -> Error {
+    Error {
+        code: ErrorCode::ServerError(40002),
+        message: format!("{:?}", e),
+        data: None,
+    }
+}
+
+pub fn empty_reponse() -> Error {
+    Error {
+        code: ErrorCode::ServerError(40003),
+        message: "upsteam return null response".to_string(),
+        data: None,
+    }
+}
+

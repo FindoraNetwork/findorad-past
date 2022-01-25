@@ -27,7 +27,7 @@ impl Web3ServerBuilder {
         };
 
         let web3 = Web3ApiImpl {
-            upstream: upstream.clone(),
+            upstream,
         };
 
         io.extend_with(eth.to_delegate());
@@ -54,7 +54,7 @@ impl Web3ServerBuilder {
         };
 
         let web3 = Web3ApiImpl {
-            upstream: upstream.clone(),
+            upstream,
         };
 
         io.extend_with(eth.to_delegate());
