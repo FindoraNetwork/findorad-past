@@ -24,3 +24,11 @@ pub fn empty_reponse() -> Error {
     }
 }
 
+pub fn convert_error(e: std::num::TryFromIntError) -> Error {
+    Error {
+        code: ErrorCode::ServerError(40004),
+        message: format!("{:?}", e),
+        data: None,
+    }
+}
+

@@ -16,7 +16,11 @@ pub struct EthApiImpl {
 
 impl EthApi for EthApiImpl {
     fn protocol_version(&self) -> BoxFuture<Result<u64>> {
-        Box::pin(async { Ok(0) })
+        let upstream = self.upstream.clone();
+
+        Box::pin(async move {
+            apis::protocol_version(&upstream).await
+        })
     }
 
     fn chain_id(&self) -> BoxFuture<Result<Option<U64>>> {
@@ -41,15 +45,27 @@ impl EthApi for EthApiImpl {
     }
 
     fn syncing(&self) -> BoxFuture<Result<SyncStatus>> {
-        Box::pin(async { Ok(SyncStatus::None) })
+        let upstream = self.upstream.clone();
+
+        Box::pin(async move {
+            apis::syncing(&upstream).await
+        })
     }
 
     fn author(&self) -> BoxFuture<Result<H160>> {
-        Box::pin(async { Ok(H160::default()) })
+        let upstream = self.upstream.clone();
+
+        Box::pin(async move {
+            apis::coinbase(&upstream).await
+        })
     }
 
     fn is_mining(&self) -> BoxFuture<Result<bool>> {
-        Box::pin(async { Ok(true) })
+        let upstream = self.upstream.clone();
+
+        Box::pin(async move {
+            apis::is_mining(&upstream).await
+        })
     }
 
     fn gas_price(&self) -> BoxFuture<Result<U256>> {
@@ -57,7 +73,11 @@ impl EthApi for EthApiImpl {
     }
 
     fn block_number(&self) -> BoxFuture<Result<U256>> {
-        Box::pin(async { Ok(U256::zero()) })
+        let upstream = self.upstream.clone();
+
+        Box::pin(async move {
+            apis::block_number(&upstream).await
+        })
     }
 
     fn storage_at(&self, _: H160, _: U256, _: Option<BlockNumber>) -> BoxFuture<Result<H256>> {
@@ -124,6 +144,7 @@ impl EthApi for EthApiImpl {
         Box::pin(async { Ok(Default::default()) })
     }
 
+    // ----------- Not impl.
     fn work(&self) -> Result<Work> {
         Err(error::no_impl())
     }
@@ -159,3 +180,46 @@ impl EthApi for EthApiImpl {
         Err(error::no_impl())
     }
 }
+
+mod apis {
+    use ethereum_types::{U256, H160};
+    use jsonrpc_core::Result;
+    use web3_rpc_core::types::{SyncStatus, SyncInfo};
+
+    use crate::utils;
+
+    pub async fn protocol_version(upstream: &str) -> Result<u64> {
+        let result = utils::status(upstream).await?;
+        Ok(result.node_info.protocol_version.app)
+    }
+
+    pub async fn syncing(upstream: &str) -> Result<SyncStatus> {
+        let result = utils::status(upstream).await?;
+        Ok(match result.sync_info.catching_up {
+            true => SyncStatus::None,
+            false => SyncStatus::Info(SyncInfo {
+                starting_block: U256::from(result.sync_info.earliest_block_height),
+                current_block: U256::from(result.sync_info.latest_block_height),
+                highest_block: U256::from(result.sync_info.latest_block_height),
+                warp_chunks_amount: None,
+                warp_chunks_processed: None,
+            })
+        })
+    }
+
+    pub async fn coinbase(upstream: &str) -> Result<H160> {
+        let result = utils::status(upstream).await?;
+        Ok(H160::from_slice(&result.validator_info.address))
+    }
+
+    pub async fn is_mining(upstream: &str) -> Result<bool> {
+        let result = utils::status(upstream).await?;
+        Ok(result.validator_info.voting_power != 0)
+    }
+
+    pub async fn block_number(upstream: &str) -> Result<U256> {
+        let result = utils::status(upstream).await?;
+        Ok(U256::from(result.sync_info.latest_block_height))
+    }
+}
+
