@@ -119,7 +119,7 @@ fn send(cmd: &Send, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
 
     let mut prng = ChaChaRng::from_entropy();
     let mut provider = HttpGetProvider {
-        url: String::from("http://127.0.0.1")
+        url: String::from("http://127.0.0.1"),
     };
     let mut builder = Builder::default();
 

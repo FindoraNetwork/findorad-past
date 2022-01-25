@@ -63,6 +63,5 @@ pub async fn get<P: Provider>(
         }
     }
 
-
     Ok((outputid_v, output_v))
 }
