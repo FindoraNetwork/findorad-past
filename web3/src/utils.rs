@@ -1,10 +1,12 @@
-use abcf_sdk::{jsonrpc::endpoint, providers::{HttpGetProvider, Provider}};
+use abcf_sdk::{
+    jsonrpc::endpoint,
+    providers::{HttpGetProvider, Provider},
+};
 use jsonrpc_core::Result;
 
 use crate::error;
 
-pub async fn net_info(upstream: &str) -> Result<endpoint::net_info::Response>
-{
+pub async fn net_info(upstream: &str) -> Result<endpoint::net_info::Response> {
     let mut provider = HttpGetProvider {
         url: upstream.to_string(),
     };
@@ -22,8 +24,7 @@ pub async fn net_info(upstream: &str) -> Result<endpoint::net_info::Response>
     }
 }
 
-pub async fn status(upstream: &str) -> Result<endpoint::status::Response>
-{
+pub async fn status(upstream: &str) -> Result<endpoint::status::Response> {
     let mut provider = HttpGetProvider {
         url: upstream.to_string(),
     };

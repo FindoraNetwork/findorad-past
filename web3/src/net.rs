@@ -1,7 +1,7 @@
 use jsonrpc_core::{BoxFuture, Result};
 use web3_rpc_core::{types::PeerCount, NetApi};
 
-use crate::{utils::net_info, error};
+use crate::{error, utils::net_info};
 
 pub struct NetApiImpl {
     pub upstream: String,

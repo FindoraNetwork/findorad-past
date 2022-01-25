@@ -1,5 +1,5 @@
 use ethereum_types::H256;
-use jsonrpc_core::{Result, BoxFuture};
+use jsonrpc_core::{BoxFuture, Result};
 use sha3::{Digest, Keccak256};
 use web3_rpc_core::{types::Bytes, Web3Api};
 
@@ -18,9 +18,7 @@ impl Web3Api for Web3ApiImpl {
     fn client_version(&self) -> BoxFuture<Result<String>> {
         let upstream = self.upstream.clone();
 
-        Box::pin(async move {
-            client_version(&upstream).await
-        })
+        Box::pin(async move { client_version(&upstream).await })
     }
 
     fn sha3(&self, input: Bytes) -> Result<H256> {

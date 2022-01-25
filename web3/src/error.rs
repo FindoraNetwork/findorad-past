@@ -31,4 +31,3 @@ pub fn convert_error(e: std::num::TryFromIntError) -> Error {
         data: None,
     }
 }
-

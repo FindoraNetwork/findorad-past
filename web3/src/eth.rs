@@ -18,9 +18,7 @@ impl EthApi for EthApiImpl {
     fn protocol_version(&self) -> BoxFuture<Result<u64>> {
         let upstream = self.upstream.clone();
 
-        Box::pin(async move {
-            apis::protocol_version(&upstream).await
-        })
+        Box::pin(async move { apis::protocol_version(&upstream).await })
     }
 
     fn chain_id(&self) -> BoxFuture<Result<Option<U64>>> {
@@ -47,25 +45,19 @@ impl EthApi for EthApiImpl {
     fn syncing(&self) -> BoxFuture<Result<SyncStatus>> {
         let upstream = self.upstream.clone();
 
-        Box::pin(async move {
-            apis::syncing(&upstream).await
-        })
+        Box::pin(async move { apis::syncing(&upstream).await })
     }
 
     fn author(&self) -> BoxFuture<Result<H160>> {
         let upstream = self.upstream.clone();
 
-        Box::pin(async move {
-            apis::coinbase(&upstream).await
-        })
+        Box::pin(async move { apis::coinbase(&upstream).await })
     }
 
     fn is_mining(&self) -> BoxFuture<Result<bool>> {
         let upstream = self.upstream.clone();
 
-        Box::pin(async move {
-            apis::is_mining(&upstream).await
-        })
+        Box::pin(async move { apis::is_mining(&upstream).await })
     }
 
     fn gas_price(&self) -> BoxFuture<Result<U256>> {
@@ -75,9 +67,7 @@ impl EthApi for EthApiImpl {
     fn block_number(&self) -> BoxFuture<Result<U256>> {
         let upstream = self.upstream.clone();
 
-        Box::pin(async move {
-            apis::block_number(&upstream).await
-        })
+        Box::pin(async move { apis::block_number(&upstream).await })
     }
 
     fn storage_at(&self, _: H160, _: U256, _: Option<BlockNumber>) -> BoxFuture<Result<H256>> {
@@ -182,9 +172,9 @@ impl EthApi for EthApiImpl {
 }
 
 mod apis {
-    use ethereum_types::{U256, H160};
+    use ethereum_types::{H160, U256};
     use jsonrpc_core::Result;
-    use web3_rpc_core::types::{SyncStatus, SyncInfo};
+    use web3_rpc_core::types::{SyncInfo, SyncStatus};
 
     use crate::utils;
 
@@ -203,7 +193,7 @@ mod apis {
                 highest_block: U256::from(result.sync_info.latest_block_height),
                 warp_chunks_amount: None,
                 warp_chunks_processed: None,
-            })
+            }),
         })
     }
 
@@ -222,4 +212,3 @@ mod apis {
         Ok(U256::from(result.sync_info.latest_block_height))
     }
 }
-
