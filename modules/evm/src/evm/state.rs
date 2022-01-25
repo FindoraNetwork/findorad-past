@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use abcf::bs3::MapStore;
+use abcf::bs3::{MapStore, Forkable};
 use ethereum::Log;
 use evm::{
     backend::{Backend, Basic},
@@ -170,10 +170,10 @@ impl<
 
 impl<
         'config,
-        A: MapStore<H160, Account> + Clone,
-        S: MapStore<H160, BTreeMap<H256, H256>> + Clone,
-        OO: MapStore<Address, Vec<OutputId>> + Clone,
-        OS: MapStore<OutputId, Output> + Clone,
+        A: MapStore<H160, Account> + Clone + Forkable,
+        S: MapStore<H160, BTreeMap<H256, H256>> + Clone + Forkable,
+        OO: MapStore<Address, Vec<OutputId>> + Clone + Forkable,
+        OS: MapStore<OutputId, Output> + Clone + Forkable,
     > State<'config, A, S, OO, OS>
 {
     fn _enter(&mut self, gas_limit: u64, is_static: bool) {
@@ -401,10 +401,10 @@ impl<
 
 impl<
         'config,
-        A: MapStore<H160, Account> + Clone,
-        S: MapStore<H160, BTreeMap<H256, H256>> + Clone,
-        OO: MapStore<Address, Vec<OutputId>> + Clone,
-        OS: MapStore<OutputId, Output> + Clone,
+        A: MapStore<H160, Account> + Clone + Forkable,
+        S: MapStore<H160, BTreeMap<H256, H256>> + Clone + Forkable,
+        OO: MapStore<Address, Vec<OutputId>> + Clone + Forkable,
+        OS: MapStore<OutputId, Output> + Clone + Forkable,
     > StackState<'config> for State<'config, A, S, OO, OS>
 {
     fn metadata(&self) -> &StackSubstateMetadata<'config> {
