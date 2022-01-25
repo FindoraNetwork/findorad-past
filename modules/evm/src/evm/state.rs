@@ -209,6 +209,11 @@ impl<
                 .swallow_commit(pop_substate.metadata)?;
             latest_substate.logs.append(&mut pop_substate.logs);
             latest_substate.deletes.append(&mut pop_substate.deletes);
+
+            latest_substate.accounts.merge(pop_substate.accounts.cache());
+            latest_substate.outputs_set.merge(pop_substate.outputs_set.cache());
+            latest_substate.owned_outputs.merge(pop_substate.owned_outputs.cache());
+            latest_substate.storages.merge(pop_substate.storages.cache());
         } else {
             return Err(ExitError::Other("Cannot commit on root substate".into()));
         }
