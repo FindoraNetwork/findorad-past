@@ -101,7 +101,7 @@ impl From<bech32::Error> for Error {
 
 impl From<Box<dyn RucError>> for Error {
     fn from(e: Box<dyn RucError>) -> Self {
-        Error::RucError(e.to_string())
+        Error::RucError(format!("{}", e))
     }
 }
 

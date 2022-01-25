@@ -3,8 +3,6 @@
 // pub mod coinbase;
 // pub mod utxo;
 
-mod utils;
-
 use bs3::backend::SledBackend;
 use libfindora::transaction::Transaction;
 use rand_chacha::ChaChaRng;
@@ -176,12 +174,7 @@ fn main() {
         },
     };
 
-    #[allow(unused_mut)]
-    let mut entry = abcf::entry::Node::new(stateless, stateful, manager);
-
-    #[cfg(feature = "debug_env")]
-    utils::define_issue_fra(&mut entry);
-
+    let entry = abcf::entry::Node::new(stateless, stateful, manager);
     let node = abcf_node::Node::new(entry, "./target/findorad/abcf", NodeType::Validator).unwrap();
     node.start().unwrap();
     std::thread::park();

@@ -53,7 +53,7 @@ impl From<capnp::NotInSchema> for Error {
 
 impl From<Box<dyn ruc::RucError>> for Error {
     fn from(e: Box<dyn ruc::RucError>) -> Self {
-        Self::RucError(e.to_string())
+        Self::RucError(format!("{}", e))
     }
 }
 

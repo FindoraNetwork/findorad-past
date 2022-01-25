@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 abcf = { git = "https://github.com/FindoraNetwork/abcf.git" }
 abcf-node = { git = "https://github.com/FindoraNetwork/abcf.git" }
-bs3 = { git = "https://github.com/FindoraNetwork/bs3.git", features = ["sled-backend"] , tag = "0.1.9"}
+bs3 = { git = "https://github.com/FindoraNetwork/bs3.git", features = ["sled-backend"], tag = "0.1.9" }
 env_logger = "0.9.0"
 async-trait = "0.1.51"
 sha3 = "0.9.1"
@@ -16,17 +16,13 @@ digest = "0.9.0"
 serde_json = "1.0.68"
 serde = "1.0.130"
 libfindora = { path = "../libfindora" }
-libfn = { path = "../libfn" }
 zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor-address-v1" }
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 rand_chacha = "0.2.2"
 log = "0.4.14"
 tendermint-sys = { git = "https://github.com/FindoraNetwork/tendermint-sys.git" }
-primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
-tokio = { version = "1", features = ["full"] }
-abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git" , features = ["http"]}
-tm-abci = { git = "https://github.com/FindoraNetwork/tendermint-sys.git" }
 
+clap = "3.0"
 
 fm-utxo = { path = "../modules/utxo" }
 fm-coinbase = { path = "../modules/coinbase" }
@@ -35,11 +31,6 @@ fm-fee = { path = "../modules/fee" }
 fm-asset = { path = "../modules/asset" }
 
 [dev-dependencies]
-abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", default-features = false, features=["websocket"]}
+abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", default-features = false, features=["websocket"] }
 tokio = { version = "1", features = ["full"] }
 ruc = "1.0.2"
-
-
-[features]
-default = []
-debug_env = []
