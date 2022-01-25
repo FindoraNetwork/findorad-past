@@ -13,9 +13,7 @@ impl NetApi for NetApiImpl {
 
     fn peer_count(&self) -> BoxFuture<Result<PeerCount>> {
         // let upstream = self
-        Box::pin(async {
-            Ok(PeerCount::U32(0)) 
-        })
+        Box::pin(async { Ok(PeerCount::U32(0)) })
     }
 
     fn is_listening(&self) -> Result<bool> {

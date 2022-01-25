@@ -36,8 +36,17 @@ fm-asset = { path = "../modules/asset" }
 
 libfn = { path = "../libfn" }
 
+web3-server = { path = "../web3", optional = true }
+
 tokio = { version = "1", features = ["full"] }
+
+[features]
+web3-http = ["web3-server/http"]
+web3-ws = ["web3-server/ws"]
+
+default = ["web3-http"]
 
 [dev-dependencies]
 ruc = "1.0.2"
 sled = "0.34"
+

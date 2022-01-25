@@ -1,5 +1,5 @@
 [package]
-name = "web3"
+name = "web3-server"
 version = "0.1.0"
 edition = "2021"
 
