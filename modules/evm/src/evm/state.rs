@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use abcf::bs3::{MapStore, Forkable};
+use abcf::bs3::{Forkable, MapStore};
 use ethereum::Log;
 use evm::{
     backend::{Backend, Basic},
@@ -8,11 +8,13 @@ use evm::{
     ExitError,
 };
 use libfindora::{
-    asset::XfrAmount,
+    asset::{XfrAmount, FRA},
     utxo::{Output, OutputId},
     Address,
 };
-use primitive_types::{H160, H256, U256};
+use primitive_types::{H160, H256, U256, H512};
+
+use crate::utils;
 
 use super::{account::Account, vicinity::Vicinity};
 
@@ -29,6 +31,8 @@ pub struct SubstackState<'config, A, S, OO, OS> {
 pub struct State<'config, A, S, OO, OS> {
     pub vicinity: Vicinity,
     pub substates: Vec<SubstackState<'config, A, S, OO, OS>>,
+    pub txid: H512,
+    pub n: u32,
 }
 
 impl<
@@ -210,10 +214,18 @@ impl<
             latest_substate.logs.append(&mut pop_substate.logs);
             latest_substate.deletes.append(&mut pop_substate.deletes);
 
-            latest_substate.accounts.merge(pop_substate.accounts.cache());
-            latest_substate.outputs_set.merge(pop_substate.outputs_set.cache());
-            latest_substate.owned_outputs.merge(pop_substate.owned_outputs.cache());
-            latest_substate.storages.merge(pop_substate.storages.cache());
+            latest_substate
+                .accounts
+                .merge(pop_substate.accounts.cache());
+            latest_substate
+                .outputs_set
+                .merge(pop_substate.outputs_set.cache());
+            latest_substate
+                .owned_outputs
+                .merge(pop_substate.owned_outputs.cache());
+            latest_substate
+                .storages
+                .merge(pop_substate.storages.cache());
         } else {
             return Err(ExitError::Other("Cannot commit on root substate".into()));
         }
@@ -231,7 +243,6 @@ impl<
             return Err(ExitError::Other("Cannot commit on root substate".into()));
         }
 
-        // revert stack.
         Ok(())
     }
 
@@ -245,6 +256,7 @@ impl<
         } else {
             return Err(ExitError::Other("Cannot commit on root substate".into()));
         }
+
         Ok(())
     }
 
@@ -370,7 +382,23 @@ impl<
         Ok(())
     }
 
-    fn _transfer(&mut self, _transfer: evm::Transfer) -> crate::Result<()> {
+    fn _transfer(&mut self, transfer: evm::Transfer) -> crate::Result<()> {
+        let oid = OutputId {
+            txid: self.txid,
+            n: self.n,
+        };
+
+        let latest_substate = self.latest_substate_mut();
+
+        let from = Address::from(transfer.source);
+        let to = Address::from(transfer.target);
+        let amount = transfer.value.as_u64();
+        let asset = FRA.bare_asset_type;
+
+        utils::transfer(from, to, amount, asset, oid, &mut latest_substate.outputs_set, &mut latest_substate.owned_outputs)?;
+
+        self.n += 1;
+
         Ok(())
     }
 
@@ -425,18 +453,15 @@ impl<
     }
 
     fn exit_commit(&mut self) -> Result<(), ExitError> {
-        // commit stack.
-        Ok(())
+        self._exit_commit()
     }
 
     fn exit_revert(&mut self) -> Result<(), ExitError> {
-        // revert stack.
-        Ok(())
+        self._exit_revert()
     }
 
     fn exit_discard(&mut self) -> Result<(), ExitError> {
-        // discard stack.
-        Ok(())
+        self._exit_discard()
     }
 
     fn is_empty(&self, address: H160) -> bool {
@@ -493,8 +518,9 @@ impl<
         }
     }
 
-    fn transfer(&mut self, _transfer: evm::Transfer) -> Result<(), ExitError> {
-        Ok(())
+    fn transfer(&mut self, transfer: evm::Transfer) -> Result<(), ExitError> {
+        self._transfer(transfer)
+            .map_err(|e| ExitError::Other(format!("{:?}", e).into()))
     }
 
     fn reset_balance(&mut self, address: H160) {
