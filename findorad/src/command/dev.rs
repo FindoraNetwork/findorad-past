@@ -51,7 +51,7 @@ pub fn define_issue_fra() -> Transaction {
         amount: 210_0000_0000 * FRA.units / 2,
         asset_type: FRA.bare_asset_type,
         confidential_amount: false,
-        keypair: kp.clone(),
+        keypair: kp,
     });
 
     let rt = tokio::runtime::Runtime::new().unwrap();

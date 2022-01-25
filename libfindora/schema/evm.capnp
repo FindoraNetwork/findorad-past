@@ -9,7 +9,7 @@ struct Input {
 }
 
 struct Action {
-    action: union {
+    union {
         call @0: Void;
         create @1: Void;
         create2 @2: Create;

@@ -23,10 +23,10 @@ pub fn balance(
                 if let (XfrAmount::NonConfidential(amount), XfrAssetType::NonConfidential(asset)) =
                     (&output.amount, &output.asset)
                 {
-                    if let Some(a) = amounts.get_mut(&asset) {
-                        *a = a.checked_add(*amount).ok_or_else(|| Error::AddOverflow)?;
+                    if let Some(a) = amounts.get_mut(asset) {
+                        *a = a.checked_add(*amount).ok_or(Error::AddOverflow)?;
                     } else {
-                        amounts.insert(asset.clone(), amount.clone());
+                        amounts.insert(*asset, *amount);
                     }
                 }
             }

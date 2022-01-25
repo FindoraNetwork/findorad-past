@@ -9,7 +9,7 @@ edition = "2021"
 abcf = { git = "https://github.com/FindoraNetwork/abcf.git" }
 abcf-node = { git = "https://github.com/FindoraNetwork/abcf.git" }
 abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git" }
-bs3 = { git = "https://github.com/FindoraNetwork/bs3.git", features = ["sled-backend"], tag = "0.1.9" }
+bs3 = { git = "https://github.com/FindoraNetwork/bs3.git", features = ["sled-backend"], tag = "0.1.10" }
 env_logger = "0.9.0"
 async-trait = "0.1.51"
 sha3 = "0.9.1"

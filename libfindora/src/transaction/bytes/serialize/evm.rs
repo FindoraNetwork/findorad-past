@@ -12,7 +12,7 @@ pub fn build_evm(evm: &Evm, builder: output::Builder) -> Result<()> {
     builder.set_chain_id(evm.chain_id);
     builder.set_gas_limit(evm.gas_limit);
 
-    let mut action = builder.init_action().get_action();
+    let mut action = builder.get_action()?;
 
     match &evm.action {
         Action::Call => action.set_call(()),

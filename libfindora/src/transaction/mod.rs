@@ -1,5 +1,5 @@
-mod transaction;
-pub use transaction::Transaction;
+mod tx;
+pub use tx::*;
 
 mod input;
 pub use input::{Input, Operation as InputOperation};

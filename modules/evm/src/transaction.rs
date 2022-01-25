@@ -43,11 +43,10 @@ fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
                 n: input.n,
             });
         } else {
-            let mut value = Vec::new();
-            value.push(OutputId {
+            let value = vec![OutputId {
                 txid: input.txid,
                 n: input.n,
-            });
+            }];
             out_indexes.insert(input.n, value);
         }
     }

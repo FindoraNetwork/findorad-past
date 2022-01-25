@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use abcf::bs3::{MapStore};
+use abcf::bs3::MapStore;
 use ethereum::Log;
 use evm::{
     backend::{Backend, Basic},
@@ -54,7 +54,7 @@ impl<
             let mut balance = 0;
 
             for output_id in v.as_ref() {
-                if let Some(output) = self.latest_substate().outputs_set.get(&output_id)? {
+                if let Some(output) = self.latest_substate().outputs_set.get(output_id)? {
                     if let XfrAmount::NonConfidential(e) = &output.amount {
                         balance += e;
                     }
@@ -158,13 +158,7 @@ impl<
 
     fn original_storage(&self, address: H160, key: H256) -> Option<H256> {
         match self.latest_substate().storages.get(&address) {
-            Ok(Some(e)) => {
-                if let Some(r) = e.get(&key) {
-                    Some(r.clone())
-                } else {
-                    None
-                }
-            }
+            Ok(Some(e)) => e.get(&key).copied(),
             Ok(None) => None,
             Err(e) => {
                 log::error!("read code error: {:?}", e);
@@ -185,7 +179,6 @@ impl<
     fn _enter(&mut self, gas_limit: u64, is_static: bool) {
         let latest_substate = self.latest_substate_mut();
 
-
         let metadata = latest_substate.metadata.spit_child(gas_limit, is_static);
 
         let accounts = latest_substate.accounts.clone();
@@ -195,9 +188,14 @@ impl<
         let owned_outputs = latest_substate.owned_outputs.clone();
         let storages = latest_substate.storages.clone();
 
-
         let substate = SubstackState {
-            accounts, logs, deletes, metadata, outputs_set, owned_outputs, storages,
+            accounts,
+            logs,
+            deletes,
+            metadata,
+            outputs_set,
+            owned_outputs,
+            storages,
         };
         self.substates.push(substate);
     }
@@ -206,12 +204,13 @@ impl<
         if let Some(mut pop_substate) = self.substates.pop() {
             let latest_substate = self.latest_substate_mut();
 
-            latest_substate.metadata.swallow_commit(pop_substate.metadata)?;
+            latest_substate
+                .metadata
+                .swallow_commit(pop_substate.metadata)?;
             latest_substate.logs.append(&mut pop_substate.logs);
             latest_substate.deletes.append(&mut pop_substate.deletes);
-
         } else {
-            return Err(ExitError::Other("Cannot commit on root substate".into()))
+            return Err(ExitError::Other("Cannot commit on root substate".into()));
         }
         Ok(())
     }
@@ -220,10 +219,11 @@ impl<
         if let Some(pop_substate) = self.substates.pop() {
             let latest_substate = self.latest_substate_mut();
 
-            latest_substate.metadata.swallow_revert(pop_substate.metadata)?;
-
+            latest_substate
+                .metadata
+                .swallow_revert(pop_substate.metadata)?;
         } else {
-            return Err(ExitError::Other("Cannot commit on root substate".into()))
+            return Err(ExitError::Other("Cannot commit on root substate".into()));
         }
 
         // revert stack.
@@ -231,13 +231,14 @@ impl<
     }
 
     fn _exit_discard(&mut self) -> Result<(), ExitError> {
-         if let Some(pop_substate) = self.substates.pop() {
+        if let Some(pop_substate) = self.substates.pop() {
             let latest_substate = self.latest_substate_mut();
 
-            latest_substate.metadata.swallow_discard(pop_substate.metadata)?;
-
+            latest_substate
+                .metadata
+                .swallow_discard(pop_substate.metadata)?;
         } else {
-            return Err(ExitError::Other("Cannot commit on root substate".into()))
+            return Err(ExitError::Other("Cannot commit on root substate".into()));
         }
         Ok(())
     }
@@ -254,7 +255,7 @@ impl<
         };
 
         let r1 = if let Some(account) = self.latest_substate().accounts.get(&address)? {
-            account.code.len() == 0 && account.nonce == 0
+            account.code.is_empty() && account.nonce == 0
         } else {
             true
         };
@@ -364,7 +365,7 @@ impl<
         Ok(())
     }
 
-    fn _transfer(&mut self, transfer: evm::Transfer) -> crate::Result<()> {
+    fn _transfer(&mut self, _transfer: evm::Transfer) -> crate::Result<()> {
         Ok(())
     }
 
@@ -487,7 +488,7 @@ impl<
         }
     }
 
-    fn transfer(&mut self, transfer: evm::Transfer) -> Result<(), ExitError> {
+    fn transfer(&mut self, _transfer: evm::Transfer) -> Result<(), ExitError> {
         Ok(())
     }
 

@@ -21,6 +21,5 @@ fn main() {
         let tx = command::dev::define_issue_fra();
         fnd.genesis(tx).unwrap();
         fnd.start();
-        return;
     }
 }

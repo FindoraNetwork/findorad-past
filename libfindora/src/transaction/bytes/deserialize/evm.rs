@@ -2,7 +2,7 @@ use primitive_types::H256;
 
 use crate::{
     evm::{Action, Create2, Evm},
-    evm_capnp::{action::action, output},
+    evm_capnp::{action, output},
     Result,
 };
 
@@ -14,7 +14,7 @@ pub fn from_evm(input: output::Reader) -> Result<Evm> {
 
     let action_reader = input.get_action()?;
 
-    let action = match action_reader.get_action().which()? {
+    let action = match action_reader.which()? {
         action::Which::Call(_) => Action::Call,
         action::Which::Create(_) => Action::Create,
         action::Which::Create2(a) => {

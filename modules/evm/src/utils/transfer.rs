@@ -26,15 +26,12 @@ pub fn transfer(
                 {
                     if at == &asset {
                         if *am < target_amount {
-                            target_amount = target_amount
-                                .checked_sub(*am)
-                                .ok_or_else(|| Error::SubOverflow)?;
+                            target_amount =
+                                target_amount.checked_sub(*am).ok_or(Error::SubOverflow)?;
                             // remove output.
                             outputs_sets.remove(&id)?;
                         } else {
-                            *am = am
-                                .checked_sub(target_amount)
-                                .ok_or_else(|| Error::SubOverflow)?;
+                            *am = am.checked_sub(target_amount).ok_or(Error::SubOverflow)?;
                         }
                     }
                 }

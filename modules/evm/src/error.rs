@@ -41,32 +41,34 @@ impl From<Error> for abcf::Error {
                 abcf::Error::ABCIApplicationError(80005, format!("{:?}", e))
             }
             Error::Bs3Error(e) => abcf::Error::ABCIApplicationError(80005, format!("{:?}", e)),
-            Error::NoOutputIndex => abcf::Error::ABCIApplicationError(80005, format!("No output.")),
+            Error::NoOutputIndex => {
+                abcf::Error::ABCIApplicationError(80005, String::from("No output."))
+            }
             Error::OutputOperationMustBeEvm => abcf::Error::ABCIApplicationError(
                 80005,
-                format!("Output operation must be evm call."),
+                String::from("Output operation must be evm call."),
             ),
             Error::RlpError(e) => abcf::Error::ABCIApplicationError(80005, format!("{:?}", e)),
             Error::OnlySupportLegacyTransaction => abcf::Error::ABCIApplicationError(
                 80005,
-                format!("Only support legact transaction."),
+                String::from("Only support legact transaction."),
             ),
             Error::Secp256k1Error(e) => {
                 abcf::Error::ABCIApplicationError(80005, format!("{:?}", e))
             }
             Error::AmountTypeMustBeNonConfidential => abcf::Error::ABCIApplicationError(
                 80005,
-                format!("Amount type must be non-confidential."),
+                String::from("Amount type must be non-confidential."),
             ),
             Error::EvmExitError(e) => abcf::Error::ABCIApplicationError(80005, format!("{:?}", e)),
             Error::AddOverflow => {
-                abcf::Error::ABCIApplicationError(80005, format!("Add overflow."))
+                abcf::Error::ABCIApplicationError(80005, String::from("Add overflow."))
             }
             Error::SubOverflow => {
-                abcf::Error::ABCIApplicationError(80005, format!("Sub overflow."))
+                abcf::Error::ABCIApplicationError(80005, String::from("Sub overflow."))
             }
             Error::InsufficientBalance => {
-                abcf::Error::ABCIApplicationError(80005, format!("Sub overflow."))
+                abcf::Error::ABCIApplicationError(80005, String::from("Sub overflow."))
             }
         }
     }

@@ -68,7 +68,7 @@ impl Transaction {
     }
 
     pub fn signature(&mut self, keypairs: &[XfrKeyPair]) -> Result<()> {
-        if self.signatures.len() != 0 {
+        if !self.signatures.is_empty() {
             return Err(Error::AlreadySign);
         }
 
