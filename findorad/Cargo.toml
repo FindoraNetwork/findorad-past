@@ -33,6 +33,7 @@ fm-coinbase = { path = "../modules/coinbase" }
 fm-staking = { path = "../modules/staking" }
 fm-fee = { path = "../modules/fee" }
 fm-asset = { path = "../modules/asset" }
+fm-evm = { path = "../modules/evm" }
 
 libfn = { path = "../libfn" }
 
