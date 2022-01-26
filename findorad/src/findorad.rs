@@ -39,7 +39,14 @@ pub struct Findorad {
 }
 
 impl Findorad {
-    pub fn new() -> Self {
+    pub fn new(prefix:Option<&str>) -> Self {
+
+        let prefix_path = if let Some(prefix) = prefix {
+            prefix.to_string()
+        } else {
+            "./target/findorad".to_string()
+        };
+        println!("prefix_path:{}",prefix_path);
         let staking = StakingModule::new(BTreeMap::new());
 
         let asset = AssetModule::new();
@@ -55,12 +62,12 @@ impl Findorad {
         let manager = FindoradManager::<SledBackend>::new(staking, asset, fee, coinbase, utxo);
 
         let staking_backend =
-            bs3::backend::sled_db_open(Some("./target/findorad/staking")).unwrap();
+            bs3::backend::sled_db_open(Some(format!("{}/{}",prefix_path,"staking").as_str())).unwrap();
         let coinbase_backend =
-            bs3::backend::sled_db_open(Some("./target/findorad/coinbase")).unwrap();
-        let utxo_backend = bs3::backend::sled_db_open(Some("./target/findorad/utxo")).unwrap();
-        let asset_backend = bs3::backend::sled_db_open(Some("./target/findorad/asset")).unwrap();
-        let fee_backend = bs3::backend::sled_db_open(Some("./target/findorad/fee")).unwrap();
+            bs3::backend::sled_db_open(Some(format!("{}/{}",prefix_path,"coinbase").as_str())).unwrap();
+        let utxo_backend = bs3::backend::sled_db_open(Some(format!("{}/{}",prefix_path,"utxo").as_str())).unwrap();
+        let asset_backend = bs3::backend::sled_db_open(Some(format!("{}/{}",prefix_path,"asset").as_str())).unwrap();
+        let fee_backend = bs3::backend::sled_db_open(Some(format!("{}/{}",prefix_path,"fee").as_str())).unwrap();
 
         let stateful = abcf::Stateful::<FindoradManager<SledBackend>> {
             staking: abcf::Stateful::<StakingModule<SledBackend, Sha3_512>> {
@@ -181,7 +188,7 @@ impl Findorad {
         let entry = abcf::entry::Node::new(stateless, stateful, manager);
         let node = abcf_node::Node::new(
             entry,
-            "./target/findorad/abcf",
+            format!("{}/{}",prefix_path,"abcf").as_str(),
             abcf_node::NodeType::Validator,
         )
         .unwrap();

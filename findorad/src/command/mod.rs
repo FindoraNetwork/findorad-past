@@ -20,5 +20,11 @@ pub struct Args {
 
 #[derive(clap::Subcommand, Debug)]
 pub enum Action {
-    Node,
+    Node(Node),
+}
+
+#[derive(Parser, Debug)]
+pub struct Node {
+    #[clap(short, long, forbid_empty_values = true)]
+    pub config_path: String,
 }
