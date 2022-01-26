@@ -11,4 +11,5 @@ members = [
     "modules/fee",
     "modules/asset",
     "modules/evm",
+    "web3"
 ]

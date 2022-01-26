@@ -1,0 +1,33 @@
+[package]
+name = "web3-server"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4.14"
+
+jsonrpc-core = "18.0"
+jsonrpc-http-server = { version = "18.0", optional = true }
+jsonrpc-ws-server = { version = "18.0", optional = true }
+
+primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
+ethereum-types = "0.12"
+
+web3-rpc-core = { git = "https://github.com/FindoraNetwork/web3-rpc.git" }
+
+reqwest = { version = "0.11", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
+
+sha3 = "0.9.1"
+
+abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git" }
+
+libfindora = { path = "../libfindora" }
+libfn = { path = "../libfn" }
+
+[features]
+http = ["jsonrpc-http-server"]
+ws = ["jsonrpc-ws-server"]
+
