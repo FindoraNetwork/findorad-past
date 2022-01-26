@@ -11,7 +11,7 @@ fn main() {
 
     rt.block_on(async {
         let mut p1 = abcf_sdk::providers::HttpGetProvider {
-            url: String::from("http://127.0.0.1"),
+            url: String::from("http://127.0.0.1:26657"),
         };
         let address = Address::from(kp.pub_key);
         println!("{}", serde_json::to_string(&address).unwrap());
