@@ -1,5 +1,6 @@
 use abcf::{tm_protos::abci::RequestDeliverTx, ToBytes};
 use bs3::backend::SledBackend;
+use fm_evm::EvmModule;
 use libfindora::transaction::Transaction;
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
@@ -26,6 +27,8 @@ pub struct FindoradManager {
     #[dependence(coinbase = "coinbase")]
     pub staking: StakingModule,
     pub asset: AssetModule,
+    #[dependence(utxo = "utxo")]
+    pub evm: EvmModule,
     pub fee: FeeModule,
     #[dependence(utxo = "utxo")]
     pub coinbase: CoinbaseModule,
@@ -44,15 +47,19 @@ impl Findorad {
 
         let asset = AssetModule::new();
 
+        let evm = EvmModule::new(fm_evm::evm::vicinity::Vicinity::mainnet());
+
         let fee = FeeModule::new();
 
         let coinbase = CoinbaseModule::new(0);
 
         let params = PublicParams::default();
+
         let prng = ChaChaRng::from_entropy();
+
         let utxo = UtxoModule::new(params, prng);
 
-        let manager = FindoradManager::<SledBackend>::new(staking, asset, fee, coinbase, utxo);
+        let manager = FindoradManager::<SledBackend>::new(staking, asset, evm, fee, coinbase, utxo);
 
         let staking_backend =
             bs3::backend::sled_db_open(Some("./target/findorad/staking")).unwrap();
@@ -61,6 +68,7 @@ impl Findorad {
         let utxo_backend = bs3::backend::sled_db_open(Some("./target/findorad/utxo")).unwrap();
         let asset_backend = bs3::backend::sled_db_open(Some("./target/findorad/asset")).unwrap();
         let fee_backend = bs3::backend::sled_db_open(Some("./target/findorad/fee")).unwrap();
+        let evm_backend = bs3::backend::sled_db_open(Some("./target/findorad/evm")).unwrap();
 
         let stateful = abcf::Stateful::<FindoradManager<SledBackend>> {
             staking: abcf::Stateful::<StakingModule<SledBackend, Sha3_512>> {
@@ -96,6 +104,20 @@ impl Findorad {
                 asset_infos: bs3::SnapshotableStorage::new(
                     Default::default(),
                     SledBackend::open_tree(&asset_backend, "asset_infos").unwrap(),
+                )
+                .unwrap(),
+                __marker_s: PhantomData,
+                __marker_d: PhantomData,
+            },
+            evm: abcf::Stateful::<EvmModule<SledBackend, Sha3_512>> {
+                accounts: abcf::bs3::SnapshotableStorage::new(
+                    Default::default(),
+                    SledBackend::open_tree(&evm_backend, "accounts").unwrap(),
+                )
+                .unwrap(),
+                storages: abcf::bs3::SnapshotableStorage::new(
+                    Default::default(),
+                    SledBackend::open_tree(&evm_backend, "storages").unwrap(),
                 )
                 .unwrap(),
                 __marker_s: PhantomData,
@@ -171,6 +193,15 @@ impl Findorad {
                 owned_outputs: abcf::bs3::SnapshotableStorage::new(
                     Default::default(),
                     SledBackend::open_tree(&utxo_backend, "owned_outputs").unwrap(),
+                )
+                .unwrap(),
+                __marker_s: PhantomData,
+                __marker_d: PhantomData,
+            },
+            evm: abcf::Stateless::<EvmModule<SledBackend, Sha3_512>> {
+                sl_value: abcf::bs3::SnapshotableStorage::new(
+                    Default::default(),
+                    SledBackend::open_tree(&evm_backend, "sl_value").unwrap(),
                 )
                 .unwrap(),
                 __marker_s: PhantomData,

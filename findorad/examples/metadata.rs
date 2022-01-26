@@ -15,9 +15,7 @@ fn main() {
         };
         let address = Address::from(kp.pub_key);
         println!("{}", serde_json::to_string(&address).unwrap());
-        let result = libfn::net::owned_outputs::get(&mut p1, &address)
-            .await
-            .unwrap();
+        let result = libfn::net::metadata::get(&mut p1).await.unwrap();
         println!("query: {:?}", result);
     });
 }

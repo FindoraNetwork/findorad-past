@@ -25,6 +25,7 @@ pub enum Error {
     ED25519BipError(ed25519_dalek_bip32::Error),
     DerivationPathError(derivation_path::DerivationPathError),
     AbcfSdkError(String),
+    NoResponse,
 }
 
 impl Display for Error {
@@ -59,6 +60,7 @@ impl std::error::Error for Error {
             Self::ED25519BipError(_) => "ed25519 bip error",
             Self::DerivationPathError(_) => "derivation_path error",
             Self::AbcfSdkError(_) => "abcf sdk error",
+            Self::NoResponse => "No response from network",
         }
     }
 }

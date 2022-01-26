@@ -40,7 +40,7 @@ pub async fn get<P: Provider>(
 
     let params = serde_json::json!({
         "path": hex_path,
-        "height": 0_i64,
+        "height": 0i64,
     });
 
     if let Some(output_id_temps) = abci_query::<Vec<OutputIdTemp>, P>(params, provider).await? {
