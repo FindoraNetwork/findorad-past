@@ -4,12 +4,15 @@ use abcf::{
         model::{DoubleKeyMap, Map, Value},
     },
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
-    Application, RPCResponse, TxnContext, RPCContext,
+    Application, RPCContext, RPCResponse, TxnContext,
 };
 use fm_utxo::UtxoModule;
 use primitive_types::{H160, H256, U256};
 
-use crate::{evm::{account::Account, vicinity::Vicinity}, rpc, Transaction};
+use crate::{
+    evm::{account::Account, vicinity::Vicinity},
+    rpc, Transaction,
+};
 
 #[abcf::module(name = "evm", version = 1, impl_version = "0.1.1", target_height = 0)]
 #[dependence(utxo = "UtxoModule")]

@@ -31,3 +31,11 @@ pub fn convert_error(e: std::num::TryFromIntError) -> Error {
         data: None,
     }
 }
+
+pub fn libfn_error(e: libfn::Error) -> Error {
+    Error {
+        code: ErrorCode::ServerError(40005),
+        message: format!("{:?}", e),
+        data: None,
+    }
+}

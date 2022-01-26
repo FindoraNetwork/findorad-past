@@ -113,11 +113,13 @@ impl Findorad {
                 accounts: abcf::bs3::SnapshotableStorage::new(
                     Default::default(),
                     SledBackend::open_tree(&evm_backend, "accounts").unwrap(),
-                ).unwrap(),
+                )
+                .unwrap(),
                 storages: abcf::bs3::SnapshotableStorage::new(
                     Default::default(),
                     SledBackend::open_tree(&evm_backend, "storages").unwrap(),
-                ).unwrap(),
+                )
+                .unwrap(),
                 __marker_s: PhantomData,
                 __marker_d: PhantomData,
             },
@@ -200,7 +202,8 @@ impl Findorad {
                 sl_value: abcf::bs3::SnapshotableStorage::new(
                     Default::default(),
                     SledBackend::open_tree(&evm_backend, "sl_value").unwrap(),
-                ).unwrap(),
+                )
+                .unwrap(),
                 __marker_s: PhantomData,
                 __marker_d: PhantomData,
             },

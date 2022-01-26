@@ -22,16 +22,21 @@ impl EthApi for EthApiImpl {
     }
 
     fn chain_id(&self) -> BoxFuture<Result<Option<U64>>> {
-        // form td rpc
-        Box::pin(async { Ok(Some(U64::zero())) })
+        let upstream = self.upstream.clone();
+
+        Box::pin(async move { apis::chain_id(&upstream).await })
     }
 
     fn accounts(&self) -> Result<Vec<H160>> {
         Ok(vec![])
     }
 
-    fn balance(&self, _: H160, _: Option<BlockNumber>) -> BoxFuture<Result<U256>> {
-        Box::pin(async { Ok(U256::zero()) })
+    fn balance(&self, address: H160, _height: Option<BlockNumber>) -> BoxFuture<Result<U256>> {
+        let upstream = self.upstream.clone();
+
+        // TODO: Adding height
+
+        Box::pin(async move { apis::balance(&upstream, address).await })
     }
 
     fn send_transaction(&self, _: TransactionRequest) -> BoxFuture<Result<H256>> {
@@ -61,7 +66,9 @@ impl EthApi for EthApiImpl {
     }
 
     fn gas_price(&self) -> BoxFuture<Result<U256>> {
-        Box::pin(async { Ok(U256::zero()) })
+        let upstream = self.upstream.clone();
+
+        Box::pin(async move { apis::gas_price(&upstream).await })
     }
 
     fn block_number(&self) -> BoxFuture<Result<U256>> {
@@ -172,11 +179,13 @@ impl EthApi for EthApiImpl {
 }
 
 mod apis {
-    use ethereum_types::{H160, U256};
+    use abcf_sdk::providers::HttpGetProvider;
+    use ethereum_types::{H160, U256, U64};
     use jsonrpc_core::Result;
+    use libfindora::{Address, asset::XfrAmount};
     use web3_rpc_core::types::{SyncInfo, SyncStatus};
 
-    use crate::utils;
+    use crate::{error::libfn_error, utils};
 
     pub async fn protocol_version(upstream: &str) -> Result<u64> {
         let result = utils::status(upstream).await?;
@@ -210,5 +219,45 @@ mod apis {
     pub async fn block_number(upstream: &str) -> Result<U256> {
         let result = utils::status(upstream).await?;
         Ok(U256::from(result.sync_info.latest_block_height))
+    }
+
+    pub async fn chain_id(upstream: &str) -> Result<Option<U64>> {
+        let mut provider = HttpGetProvider {
+            url: upstream.to_string(),
+        };
+        let result = libfn::net::metadata::get(&mut provider)
+            .await
+            .map_err(libfn_error)?;
+        Ok(Some(result.chain_id.into()))
+    }
+
+    pub async fn gas_price(upstream: &str) -> Result<U256> {
+        let mut provider = HttpGetProvider {
+            url: upstream.to_string(),
+        };
+        let result = libfn::net::metadata::get(&mut provider)
+            .await
+            .map_err(libfn_error)?;
+        Ok(U256::from(result.gas_price))
+    }
+
+    pub async fn balance(upstream: &str, address: H160) -> Result<U256> {
+        let mut provider = HttpGetProvider {
+            url: upstream.to_string(),
+        };
+
+        let result = libfn::net::owned_outputs::get(&mut provider, &Address::from(address))
+            .await
+            .map_err(libfn_error)?;
+
+        let mut amount = 0;
+
+        for output in result.1 {
+            if let XfrAmount::NonConfidential(a) = output.amount {
+                amount += a;
+            }
+        }
+
+        Ok(U256::from(amount))
     }
 }

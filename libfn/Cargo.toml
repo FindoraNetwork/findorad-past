@@ -26,3 +26,4 @@ ruc = "1.0.2"
 
 libfindora = { path = "../libfindora" }
 fm-fee = { path = "../modules/fee" }
+fm-evm = { path = "../modules/evm" }

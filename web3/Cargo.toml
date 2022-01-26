@@ -24,6 +24,9 @@ sha3 = "0.9.1"
 
 abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git" }
 
+libfindora = { path = "../libfindora" }
+libfn = { path = "../libfn" }
+
 [features]
 http = ["jsonrpc-http-server"]
 ws = ["jsonrpc-ws-server"]

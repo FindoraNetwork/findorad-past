@@ -1,4 +1,6 @@
+pub mod metadata;
 pub mod owned_outputs;
+
 mod tx;
 mod utils;
 
