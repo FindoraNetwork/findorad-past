@@ -5,7 +5,12 @@ pub fn strat_web3() {
     // TODO: Add ws addr.
     let builder = Web3ServerBuilder {
         upstream: "http://127.0.0.1:26657".to_string(),
+        #[cfg(feature = "web3-http")]
         http: "127.0.0.1:8545"
+            .parse()
+            .expect("parse socket address error."),
+        #[cfg(feature = "web3-ws")]
+        ws: "127.0.0.1:8546"
             .parse()
             .expect("parse socket address error."),
     };
