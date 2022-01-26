@@ -182,7 +182,7 @@ mod apis {
     use abcf_sdk::providers::HttpGetProvider;
     use ethereum_types::{H160, U256, U64};
     use jsonrpc_core::Result;
-    use libfindora::{Address, asset::XfrAmount};
+    use libfindora::{asset::XfrAmount, Address};
     use web3_rpc_core::types::{SyncInfo, SyncStatus};
 
     use crate::{error::libfn_error, utils};
