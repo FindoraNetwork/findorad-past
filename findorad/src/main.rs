@@ -2,9 +2,8 @@
 
 mod config;
 mod error;
-mod evm;
 mod findorad;
-
+mod web3;
 pub use error::*;
 
 mod command;
@@ -17,6 +16,10 @@ fn main() {
     env_logger::init();
 
     let args = Args::parse();
+
+    if args.enable_web3 {
+        web3::strat_web3();
+    }
 
     if args.dev {
         let mut fnd = findorad::Findorad::new(None);

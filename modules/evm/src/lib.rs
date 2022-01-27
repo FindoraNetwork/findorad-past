@@ -12,3 +12,5 @@ pub use transaction::Transaction;
 pub mod utils;
 
 pub mod evm;
+
+pub mod rpc;

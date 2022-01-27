@@ -15,6 +15,10 @@ pub struct Args {
     #[clap(short = 's', long)]
     pub dev_staking: bool,
 
+    /// Enable web3 interface.
+    #[clap(long)]
+    pub enable_web3: bool,
+
     #[clap(subcommand)]
     pub action: Option<Action>,
 }
