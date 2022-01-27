@@ -1,4 +1,5 @@
 pub mod dev;
+pub mod dev_staking;
 
 use clap::Parser;
 
