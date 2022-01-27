@@ -1,4 +1,4 @@
-# findorad
+# Findorad
 
 ## Install Dependencies
 
@@ -66,7 +66,7 @@ Special, all bytes of the HA are `0` is a black hole address, which means that t
 #### Public Key Address (PKA)
 
 Based on zei's requirements, the recipient address must use the Public Key Address(PKA)
-when using private transactions. The bech32 format of the PKA starts with `fra`, which is an ED25519 public key.
+when using confidential transactions. The bech32 format of the PKA starts with `fra`, which is an ED25519 public key.
 
 #### Transaction
 
