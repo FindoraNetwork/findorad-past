@@ -4,6 +4,7 @@ use crate::entry::wallet as entry_wallet;
 
 use abcf_sdk::providers::HttpGetProvider;
 use anyhow::Result;
+use async_compat::{Compat, CompatExt};
 use clap::{ArgGroup, Parser};
 use futures::executor::block_on;
 use libfn::{entity, Builder};
@@ -119,7 +120,11 @@ fn send(cmd: &Send, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
     let mut provider = HttpGetProvider::new("http://127.0.0.1");
     let mut builder = Builder::default();
 
-    block_on(builder.from_entities(&mut prng, &mut provider, vec![entity::Entity::Transfer(t)]))?;
+    block_on(Compat::new(builder.from_entities(
+        &mut prng,
+        &mut provider,
+        vec![entity::Entity::Transfer(t)],
+    )))?;
     let tx = builder.build(&mut prng)?;
     tx.serialize()?;
 

@@ -21,5 +21,6 @@ lazy_static = "1.4"
 console = "0.15"
 rand_chacha = "0.2" 
 futures = "0.3"
+async-compat = "0.2"
 regex = { version = "1.5", default-features = false, features = ["std"] }
 primitive-types = { version = "0.10", default-features = false }

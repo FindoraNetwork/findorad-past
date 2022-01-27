@@ -4,6 +4,7 @@ use crate::entry::wallet as entry_wallet;
 
 use abcf_sdk::providers::HttpGetProvider;
 use anyhow::Result;
+use async_compat::{Compat, CompatExt};
 use clap::{ArgGroup, Parser, ValueHint};
 use futures::executor::block_on;
 use libfindora::asset::AssetType;
@@ -124,11 +125,11 @@ fn create(cmd: &Create, home: &Path) -> Result<Box<dyn Display>> {
     });
 
     println!("{:?}", define);
-    let mut provider = HttpGetProvider::new("http://127.0.0.1");
+    let mut provider = HttpGetProvider::new("http://127.0.0.1:26657");
     let mut builder = Builder::default();
     block_on(builder.from_entities(&mut rng, &mut provider, vec![define]))?;
     let tx = builder.build(&mut rng)?.serialize()?;
-    let response = block_on(send_tx(&mut provider, tx))?;
+    let response = block_on(Compat::new(send_tx(&mut provider, tx)))?;
 
     Ok(Box::new(0))
 }
