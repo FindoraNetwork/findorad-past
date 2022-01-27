@@ -4,7 +4,7 @@ use crate::entry::wallet as entry_wallet;
 
 use abcf_sdk::providers::HttpGetProvider;
 use anyhow::Result;
-use async_compat::{Compat, CompatExt};
+use async_compat::Compat;
 use clap::{ArgGroup, Parser};
 use futures::executor::block_on;
 use libfn::{entity, Builder};

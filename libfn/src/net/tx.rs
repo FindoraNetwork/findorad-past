@@ -1,7 +1,4 @@
-use abcf_sdk::{
-    jsonrpc::{endpoint::tx::ResultResponse as TxResp},
-    providers::Provider,
-};
+use abcf_sdk::{jsonrpc::endpoint::tx::ResultResponse as TxResp, providers::Provider};
 use libfindora::Transaction;
 use serde_json::Value;
 
@@ -25,7 +22,7 @@ pub async fn send_tx<P: Provider>(provider: &mut P, tx: Transaction) -> Result<T
     match response {
         Some(res) => {
             println!("{:?}", res);
-            return Ok(res)
+            return Ok(res);
         }
         None => Err(Error::AbcfSdkError("response is empty".to_string())),
     }
