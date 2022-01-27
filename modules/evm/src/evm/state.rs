@@ -12,7 +12,7 @@ use libfindora::{
     utxo::{Output, OutputId},
     Address,
 };
-use primitive_types::{H160, H256, U256, H512};
+use primitive_types::{H160, H256, H512, U256};
 
 use crate::utils;
 
@@ -395,7 +395,15 @@ impl<
         let amount = transfer.value.as_u64();
         let asset = FRA.bare_asset_type;
 
-        utils::transfer(from, to, amount, asset, oid, &mut latest_substate.outputs_set, &mut latest_substate.owned_outputs)?;
+        utils::transfer(
+            from,
+            to,
+            amount,
+            asset,
+            oid,
+            &mut latest_substate.outputs_set,
+            &mut latest_substate.owned_outputs,
+        )?;
 
         self.n += 1;
 
