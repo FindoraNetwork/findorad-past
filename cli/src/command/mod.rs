@@ -42,7 +42,7 @@ impl Opts {
         let mut config = Config::load(&self.home)?;
 
         match &self.subcmd {
-            SubCommand::Asset(c) => c.execute(config),
+            SubCommand::Asset(c) => c.execute(&self.home),
             SubCommand::Delegate(c) => c.execute(config),
             SubCommand::Setup(c) => c.execute(&mut config),
             SubCommand::Transfer(c) => c.execute(&self.home),

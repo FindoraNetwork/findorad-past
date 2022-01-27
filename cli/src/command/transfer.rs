@@ -1,14 +1,12 @@
-// use std::future::poll_fn;
 use std::{fmt::Display, path::Path};
 
 use crate::entry::wallet as entry_wallet;
 
+use abcf_sdk::providers::HttpGetProvider;
 use anyhow::Result;
 use clap::{ArgGroup, Parser};
-use libfn::{entity, Builder};
-
-use abcf_sdk::providers::HttpGetProvider;
 use futures::executor::block_on;
+use libfn::{entity, Builder};
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaChaRng;
 
@@ -118,14 +116,14 @@ fn send(cmd: &Send, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
         .build()?;
 
     let mut prng = ChaChaRng::from_entropy();
-    let mut provider = HttpGetProvider {
-        url: String::from("http://127.0.0.1"),
-    };
+    let mut provider = HttpGetProvider::new("http://127.0.0.1");
     let mut builder = Builder::default();
 
     block_on(builder.from_entities(&mut prng, &mut provider, vec![entity::Entity::Transfer(t)]))?;
     let tx = builder.build(&mut prng)?;
     tx.serialize()?;
+
+    // TODO: not done yet on the display part
     Ok(Box::new(0))
 }
 
