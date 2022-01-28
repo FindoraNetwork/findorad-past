@@ -40,6 +40,12 @@ type FindoradManagerWithSled = FindoradManager<SledBackend>;
 
 pub struct Findorad {
     node: abcf_node::Node<abcf::entry::Node<sha3::Sha3_512, FindoradManagerWithSled>>,
+    staking_backend: sled::Db,
+    coinbase_backend: sled::Db,
+    asset_backend: sled::Db,
+    evm_backend: sled::Db,
+    fee_backend: sled::Db,
+    utxo_backend: sled::Db,
 }
 
 impl Findorad {
@@ -236,7 +242,15 @@ impl Findorad {
         )
         .unwrap();
 
-        Self { node }
+        Self {
+            node,
+            staking_backend,
+            utxo_backend,
+            coinbase_backend,
+            asset_backend,
+            fee_backend,
+            evm_backend,
+        }
     }
 
     pub fn genesis(&mut self, tx: Transaction) -> Result<()> {
@@ -249,6 +263,16 @@ impl Findorad {
 
         let resp = rt.block_on(async { self.node.app.deliver_tx(req).await });
         log::info!("{:?}", resp);
+        Ok(())
+    }
+
+    pub fn flush(&self) -> Result<()> {
+        self.utxo_backend.flush()?;
+        self.coinbase_backend.flush()?;
+        self.evm_backend.flush()?;
+        self.asset_backend.flush()?;
+        self.staking_backend.flush()?;
+        self.fee_backend.flush()?;
         Ok(())
     }
 

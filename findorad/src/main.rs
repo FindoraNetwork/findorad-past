@@ -29,7 +29,7 @@ fn main() {
     }
 
     if args.dev_staking {
-        command::dev_staking::start();
+        command::dev_staking::start(None);
     }
 
     if args.action.is_some() {
