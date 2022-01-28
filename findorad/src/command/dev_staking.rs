@@ -91,11 +91,18 @@ pub fn start() {
 
 fn start_node(node_paths: Vec<PathBuf>, cur_path: &Path) {
     for node_path in node_paths {
+        // The information printed in findorad is output here
         let output = node_path.join("output.log");
-        let f = File::create(output).unwrap();
+        // Here the tendermint information is output
+        let err = node_path.join("err.log");
+
+        let of = File::create(output).unwrap();
+        let ef = File::create(err).unwrap();
+
         Command::new(cur_path.to_str().unwrap())
             .args(["node", "-c", node_path.to_str().unwrap()])
-            .stdout(Stdio::from(f))
+            .stdout(Stdio::from(of))
+            .stderr(Stdio::from(ef))
             .spawn()
             .unwrap();
     }
