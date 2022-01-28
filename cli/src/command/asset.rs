@@ -132,8 +132,7 @@ fn create(cmd: &Create, home: &Path) -> Result<Box<dyn Display>> {
         vec![define],
     )))?;
     let tx = builder.build(&mut rng)?;
-    println!("{:#?}", tx);
-    let response = block_on(Compat::new(send_tx(&mut provider, tx)))?;
+    block_on(Compat::new(send_tx(&mut provider, tx)))?;
 
     Ok(Box::new(0))
 }

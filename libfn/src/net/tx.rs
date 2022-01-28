@@ -20,10 +20,7 @@ pub async fn send_tx<P: Provider>(provider: &mut P, tx: Transaction) -> Result<T
         .map_err(|e| Error::AbcfSdkError(format!("{:?}", e)))?;
 
     match response {
-        Some(res) => {
-            println!("{:?}", res);
-            return Ok(res);
-        }
+        Some(res) => Ok(res),
         None => Err(Error::AbcfSdkError("response is empty".to_string())),
     }
 }
