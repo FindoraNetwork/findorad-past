@@ -4,10 +4,6 @@ struct Create {
     salt @0 :Data;
 }
 
-struct Input {
-    n @0: UInt32;
-}
-
 struct Action {
     union {
         call @0: Void;

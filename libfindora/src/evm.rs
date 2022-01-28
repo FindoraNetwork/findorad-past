@@ -8,11 +8,6 @@ pub struct EvmMemo {
     pub n: u32,
 }
 
-#[derive(Debug, Clone)]
-pub struct Input {
-    pub n: u32,
-}
-
 #[derive(Debug, Clone, Default)]
 pub struct Create2 {
     pub salt: H256,

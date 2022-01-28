@@ -1,11 +1,8 @@
 use primitive_types::H512;
 
-use crate::evm;
-
 #[derive(Debug, Clone)]
 pub enum Operation {
     TransferAsset,
-    EvmCall(evm::Input),
 }
 
 #[derive(Debug, Clone)]

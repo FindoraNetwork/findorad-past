@@ -3,14 +3,15 @@
 using Evm = import "evm.capnp";
 using Memo = import "memo.capnp";
 
+struct InputOperation {
+    transferAsset @0: Void;
+}
+
 struct Input {
     txid @0 : Data;
     n @1: UInt32;
 
-    operation: union {
-        transferAsset @2: Void;
-        evmCall @3: Evm.Input;
-    }
+    operation @2: InputOperation;
 }
 
 struct ConfidentialAmount {
