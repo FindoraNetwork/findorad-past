@@ -1,6 +1,6 @@
 use primitive_types::H256;
 
-use crate::asset::Amount;
+use crate::Address;
 
 #[derive(Debug, Clone)]
 pub struct EvmMemo {
@@ -28,9 +28,11 @@ impl Default for Action {
 
 #[derive(Debug, Clone, Default)]
 pub struct Evm {
+    pub chain_id: u64,
     pub nonce: u64,
-    pub gas_limit: Amount,
+    pub gas_limit: u64,
+    pub gas_price: u64,
     pub data: Vec<u8>,
     pub action: Action,
-    pub chain_id: u64,
+    pub caller: Address,
 }

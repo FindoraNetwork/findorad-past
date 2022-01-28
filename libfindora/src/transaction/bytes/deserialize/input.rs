@@ -15,5 +15,9 @@ pub fn from_input(input: input::Reader) -> Result<Input> {
 
     let n = input.get_n();
 
-    Ok(Input { txid, n, operation: InputOperation::TransferAsset })
+    Ok(Input {
+        txid,
+        n,
+        operation: InputOperation::TransferAsset,
+    })
 }

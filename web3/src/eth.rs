@@ -182,7 +182,10 @@ mod apis {
     use abcf_sdk::providers::HttpGetProvider;
     use ethereum_types::{H160, U256, U64};
     use jsonrpc_core::Result;
-    use libfindora::{asset::{XfrAmount, XfrAssetType, FRA}, Address};
+    use libfindora::{
+        asset::{XfrAmount, XfrAssetType, FRA},
+        Address,
+    };
     use web3_rpc_core::types::{SyncInfo, SyncStatus};
 
     use crate::{error::libfn_error, utils};
@@ -253,14 +256,15 @@ mod apis {
         let mut amount = 0;
 
         for output in result.1 {
-            if let (XfrAmount::NonConfidential(a), XfrAssetType::NonConfidential(t)) = (output.amount, output.asset) {
-
+            if let (XfrAmount::NonConfidential(a), XfrAssetType::NonConfidential(t)) =
+                (output.amount, output.asset)
+            {
                 if t == FRA.bare_asset_type {
                     amount += a;
                 }
             }
         }
 
-        Ok(U256::from(amount * 10 ^ 12))
+        Ok(U256::from(amount * 1000_000_000_000))
     }
 }
