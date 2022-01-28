@@ -12,8 +12,6 @@ pub async fn send_tx<P: Provider>(provider: &mut P, tx: Transaction) -> Result<T
         "tx": tx_param,
     });
 
-    println!("{:?}", params);
-
     let response = provider
         .request::<Value, TxResp>("broadcast_tx_sync", &params)
         .await
