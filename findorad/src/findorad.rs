@@ -256,13 +256,18 @@ impl Findorad {
     pub fn genesis(&mut self, tx: Transaction) -> Result<()> {
         use tm_abci::Application;
 
-        let bytes = tx.to_bytes()?;
-        let req = RequestDeliverTx { tx: bytes };
+        let height = self.node.app.height()?;
 
-        let rt = tokio::runtime::Runtime::new().unwrap();
+        if height == 0 {
+            let bytes = tx.to_bytes()?;
+            let req = RequestDeliverTx { tx: bytes };
 
-        let resp = rt.block_on(async { self.node.app.deliver_tx(req).await });
-        log::info!("{:?}", resp);
+            let rt = tokio::runtime::Runtime::new().unwrap();
+
+            let resp = rt.block_on(async { self.node.app.deliver_tx(req).await });
+            log::info!("{:?}", resp);
+        }
+
         Ok(())
     }
 

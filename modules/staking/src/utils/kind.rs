@@ -51,7 +51,7 @@ impl From<&RequestBeginBlock> for BlockEvidence {
             let validator = ev
                 .validator
                 .as_ref()
-                .map(|validator| (&validator.address).into());
+                .map(|validator| TendermintAddress::from(&validator.address));
 
             evidences.push(Evidence { kind, validator });
         }

@@ -26,10 +26,8 @@ serde_json = "1.0.68"
 
 libfindora = { path = "../libfindora" }
 zei = { git = "https://github.com/tiannian/zei.git", branch = "feat-refactor-address-v1" }
-
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 rand_chacha = "0.2.2"
-
 tm-abci = { git = "https://github.com/FindoraNetwork/tendermint-sys.git" }
 
 primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
