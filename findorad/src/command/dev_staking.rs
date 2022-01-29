@@ -1,39 +1,39 @@
-use crate::{
-    command,
-    findorad::{Findorad},
-};
+use crate::{command, findorad::Findorad};
+use abcf_node::NodeType;
 use serde_json::{json, Value};
-use std::{path::{Path, PathBuf}, fs::{self, File}, process::{Command, Stdio}};
+use std::{
+    fs::{self, File},
+    path::{Path, PathBuf},
+    process::{Command, Stdio},
+};
 
 pub fn current_dir() -> PathBuf {
     let s = std::env::current_exe().unwrap();
     s.parent().unwrap().to_path_buf()
 }
 
-pub const VALIDATOR_SET_LIMIT: u64 = 2;
-
 pub fn start(path: Option<&Path>) {
     let ports = vec![
         (26616, 26615),
-        //         ("26626", "26625"),
-        // ("26636", "26635"),
-        // ("26646", "26645"),
-        // ("26654", "26655"),
-        // ("26666", "26665"),
-        // ("26676", "26675"),
-        // ("26686", "26685"),
-        // ("26696", "26695"),
-        // ("26706", "26705"),
-        // ("26716", "26715"),
-        // ("26726", "26725"),
-        // ("26746", "26745"),
-        // ("26756", "26755"),
-        // ("26766", "26765"),
-        // ("26776", "26775"),
-        // ("26786", "26785"),
-        // ("26796", "26795"),
-        // ("26806", "26805"),
-        //         ("26816", "26815"),
+        (26626, 26625),
+        (26636, 26635),
+        (26646, 26645),
+        (26654, 26655),
+        (26666, 26665),
+        (26676, 26675),
+        (26686, 26685),
+        (26696, 26695),
+        (26706, 26705),
+        (26716, 26715),
+        (26726, 26725),
+        (26746, 26745),
+        (26756, 26755),
+        (26766, 26765),
+        (26776, 26775),
+        (26786, 26785),
+        (26796, 26795),
+        (26806, 26805),
+        (26816, 26815),
     ];
 
     // findorad execute path
@@ -44,7 +44,6 @@ pub fn start(path: Option<&Path>) {
     };
 
     // Create Node 00.
-
     let node0_path = work_dir.join("nodes").join("node00");
 
     let mut fnd = Findorad::new(node0_path.to_str());
@@ -55,6 +54,7 @@ pub fn start(path: Option<&Path>) {
     fnd.flush().unwrap();
 
     let nodeid = read_node_key(&node0_path);
+    let len = ports.len();
 
     // Create Node 01 .. 20
     let validator_keys = create_node(&work_dir, &nodeid, ports);
@@ -62,19 +62,21 @@ pub fn start(path: Option<&Path>) {
     let node00_genesis_path = node0_path.join("abcf/config/genesis.json");
     save_validators_and_chain_id_to_genesis(&node00_genesis_path, validator_keys);
 
-    for i in 1 .. VALIDATOR_SET_LIMIT {
-        let path = work_dir.join("nodes").join(format!("node{:02}", i)).join("abcf/config/genesis.json");
+    for i in 1..len {
+        let path = work_dir
+            .join("nodes")
+            .join(format!("node{:02}", i))
+            .join("abcf/config/genesis.json");
         fs::copy(&node00_genesis_path, path).unwrap();
     }
 
-    start_node(&work_dir);
+    start_node(&work_dir, len);
 
     fnd.start();
 }
 
-fn start_node(path: &Path) {
-    for i in 1 .. VALIDATOR_SET_LIMIT {
-
+fn start_node(path: &Path, len: usize) {
+    for i in 1..len {
         let node_path = path.join("nodes").join(format!("node{:02}", i));
 
         let output = node_path.join("output.log");
@@ -95,28 +97,28 @@ fn start_node(path: &Path) {
 fn create_node(p: &Path, nodeid: &str, ports: Vec<(u32, u32)>) -> Vec<Value> {
     let node_path = p.join("nodes").join("node00");
     let priv_key_path = node_path.join("abcf/config/priv_validator_key.json");
-    let validator_address = read_validator_address(&priv_key_path);
+    let validator_address = read_validator_address(&priv_key_path, "node00".to_string());
 
     let mut validator_keys = vec![validator_address];
 
     let persistent_peers = format!("{}@127.0.0.1:26656", nodeid);
 
     for (i, (rpc_port, p2p_port)) in ports.iter().enumerate() {
-        let node_path = p.join("nodes").join(format!("node{:02}", i + 1));
+        let node_name = format!("node{:02}", i + 1);
+        let node_path = p.join("nodes").join(node_name.as_str());
 
-        let fnd = Findorad::new(node_path.to_str());
+        tendermint_sys::init_home(
+            node_path.join("abcf").to_str().unwrap(),
+            NodeType::Validator,
+        )
+        .unwrap();
 
-    //     let tx = command::dev::define_issue_fra();
-        // fnd.genesis(tx).unwrap();
-    //     fnd.flush().unwrap();
-
-        // TODO: Write node key here.
         let config_path = node_path.join("abcf/config/config.toml");
 
         replace_config(&config_path, *rpc_port, *p2p_port, &persistent_peers);
 
         let priv_key_path = node_path.join("abcf/config/priv_validator_key.json");
-        let validator_address = read_validator_address(&priv_key_path);
+        let validator_address = read_validator_address(&priv_key_path, node_name);
 
         validator_keys.push(validator_address);
     }
@@ -124,7 +126,7 @@ fn create_node(p: &Path, nodeid: &str, ports: Vec<(u32, u32)>) -> Vec<Value> {
     validator_keys
 }
 
-fn read_validator_address(path: &Path) -> Value {
+fn read_validator_address(path: &Path, node_name: String) -> Value {
     let content = fs::read_to_string(path).unwrap();
     let obj = serde_json::from_str::<Value>(&content).unwrap();
     let address = obj.get("address").unwrap().clone();
@@ -135,7 +137,7 @@ fn read_validator_address(path: &Path) -> Value {
     map.insert("address".to_string(), address);
     map.insert("pub_key".to_string(), pubkey);
     map.insert("power".to_string(), Value::String("1".to_string()));
-    map.insert("name".to_string(), Value::String(String::new()));
+    map.insert("name".to_string(), Value::String(node_name));
 
     Value::Object(map)
 }
