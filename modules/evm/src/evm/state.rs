@@ -1,6 +1,6 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
-use abcf::bs3::{Forkable, MapStore};
+use abcf::bs3::{DoubleKeyMapStore, Forkable, MapStore};
 use ethereum::Log;
 use evm::{
     backend::{Backend, Basic},
@@ -38,7 +38,7 @@ pub struct State<'config, A, S, OO, OS> {
 impl<
         'config,
         A: MapStore<H160, Account>,
-        S: MapStore<H160, BTreeMap<H256, H256>>,
+        S: DoubleKeyMapStore<H160, H256, H256>,
         OO: MapStore<Address, Vec<OutputId>>,
         OS: MapStore<OutputId, Output>,
     > State<'config, A, S, OO, OS>
@@ -85,7 +85,7 @@ impl<
 impl<
         'config,
         A: MapStore<H160, Account>,
-        S: MapStore<H160, BTreeMap<H256, H256>>,
+        S: DoubleKeyMapStore<H160, H256, H256>,
         OO: MapStore<Address, Vec<OutputId>>,
         OS: MapStore<OutputId, Output>,
     > Backend for State<'config, A, S, OO, OS>
@@ -161,8 +161,8 @@ impl<
     }
 
     fn original_storage(&self, address: H160, key: H256) -> Option<H256> {
-        match self.latest_substate().storages.get(&address) {
-            Ok(Some(e)) => e.get(&key).copied(),
+        match self.latest_substate().storages.get(&address, &key) {
+            Ok(Some(e)) => Some(e.clone()),
             Ok(None) => None,
             Err(e) => {
                 log::error!("read code error: {:?}", e);
@@ -175,7 +175,7 @@ impl<
 impl<
         'config,
         A: MapStore<H160, Account> + Clone + Forkable,
-        S: MapStore<H160, BTreeMap<H256, H256>> + Clone + Forkable,
+        S: DoubleKeyMapStore<H160, H256, H256> + Clone + Forkable,
         OO: MapStore<Address, Vec<OutputId>> + Clone + Forkable,
         OS: MapStore<OutputId, Output> + Clone + Forkable,
     > State<'config, A, S, OO, OS>
@@ -342,20 +342,23 @@ impl<
     }
 
     fn _set_storage(&mut self, address: H160, key: H256, value: H256) -> crate::Result<()> {
-        if let Some(m) = self.latest_substate_mut().storages.get_mut(&address)? {
-            m.insert(key, value);
+        if let Some(m) = self
+            .latest_substate_mut()
+            .storages
+            .get_mut(&address, &key)?
+        {
+            *m = value;
         } else {
-            let mut m = BTreeMap::new();
-            m.insert(key, value);
-            self.latest_substate_mut().storages.insert(address, m)?;
+            self.latest_substate_mut()
+                .storages
+                .insert(address, key, value)?;
         }
         Ok(())
     }
 
     fn _reset_storage(&mut self, address: H160) -> crate::Result<()> {
-        if let Some(m) = self.latest_substate_mut().storages.get_mut(&address)? {
-            std::mem::take(m);
-        }
+        let _t = H256::default();
+        self.latest_substate_mut().storages.remove(&address, &_t)?;
         Ok(())
     }
 
@@ -443,7 +446,7 @@ impl<
 impl<
         'config,
         A: MapStore<H160, Account> + Clone + Forkable,
-        S: MapStore<H160, BTreeMap<H256, H256>> + Clone + Forkable,
+        S: DoubleKeyMapStore<H160, H256, H256> + Clone + Forkable,
         OO: MapStore<Address, Vec<OutputId>> + Clone + Forkable,
         OS: MapStore<OutputId, Output> + Clone + Forkable,
     > StackState<'config> for State<'config, A, S, OO, OS>
