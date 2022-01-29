@@ -62,7 +62,7 @@ impl From<&RequestBeginBlock> for BlockEvidence {
                     let validator = vote
                         .validator
                         .as_ref()
-                        .map(|validator| (&validator.address).into());
+                        .map(|validator| TendermintAddress::from(&validator.address));
                     evidences.push(Evidence {
                         kind: ByzantineKind::OffLine,
                         validator,
