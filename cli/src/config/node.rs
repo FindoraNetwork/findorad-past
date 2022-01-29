@@ -8,7 +8,7 @@ pub struct Node {
 impl Default for Node {
     fn default() -> Node {
         Node {
-            address: String::from("http://localhost:25576"),
+            address: String::from("http://localhost:26657"),
         }
     }
 }

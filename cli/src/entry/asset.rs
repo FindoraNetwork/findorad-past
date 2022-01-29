@@ -4,6 +4,7 @@ use std::{
 };
 
 use anyhow::{bail, Context, Result};
+use libfindora::asset::AssetType;
 use serde::{Deserialize, Serialize};
 
 const DEFAULT_ASSET_FILE: &str = "assets.json";
@@ -11,8 +12,9 @@ const DEFAULT_ASSET_FILE: &str = "assets.json";
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Asset {
     pub address: String,
+    pub asset_type: AssetType,
     pub memo: Option<String>,
-    pub name: Option<String>,
+    pub code: Option<String>,
     pub decimal_place: u8,
     pub maximun: Option<u64>,
     pub is_transferable: bool,
@@ -41,9 +43,24 @@ impl Assets {
 
     pub fn create(&mut self, asset: &Asset) -> Result<()> {
         self.assets.push(asset.clone());
+        self.save()
+            .with_context(|| format!("create on save failed: {:?}", asset))?;
+        Ok(())
+    }
+
+    fn save(&self) -> Result<()> {
         let data = serde_json::to_vec(&self.assets).context("save serialize json failed")?;
         fs::write(&self.f_path, data)
             .with_context(|| format!("save write json file failed: {:?}", self.f_path))?;
+        Ok(())
+    }
+
+    pub fn update(&mut self, asset: &Asset) -> Result<()> {
+        if let Some(i) = self.assets.iter().position(|a| a.address == asset.address) {
+            self.assets[i] = asset.clone();
+            self.save()
+                .with_context(|| format!("update on save failed: {:?}", asset))?;
+        }
         Ok(())
     }
 
@@ -65,15 +82,16 @@ mod tests {
     use crate::utils::test_utils::TempDir;
 
     #[test]
-    fn test_entry_asset_create_read() {
+    fn test_entry_asset_create_read_update() {
         let home = TempDir::new("test_entry_asset_create_read").unwrap();
         let mut assets = Assets::new(home.path()).unwrap();
         assert_eq!(assets.list().unwrap().len(), 0);
 
-        let asset = Asset {
+        let mut asset = Asset {
             address: "0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117".to_string(),
+            asset_type: AssetType([9; 32]),
             memo: Some("this is a test asset 1".to_string()),
-            name: Some("TEST1".to_string()),
+            code: None,
             decimal_place: 6,
             maximun: Some(9999999),
             is_transferable: true,
@@ -82,6 +100,13 @@ mod tests {
 
         assert!(assets.create(&asset).is_ok());
         assert_eq!(assets.list().unwrap().len(), 1);
+        let got = assets
+            .read("0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117")
+            .unwrap();
+        assert_eq!(asset, got);
+
+        asset.code = Some("TEST1".to_string());
+        assert!(assets.update(&asset).is_ok());
         let got = assets
             .read("0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117")
             .unwrap();
