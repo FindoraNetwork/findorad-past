@@ -11,6 +11,7 @@ description = "Findora Network command line tool."
 libfn = { path = "../libfn" }
 libfindora = { path = "../libfindora" }
 abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", features = ["http"] }
+base64 = "0.13"
 clap = { version = "3.0.0-rc.8", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.5"

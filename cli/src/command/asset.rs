@@ -1,21 +1,25 @@
 use std::{fmt::Display, path::Path};
 
-use crate::entry::{asset as entry_asset, wallet as entry_wallet};
+use crate::{
+    display::asset as display_asset,
+    entry::{asset as entry_asset, wallet as entry_wallet},
+};
 
 use abcf_sdk::providers::HttpGetProvider;
 use anyhow::Result;
 use async_compat::Compat;
 use clap::{ArgGroup, Parser};
 use futures::executor::block_on;
-use libfindora::asset::AssetType;
+use libfindora::Address;
 use libfn::{
     entity::{Define as EntityDefine, Entity, Issue as EntityIssue},
-    net::send_tx,
+    net::{owned_outputs, send_tx},
     types::SecretKey,
+    utils::open_outputs,
     Builder,
 };
 use primitive_types::U256;
-use rand_chacha::{rand_core::RngCore, rand_core::SeedableRng, ChaChaRng};
+use rand_chacha::{rand_core::SeedableRng, ChaChaRng};
 
 #[derive(Parser, Debug)]
 pub struct Command {
@@ -42,6 +46,7 @@ struct Create {
     #[clap(short = 'f', long, value_name = "ADDRESS", forbid_empty_values = true)]
     from_address: Option<String>,
     /// To specific a plain-text input as the Findora wallet which is a base64-formatted secret
+    /// Note: using this option will not interact with any local wallet and asset records
     #[clap(short = 's', long, value_name = "SECRET", forbid_empty_values = true)]
     from_secret: Option<String>,
     /// Memo is a note for this new asset
@@ -59,10 +64,17 @@ struct Create {
 }
 
 #[derive(Parser, Debug)]
+#[clap(group(ArgGroup::new("from").required(true).args(&["from-address", "from-secret"])))]
 struct Show {
-    /// Wallet address to show the asset information of the specific one
-    #[clap(short, long, forbid_empty_values = true)]
-    address: Option<String>,
+    /// To specific an address as the Findora wallet which is
+    /// 1. ETH compatible address (0x...)
+    /// 2. Findora addreess (fra...)
+    #[clap(short = 'f', long, value_name = "ADDRESS", forbid_empty_values = true)]
+    from_address: Option<String>,
+    /// To specific a plain-text input as the Findora wallet which is a base64-formatted secret
+    /// Note: using this option will not interact with any local wallet and asset records
+    #[clap(short = 's', long, value_name = "SECRET", forbid_empty_values = true)]
+    from_secret: Option<String>,
 }
 
 #[derive(Parser, Debug)]
@@ -74,6 +86,7 @@ struct Issue {
     #[clap(short = 'f', long, value_name = "ADDRESS", forbid_empty_values = true)]
     from_address: Option<String>,
     /// To specific a plain-text input as the Findora wallet which is a base64-formatted secret
+    /// Note: using this option will not interact with any local wallet and asset records
     #[clap(short = 's', long, value_name = "SECRET", forbid_empty_values = true)]
     from_secret: Option<String>,
     /// Custom code of the new asset
@@ -91,33 +104,29 @@ impl Command {
     pub fn execute(&self, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         match &self.subcmd {
             SubCommand::Create(cmd) => create(cmd, home, addr),
-            SubCommand::Show(cmd) => show(cmd),
+            SubCommand::Show(cmd) => show(cmd, home, addr),
             SubCommand::Issue(cmd) => issue(cmd, home, addr),
         }
     }
 }
 
 fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
-    let mut assets = entry_asset::Assets::new(home)?;
-    let wallets = entry_wallet::Wallets::new(home)?;
-    let wallet = get_wallet(&wallets, &cmd.from_address, &cmd.from_secret)?;
+    let (secret, is_interact) = get_secret(home, &cmd.from_address, &cmd.from_secret)?;
     let maximum = match &cmd.maximum {
         Some(max) => Some(U256::from_str_radix(max.to_string().as_str(), 10)?),
         None => None,
     };
 
-    let mut asset_type: [u8; 32] = [0; 32];
-    let mut rng = ChaChaRng::from_entropy();
-    rng.try_fill_bytes(&mut asset_type)?;
-
+    let asset = entry_asset::Asset::new();
     let define = Entity::Define(EntityDefine {
         maximum,
         transferable: cmd.is_transferable,
-        keypair: SecretKey::from_base64(&wallet.secret)?.key.into_keypair(),
-        asset: AssetType(asset_type),
+        keypair: secret.key.clone().into_keypair(),
+        asset: asset.get_asset_type(),
     });
 
     let mut provider = HttpGetProvider::new(addr);
+    let mut rng = ChaChaRng::from_entropy();
     let mut builder = Builder::default();
     block_on(Compat::new(builder.from_entities(
         &mut rng,
@@ -129,35 +138,85 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         builder.build(&mut rng)?,
     )))?;
 
-    assets.create(&entry_asset::Asset {
-        address: wallet.address,
-        asset_type: AssetType(asset_type),
-        memo: cmd.memo.clone(),
-        code: None,
-        decimal_place: cmd.decimal_places,
-        maximun: cmd.maximum,
-        is_transferable: cmd.is_transferable,
-        is_issued: false,
-    })?;
+    if is_interact {
+        let mut assets = entry_asset::Assets::new(home)?;
+        assets.create(&entry_asset::Asset {
+            address: secret.to_public().to_address()?.to_eth()?,
+            asset_type: asset.asset_type.clone(),
+            memo: cmd.memo.clone(),
+            code: None,
+            decimal_place: cmd.decimal_places,
+            maximun: cmd.maximum,
+            is_transferable: cmd.is_transferable,
+            is_issued: false,
+        })?;
+    }
 
-    Ok(Box::new(0))
+    Ok(Box::new(display_asset::Display::new(
+        display_asset::DisplayType::Create,
+        vec![(asset, None)],
+    )))
 }
 
-fn show(_cmd: &Show) -> Result<Box<dyn Display>> {
+fn show(cmd: &Show, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
+    let (secret, is_interact) = get_secret(home, &cmd.from_address, &cmd.from_secret)?;
+    let mut provider = HttpGetProvider::new(addr);
+
+    let (_, entrypt_output) = block_on(Compat::new(owned_outputs::get(
+        &mut provider,
+        &Address::from(secret.to_public().key),
+    )))?;
+
+    let output = open_outputs(entrypt_output, &secret.key.into_keypair())?;
+
+    // if is_interact {
+    // } else {
+    //     let mut asset = entry_asset::new();
+    //     asset.amount = output
+    //     Ok(display_asset::Display::new(
+    //     display_asset::DisplayType::Show,
+    //     vec![(asset, None)],
+    // )))
+    // }
+    // let assets = entry_asset::Assets::new(home)?;
+    // match &cmd.address {
+    //     Some(addr) => {
+    //         let keypair = SecretKey::from_base64(
+    //             &entry_wallet::Wallets::new(home)?
+    //                 .read()
+    //                 .by_address(addr)
+    //                 .build()?
+    //                 .secret,
+    //         )?
+    //         .key
+    //         .into_keypair();
+    //         assets.read(addr)?;
+
+    //         let mut builder = Builder::default();
+
+    //         Ok(Box::new(0))
+    //     }
+    //     None => {
+    //         assets.list()?;
+    //         Ok(Box::new(0))
+    //     }
+    // }
     Ok(Box::new(0))
 }
 
 fn issue(cmd: &Issue, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
-    let mut assets = entry_asset::Assets::new(home)?;
-    let wallets = entry_wallet::Wallets::new(home)?;
-    let wallet = get_wallet(&wallets, &cmd.from_address, &cmd.from_secret)?;
-    let mut asset = assets.read(&wallet.address)?;
+    let (secret, is_interact) = get_secret(home, &cmd.from_address, &cmd.from_secret)?;
+    let mut asset = if is_interact {
+        entry_asset::Assets::new(home)?.read(&secret.to_public().to_address()?.to_eth()?)?
+    } else {
+        entry_asset::Asset::new()
+    };
 
     let issue = Entity::Issue(EntityIssue {
         amount: cmd.amount,
-        asset_type: asset.asset_type,
+        asset_type: asset.get_asset_type(),
         confidential_amount: cmd.is_confidential_amount,
-        keypair: SecretKey::from_base64(&wallet.secret)?.key.into_keypair(),
+        keypair: secret.key.into_keypair(),
     });
 
     let mut provider = HttpGetProvider::new(addr);
@@ -173,25 +232,39 @@ fn issue(cmd: &Issue, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         builder.build(&mut rng)?,
     )))?;
 
-    asset.code = cmd.code.clone();
-    assets.update(&asset)?;
+    if is_interact {
+        asset.code = cmd.code.clone();
+        asset.is_issued = true;
+        entry_asset::Assets::new(home)?.update(&asset)?;
+    }
 
-    Ok(Box::new(0))
+    Ok(Box::new(display_asset::Display::new(
+        display_asset::DisplayType::Issue,
+        vec![(asset, None)],
+    )))
 }
 
-fn get_wallet(
-    wallets: &entry_wallet::Wallets,
+fn get_secret(
+    home: &Path,
     addr: &Option<String>,
     secret: &Option<String>,
-) -> Result<entry_wallet::Wallet> {
-    let wallet = if let Some(addr) = addr {
-        wallets.read().by_address(addr).build()?
+) -> Result<(SecretKey, bool)> {
+    if let Some(addr) = addr {
+        Ok((
+            SecretKey::from_base64(
+                &entry_wallet::Wallets::new(home)?
+                    .read()
+                    .by_address(addr)
+                    .build()?
+                    .secret,
+            )?,
+            true,
+        ))
     } else if let Some(secret) = secret {
-        wallets.read().by_secret(secret).build()?
+        Ok((SecretKey::from_base64(secret)?, false))
     } else {
         unreachable!()
-    };
-    Ok(wallet)
+    }
 }
 
 #[cfg(test)]
@@ -228,6 +301,21 @@ mod tests {
                 is_confidential_amount: false,
                 code: None,
                 amount: 999,
+            }),
+        };
+
+        // because we did not setup the findorad server
+        // should be connection refused error
+        assert!(cmd.execute(home.path(), "127.0.0.1").is_err());
+    }
+
+    #[test]
+    fn test_command_asset_execute_show() {
+        let home = TempDir::new("test_command_asset_execute_show").unwrap();
+        let cmd = Command {
+            subcmd: SubCommand::Show(Show {
+                from_address: Some("0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117".to_string()),
+                from_secret: None,
             }),
         };
 
