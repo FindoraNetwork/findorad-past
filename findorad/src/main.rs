@@ -34,7 +34,7 @@ fn main() {
 
     if args.action.is_some() {
         match args.action.unwrap() {
-            Action::Node(node) => {
+            Action::StakingNode(node) => {
                 let mut fnd = findorad::Findorad::new(Some(node.config_path.as_str()));
                 let tx = command::dev::define_issue_fra();
                 fnd.genesis(tx).unwrap();

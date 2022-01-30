@@ -48,7 +48,6 @@ pub fn start(path: Option<&Path>) {
 
     let mut fnd = Findorad::new(node0_path.to_str());
 
-    // TODO: If exists, don't genesis;
     let tx = command::dev::define_issue_fra();
     fnd.genesis(tx).unwrap();
     fnd.flush().unwrap();
@@ -80,10 +79,9 @@ fn start_node(path: &Path, len: usize) {
         let node_path = path.join("nodes").join(format!("node{:02}", i));
 
         let output = node_path.join("output.log");
-        let err = node_path.join("error.log");
 
         let of = File::create(output).unwrap();
-        let ef = File::create(err).unwrap();
+        let ef = of.try_clone().unwrap();
 
         Command::new(std::env::current_exe().unwrap().to_str().unwrap())
             .args(["node", "-c", node_path.to_str().unwrap()])
