@@ -38,7 +38,7 @@ impl Display {
                 address: Some(a.0.address.clone()),
                 asset_type: Some(a.0.get_asset_type_base64()),
                 memo: a.0.memo.clone(),
-                maximun: a.0.maximun.map(|u| u.to_string()),
+                maximun: a.0.maximum.map(|u| u.to_string()),
                 amount: a.1.map(|u| u.to_string()),
                 is_transferable: Some(a.0.is_transferable.to_string()),
                 is_issued: Some(a.0.is_issued.to_string()),
@@ -64,57 +64,28 @@ impl Display {
         )
     }
 
-    fn list(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(
-            f,
-            "{} {}",
-            Emoji("✨", ":)"),
-            style("Listing").bold().green()
-        )?;
-        for index in 0..self.contents.len() {
-            let none = "[(none found)]".to_string();
-            let name = self.contents[index].name.as_ref().unwrap_or(&none);
-            let eth_compatible_address = self.fetcher(&self.contents[index].address)?;
-            let asset_type = self.fetcher(&self.contents[index].asset_type)?;
-            let is_issued = &self.contents[0].is_issued.as_ref().unwrap_or(&none);
-            write!(
-                f,
-                "
-{} [{}]
-Code:                   {}
-ETH Compatible Address: {}
-Asset Type:             {}
-Is Issued:              {}
-                ",
-                Emoji("🪙", "$ "),
-                index + 1,
-                style(name).bold().white(),
-                style(eth_compatible_address).bold().white(),
-                style(asset_type).bold().white(),
-                style(is_issued).bold().magenta(),
-            )?;
-        }
-        Ok(())
-    }
-
     fn show(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.contents.is_empty() {
             return Err(fmt::Error);
         }
 
-        let none = "[(none found)]".to_string();
-        let name = &self.contents[0].name.as_ref().unwrap_or(&none);
-        let address = self.fetcher(&self.contents[0].address)?;
-        let asset_type = self.fetcher(&self.contents[0].asset_type)?;
-        let memo = &self.contents[0].memo.as_ref().unwrap_or(&none);
-        let maximun = &self.contents[0].maximun.as_ref().unwrap_or(&none);
-        let amount = self.fetcher(&self.contents[0].amount)?;
-        let is_transferable = &self.contents[0].is_transferable.as_ref().unwrap_or(&none);
-        let is_issued = &self.contents[0].is_issued.as_ref().unwrap_or(&none);
+        for index in 0..self.contents.len() {
+            let none = "[(none found)]".to_string();
+            let name = &self.contents[index].name.as_ref().unwrap_or(&none);
+            let address = self.fetcher(&self.contents[index].address)?;
+            let asset_type = self.fetcher(&self.contents[index].asset_type)?;
+            let memo = &self.contents[index].memo.as_ref().unwrap_or(&none);
+            let maximun = &self.contents[index].maximun.as_ref().unwrap_or(&none);
+            let amount = self.fetcher(&self.contents[index].amount)?;
+            let is_transferable = &self.contents[index]
+                .is_transferable
+                .as_ref()
+                .unwrap_or(&none);
+            let is_issued = &self.contents[index].is_issued.as_ref().unwrap_or(&none);
 
-        write!(
-            f,
-            "
+            write!(
+                f,
+                "
 {}
 Code:                   {}
 ETH Compatible Address: {}
@@ -125,16 +96,18 @@ Amount:                 {}
 Is Transferable:        {}
 Is Issued:              {}
             ",
-            Emoji("🪙", "$ "),
-            style(name).bold().cyan(),
-            style(address).bold().cyan(),
-            style(asset_type).bold().white(),
-            style(memo).bold().cyan(),
-            style(maximun).bold().cyan(),
-            style(amount).bold().cyan(),
-            style(is_transferable).bold().magenta(),
-            style(is_issued).bold().magenta(),
-        )
+                Emoji("🪙", "$ "),
+                style(name).bold().cyan(),
+                style(address).bold().cyan(),
+                style(asset_type).bold().white(),
+                style(memo).bold().cyan(),
+                style(maximun).bold().cyan(),
+                style(amount).bold().cyan(),
+                style(is_transferable).bold().magenta(),
+                style(is_issued).bold().magenta(),
+            )?;
+        }
+        Ok(())
     }
 
     fn create(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

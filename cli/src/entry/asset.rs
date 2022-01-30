@@ -20,7 +20,7 @@ pub struct Asset {
     pub name: Option<String>,
     pub decimal_place: u8,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub maximun: Option<u64>,
+    pub maximum: Option<u64>,
     pub is_transferable: bool,
     pub is_issued: bool,
 }
@@ -37,7 +37,7 @@ impl Default for Asset {
             memo: None,
             name: None,
             decimal_place: 6,
-            maximun: None,
+            maximum: None,
             is_transferable: false,
             is_issued: false,
         }
@@ -53,6 +53,23 @@ impl Asset {
     // then cli can remove the base64 dependency
     pub fn get_asset_type_base64(&self) -> String {
         base64::encode_config(self.asset_type.0.as_ref(), base64::URL_SAFE)
+    }
+
+    pub fn new_from_asset_type_base64(asset_type: &str) -> Result<Asset> {
+        let mut u8_astyp: [u8; ASSET_TYPE_LENGTH] = Default::default();
+        let b_astyp = base64::decode_config(asset_type, base64::URL_SAFE).with_context(|| {
+            format!(
+                "new_from_asset_type_base64 decode base64 failed: {}",
+                asset_type
+            )
+        })?;
+        u8_astyp.copy_from_slice(&b_astyp);
+        let astyp = AssetType(u8_astyp);
+
+        Ok(Asset {
+            asset_type: astyp,
+            ..Default::default()
+        })
     }
 }
 
@@ -156,7 +173,7 @@ mod tests {
             memo: Some("this is a test asset 1".to_string()),
             name: None,
             decimal_place: 6,
-            maximun: Some(9999999),
+            maximum: Some(9999999),
             is_transferable: true,
             is_issued: true,
         };

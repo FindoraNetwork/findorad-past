@@ -55,9 +55,9 @@ struct Create {
     /// Is transferable for the new asset
     #[clap(short = 't', long)]
     is_transferable: bool,
-    /// Decimal places to mark the maximum in floating of the new asset
+    /// Decimal place to mark the maximum in floating of the new asset
     #[clap(short, long, default_value = "6")]
-    decimal_places: u8,
+    decimal_place: u8,
     /// Maximum amount of the new asset
     #[clap(short, long)]
     maximum: Option<u64>,
@@ -120,7 +120,7 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         None => None,
     };
 
-    let asset = entry_asset::Asset::new();
+    let mut asset = entry_asset::Asset::new();
     let define = Entity::Define(EntityDefine {
         maximum,
         transferable: cmd.is_transferable,
@@ -143,16 +143,12 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
 
     if is_interact {
         let mut assets = entry_asset::Assets::new(home)?;
-        assets.create(&entry_asset::Asset {
-            address: secret.to_public().to_address()?.to_eth()?,
-            asset_type: asset.asset_type,
-            memo: cmd.memo.clone(),
-            name: None,
-            decimal_place: cmd.decimal_places,
-            maximun: cmd.maximum,
-            is_transferable: cmd.is_transferable,
-            is_issued: false,
-        })?;
+        asset.address = secret.to_public().to_address()?.to_eth()?;
+        asset.memo = cmd.memo.clone();
+        asset.decimal_place = cmd.decimal_place;
+        asset.maximum = cmd.maximum;
+        asset.is_transferable = cmd.is_transferable;
+        assets.create(&asset)?;
     }
 
     Ok(Box::new(display_asset::Display::new(
@@ -174,6 +170,11 @@ fn show(cmd: &Show, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     let mut output_map = HashMap::with_capacity(output.len());
 
     for o in output.iter() {
+        println!(
+            "type: {:?}, amount: {}",
+            o.open_asset_record.get_asset_type(),
+            o.open_asset_record.get_amount()
+        );
         *output_map
             .entry(*o.open_asset_record.get_asset_type())
             .or_insert(0) += o.open_asset_record.get_amount();
@@ -185,6 +186,7 @@ fn show(cmd: &Show, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
             entry_asset::Assets::new(home)?.list(&secret.to_public().to_address()?.to_eth()?);
 
         for a in assets {
+            println!("output_map: {:?}", output_map);
             if let Some(amount) = output_map.get(&a.asset_type) {
                 result.push((a, Some(*amount)))
             }
@@ -207,7 +209,7 @@ fn issue(cmd: &Issue, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         entry_asset::Assets::new(home)?
             .read(&secret.to_public().to_address()?.to_eth()?, &cmd.asset_type)?
     } else {
-        entry_asset::Asset::new()
+        entry_asset::Asset::new_from_asset_type_base64(&cmd.asset_type)?
     };
 
     let issue = Entity::Issue(EntityIssue {
