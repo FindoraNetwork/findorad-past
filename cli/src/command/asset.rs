@@ -1,4 +1,4 @@
-use std::{fmt::Display, path::Path};
+use std::{collections::HashMap, fmt::Display, path::Path};
 
 use crate::{
     display::asset as display_asset,
@@ -64,7 +64,7 @@ struct Create {
 }
 
 #[derive(Parser, Debug)]
-#[clap(group(ArgGroup::new("from").required(true).args(&["from-address", "from-secret"])))]
+#[clap(group(ArgGroup::new("from").required(false).args(&["from-address", "from-secret"])))]
 struct Show {
     /// To specific an address as the Findora wallet which is
     /// 1. ETH compatible address (0x...)
@@ -159,6 +159,16 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
 }
 
 fn show(cmd: &Show, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
+    // List mod
+    if cmd.from_address.is_none() && cmd.from_secret.is_none() {
+        let assets = entry_asset::Assets::new(home)?.list()?;
+        return Ok(Box::new(display_asset::Display::new(
+            display_asset::DisplayType::List,
+            assets.iter().cloned().map(|a| (a, None)).collect(),
+        )));
+    }
+
+    // Show mod
     let (secret, is_interact) = get_secret(home, &cmd.from_address, &cmd.from_secret)?;
     let mut provider = HttpGetProvider::new(addr);
 
@@ -167,41 +177,33 @@ fn show(cmd: &Show, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         &Address::from(secret.to_public().key),
     )))?;
 
-    let output = open_outputs(entrypt_output, &secret.key.into_keypair())?;
+    let output = open_outputs(entrypt_output, &secret.key.clone().into_keypair())?;
+    let mut output_map = HashMap::with_capacity(output.len());
 
-    // if is_interact {
-    // } else {
-    //     let mut asset = entry_asset::new();
-    //     asset.amount = output
-    //     Ok(display_asset::Display::new(
-    //     display_asset::DisplayType::Show,
-    //     vec![(asset, None)],
-    // )))
-    // }
-    // let assets = entry_asset::Assets::new(home)?;
-    // match &cmd.address {
-    //     Some(addr) => {
-    //         let keypair = SecretKey::from_base64(
-    //             &entry_wallet::Wallets::new(home)?
-    //                 .read()
-    //                 .by_address(addr)
-    //                 .build()?
-    //                 .secret,
-    //         )?
-    //         .key
-    //         .into_keypair();
-    //         assets.read(addr)?;
+    for o in output.iter() {
+        *output_map
+            .entry(*o.open_asset_record.get_pub_key())
+            .or_insert(0) += o.open_asset_record.get_amount();
+    }
 
-    //         let mut builder = Builder::default();
+    if is_interact {
+        let asset =
+            entry_asset::Assets::new(home)?.read(&secret.to_public().to_address()?.to_eth()?)?;
+        let amount = output_map.get(&secret.to_public().key);
 
-    //         Ok(Box::new(0))
-    //     }
-    //     None => {
-    //         assets.list()?;
-    //         Ok(Box::new(0))
-    //     }
-    // }
-    Ok(Box::new(0))
+        Ok(Box::new(display_asset::Display::new(
+            display_asset::DisplayType::Show,
+            vec![(asset, amount)],
+        )))
+    } else {
+        let asset = entry_asset::Asset::new();
+        let amount = output_map.get(&secret.to_public().key);
+
+        Ok(Box::new(display_asset::Display::new(
+            display_asset::DisplayType::Show,
+            vec![(asset, amount)],
+        )))
+    }
 }
 
 fn issue(cmd: &Issue, home: &Path, addr: &str) -> Result<Box<dyn Display>> {

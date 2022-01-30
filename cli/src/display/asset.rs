@@ -31,7 +31,7 @@ pub enum DisplayType {
 }
 
 impl Display {
-    pub fn new(typ: DisplayType, assets: Vec<(asset::Asset, Option<u64>)>) -> Display {
+    pub fn new(typ: DisplayType, assets: Vec<(asset::Asset, Option<&u64>)>) -> Display {
         let contents = assets
             .iter()
             .map(|a| Content {
