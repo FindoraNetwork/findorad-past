@@ -1,9 +1,9 @@
 pub mod dev;
 pub mod dev_staking;
 
-use clap::Parser;
+use clap::{AppSettings, Parser};
 
-/// Simple program to greet a person
+/// Findora node.
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 pub struct Args {
@@ -25,7 +25,8 @@ pub struct Args {
 
 #[derive(clap::Subcommand, Debug)]
 pub enum Action {
-    Node(Node),
+    #[clap(setting(AppSettings::Hidden))]
+    StakingNode(Node),
 }
 
 #[derive(Parser, Debug)]
