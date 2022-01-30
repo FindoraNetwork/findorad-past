@@ -64,7 +64,7 @@ struct Create {
 }
 
 #[derive(Parser, Debug)]
-#[clap(group(ArgGroup::new("from").required(false).args(&["from-address", "from-secret"])))]
+#[clap(group(ArgGroup::new("from").required(true).args(&["from-address", "from-secret"])))]
 struct Show {
     /// To specific an address as the Findora wallet which is
     /// 1. ETH compatible address (0x...)
@@ -89,11 +89,14 @@ struct Issue {
     /// Note: using this option will not interact with any local wallet and asset records
     #[clap(short = 's', long, value_name = "SECRET", forbid_empty_values = true)]
     from_secret: Option<String>,
-    /// Custom code of the new asset
+    /// To specific a plain-text input as the AssetType which is a base64-formatted string
+    #[clap(short, long, forbid_empty_values = true)]
+    asset_type: String,
+    /// Custom name of the new asset
     #[clap(short, long)]
-    code: Option<String>,
+    name: Option<String>,
     /// Amount when issuing an asset
-    #[clap(short, long, required = true, forbid_empty_values = true)]
+    #[clap(short = 'm', long, required = true, forbid_empty_values = true)]
     amount: u64,
     /// Is the amount confidential when issuing an asset
     #[clap(short, long)]
@@ -122,7 +125,7 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         maximum,
         transferable: cmd.is_transferable,
         keypair: secret.key.clone().into_keypair(),
-        asset: asset.get_asset_type(),
+        asset: asset.asset_type,
     });
 
     let mut provider = HttpGetProvider::new(addr);
@@ -142,9 +145,9 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         let mut assets = entry_asset::Assets::new(home)?;
         assets.create(&entry_asset::Asset {
             address: secret.to_public().to_address()?.to_eth()?,
-            asset_type: asset.asset_type.clone(),
+            asset_type: asset.asset_type,
             memo: cmd.memo.clone(),
-            code: None,
+            name: None,
             decimal_place: cmd.decimal_places,
             maximun: cmd.maximum,
             is_transferable: cmd.is_transferable,
@@ -159,16 +162,6 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
 }
 
 fn show(cmd: &Show, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
-    // List mod
-    if cmd.from_address.is_none() && cmd.from_secret.is_none() {
-        let assets = entry_asset::Assets::new(home)?.list()?;
-        return Ok(Box::new(display_asset::Display::new(
-            display_asset::DisplayType::List,
-            assets.iter().cloned().map(|a| (a, None)).collect(),
-        )));
-    }
-
-    // Show mod
     let (secret, is_interact) = get_secret(home, &cmd.from_address, &cmd.from_secret)?;
     let mut provider = HttpGetProvider::new(addr);
 
@@ -182,41 +175,44 @@ fn show(cmd: &Show, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
 
     for o in output.iter() {
         *output_map
-            .entry(*o.open_asset_record.get_pub_key())
+            .entry(*o.open_asset_record.get_asset_type())
             .or_insert(0) += o.open_asset_record.get_amount();
     }
 
+    let mut result = vec![];
     if is_interact {
-        let asset =
-            entry_asset::Assets::new(home)?.read(&secret.to_public().to_address()?.to_eth()?)?;
-        let amount = output_map.get(&secret.to_public().key);
+        let assets =
+            entry_asset::Assets::new(home)?.list(&secret.to_public().to_address()?.to_eth()?);
 
-        Ok(Box::new(display_asset::Display::new(
-            display_asset::DisplayType::Show,
-            vec![(asset, amount)],
-        )))
+        for a in assets {
+            if let Some(amount) = output_map.get(&a.asset_type) {
+                result.push((a, Some(*amount)))
+            }
+        }
     } else {
-        let asset = entry_asset::Asset::new();
-        let amount = output_map.get(&secret.to_public().key);
-
-        Ok(Box::new(display_asset::Display::new(
-            display_asset::DisplayType::Show,
-            vec![(asset, amount)],
-        )))
+        for (asset_type, amount) in output_map {
+            result.push((entry_asset::Asset::from(asset_type), Some(amount)));
+        }
     }
+
+    Ok(Box::new(display_asset::Display::new(
+        display_asset::DisplayType::Show,
+        result,
+    )))
 }
 
 fn issue(cmd: &Issue, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     let (secret, is_interact) = get_secret(home, &cmd.from_address, &cmd.from_secret)?;
     let mut asset = if is_interact {
-        entry_asset::Assets::new(home)?.read(&secret.to_public().to_address()?.to_eth()?)?
+        entry_asset::Assets::new(home)?
+            .read(&secret.to_public().to_address()?.to_eth()?, &cmd.asset_type)?
     } else {
         entry_asset::Asset::new()
     };
 
     let issue = Entity::Issue(EntityIssue {
         amount: cmd.amount,
-        asset_type: asset.get_asset_type(),
+        asset_type: asset.asset_type,
         confidential_amount: cmd.is_confidential_amount,
         keypair: secret.key.into_keypair(),
     });
@@ -235,7 +231,7 @@ fn issue(cmd: &Issue, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     )))?;
 
     if is_interact {
-        asset.code = cmd.code.clone();
+        asset.name = cmd.name.clone();
         asset.is_issued = true;
         entry_asset::Assets::new(home)?.update(&asset)?;
     }
@@ -300,8 +296,9 @@ mod tests {
             subcmd: SubCommand::Issue(Issue {
                 from_address: Some("0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117".to_string()),
                 from_secret: None,
+                asset_type: "1TYZSwkxQI6-q49vgFsCOuXaOjaHbhtEV2GyDoPglUU=".to_string(),
                 is_confidential_amount: false,
-                code: None,
+                name: None,
                 amount: 999,
             }),
         };

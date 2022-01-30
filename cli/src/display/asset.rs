@@ -6,7 +6,7 @@ use console::{style, Emoji};
 
 #[derive(Default, Debug)]
 pub struct Content {
-    pub code: Option<String>,
+    pub name: Option<String>,
     pub address: Option<String>,
     pub asset_type: Option<String>,
     pub memo: Option<String>,
@@ -24,18 +24,17 @@ pub struct Display {
 
 #[derive(Debug)]
 pub enum DisplayType {
-    List,
     Show,
     Create,
     Issue,
 }
 
 impl Display {
-    pub fn new(typ: DisplayType, assets: Vec<(asset::Asset, Option<&u64>)>) -> Display {
+    pub fn new(typ: DisplayType, assets: Vec<(asset::Asset, Option<u64>)>) -> Display {
         let contents = assets
             .iter()
             .map(|a| Content {
-                code: a.0.code.clone(),
+                name: a.0.name.clone(),
                 address: Some(a.0.address.clone()),
                 asset_type: Some(a.0.get_asset_type_base64()),
                 memo: a.0.memo.clone(),
@@ -74,9 +73,10 @@ impl Display {
         )?;
         for index in 0..self.contents.len() {
             let none = "[(none found)]".to_string();
-            let code = self.contents[index].code.as_ref().unwrap_or(&none);
+            let name = self.contents[index].name.as_ref().unwrap_or(&none);
             let eth_compatible_address = self.fetcher(&self.contents[index].address)?;
             let asset_type = self.fetcher(&self.contents[index].asset_type)?;
+            let is_issued = &self.contents[0].is_issued.as_ref().unwrap_or(&none);
             write!(
                 f,
                 "
@@ -84,12 +84,14 @@ impl Display {
 Code:                   {}
 ETH Compatible Address: {}
 Asset Type:             {}
+Is Issued:              {}
                 ",
                 Emoji("🪙", "$ "),
                 index + 1,
-                style(code).bold().white(),
+                style(name).bold().white(),
                 style(eth_compatible_address).bold().white(),
                 style(asset_type).bold().white(),
+                style(is_issued).bold().magenta(),
             )?;
         }
         Ok(())
@@ -101,8 +103,9 @@ Asset Type:             {}
         }
 
         let none = "[(none found)]".to_string();
-        let code = &self.contents[0].code.as_ref().unwrap_or(&none);
+        let name = &self.contents[0].name.as_ref().unwrap_or(&none);
         let address = self.fetcher(&self.contents[0].address)?;
+        let asset_type = self.fetcher(&self.contents[0].asset_type)?;
         let memo = &self.contents[0].memo.as_ref().unwrap_or(&none);
         let maximun = &self.contents[0].maximun.as_ref().unwrap_or(&none);
         let amount = self.fetcher(&self.contents[0].amount)?;
@@ -115,6 +118,7 @@ Asset Type:             {}
 {}
 Code:                   {}
 ETH Compatible Address: {}
+Asset Type:             {}
 Memo:                   {}
 Maximun:                {}
 Amount:                 {}
@@ -122,8 +126,9 @@ Is Transferable:        {}
 Is Issued:              {}
             ",
             Emoji("🪙", "$ "),
-            style(code).bold().cyan(),
+            style(name).bold().cyan(),
             style(address).bold().cyan(),
+            style(asset_type).bold().white(),
             style(memo).bold().cyan(),
             style(maximun).bold().cyan(),
             style(amount).bold().cyan(),
@@ -162,7 +167,7 @@ Is Issued:              {}
 
         let address = self.fetcher(&self.contents[0].address)?;
         let asset_type = self.fetcher(&self.contents[0].asset_type)?;
-        let code = self.fetcher(&self.contents[0].code)?;
+        let name = self.fetcher(&self.contents[0].name)?;
         write!(
             f,
             "
@@ -178,7 +183,7 @@ Is Issued:              {}
             Emoji("★ ", "* "),
             style(asset_type).white(),
             Emoji("★ ", "* "),
-            style(code).white(),
+            style(name).white(),
         )
     }
 }
@@ -190,7 +195,6 @@ impl fmt::Display for Display {
         }
 
         match self.typ {
-            DisplayType::List => self.list(f),
             DisplayType::Show => self.show(f),
             DisplayType::Create => self.create(f),
             DisplayType::Issue => self.issue(f),
