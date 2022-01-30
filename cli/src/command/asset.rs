@@ -5,8 +5,9 @@ use crate::{
     entry::{asset as entry_asset, wallet as entry_wallet},
 };
 
+use abcf::ToBytes;
 use abcf_sdk::providers::HttpGetProvider;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use async_compat::Compat;
 use clap::{ArgGroup, Parser};
 use futures::executor::block_on;
@@ -138,7 +139,7 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     )))?;
     block_on(Compat::new(send_tx(
         &mut provider,
-        builder.build(&mut rng)?,
+        builder.build(&mut rng)?.to_bytes()?,
     )))?;
 
     if is_interact {
@@ -229,7 +230,7 @@ fn issue(cmd: &Issue, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     )))?;
     block_on(Compat::new(send_tx(
         &mut provider,
-        builder.build(&mut rng)?,
+        builder.build(&mut rng)?.to_bytes()?,
     )))?;
 
     if is_interact {
@@ -281,7 +282,7 @@ mod tests {
                 from_secret: None,
                 memo: None,
                 is_transferable: false,
-                decimal_places: 6,
+                decimal_place: 6,
                 maximum: None,
             }),
         };
