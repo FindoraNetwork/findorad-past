@@ -1,11 +1,12 @@
 #![feature(generic_associated_types)]
 
+mod transaction;
+
 use abcf::{
     bs3::{merkle::empty::EmptyMerkle, model::Value},
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, TxnContext,
 };
-use libfindora::rewards;
 
 #[abcf::module(
     name = "rewards",
@@ -27,7 +28,7 @@ impl Module {}
 /// Module's block logic.
 #[abcf::application]
 impl Application for Module {
-    type Transaction = rewards::Transaction;
+    type Transaction = transaction::Transaction;
 
     async fn check_tx(
         &mut self,
