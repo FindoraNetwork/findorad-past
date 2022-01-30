@@ -62,7 +62,7 @@ pub fn apply_global(
         let result_global_power = if let Some(gp) = global_power.get()? {
             gp.checked_add(amount).ok_or(Error::OverflowAdd)?
         } else {
-            amount
+            0
         };
 
         if result_global_power >= FRA_STAKING.max_delegate() {
@@ -86,22 +86,26 @@ pub fn apply_global(
             amount
         };
 
-        let max_delegate_global = (result_global_power as u128)
-            .checked_mul(FRA_STAKING.max_percent_per_validator[0] as u128)
-            .ok_or(Error::OverflowAdd)?;
-        let max_delegate_current = (result_power as u128)
-            .checked_mul(FRA_STAKING.max_percent_per_validator[1] as u128)
-            .ok_or(Error::OverflowAdd)?;
+        if result_global_power != 0 {
+            let max_delegate_global = (result_global_power as u128)
+                .checked_mul(FRA_STAKING.max_percent_per_validator[0] as u128)
+                .ok_or(Error::OverflowAdd)?;
+            let max_delegate_current = (result_power as u128)
+                .checked_mul(FRA_STAKING.max_percent_per_validator[1] as u128)
+                .ok_or(Error::OverflowAdd)?;
 
-        if max_delegate_current > max_delegate_global {
-            return Err(Error::DelegateAmountOutOfRange(
-                0,
-                max_delegate_global
-                    .overflowing_div(FRA_STAKING.max_percent_per_validator[1] as u128)
-                    .0
-                    .try_into()
-                    .unwrap_or_default(),
-            ));
+            if max_delegate_current > max_delegate_global {
+                return Err(Error::DelegateAmountOutOfRange(
+                    0,
+                    max_delegate_global
+                        .overflowing_div(FRA_STAKING.max_percent_per_validator[1] as u128)
+                        .0
+                        .try_into()
+                        .unwrap_or_default(),
+                ));
+            }
+        } else {
+            global_power.set(result_power)?;
         }
 
         // set value

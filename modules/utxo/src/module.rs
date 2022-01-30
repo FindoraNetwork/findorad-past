@@ -1,6 +1,6 @@
 use abcf::{
     bs3::{merkle::append_only::AppendOnlyMerkle, model::Map, MapStore},
-    module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
+    module::types::{RequestDeliverTx, ResponseDeliverTx},
     Application, TxnContext,
 };
 use libfindora::{
@@ -30,20 +30,20 @@ impl UtxoModule {}
 impl Application for UtxoModule {
     type Transaction = Transaction;
 
-    async fn check_tx(
-        &mut self,
-        context: &mut TxnContext<'_, Self>,
-        req: &RequestCheckTx<Self::Transaction>,
-    ) -> abcf::Result<ResponseCheckTx> {
-        utils::check_tx(
-            &mut self.params,
-            &mut self.prng,
-            &context.stateful.outputs_set,
-            &req.tx,
-        )?;
-
-        Ok(Default::default())
-    }
+    // async fn check_tx(
+    //     &mut self,
+    //     context: &mut TxnContext<'_, Self>,
+    //     req: &RequestCheckTx<Self::Transaction>,
+    // ) -> abcf::Result<ResponseCheckTx> {
+    //     utils::check_tx(
+    //         &mut self.params,
+    //         &mut self.prng,
+    //         &context.stateful.outputs_set,
+    //         &req.tx,
+    //     )?;
+    //
+    //     Ok(Default::default())
+    // }
 
     /// Execute transaction on state.
     async fn deliver_tx(

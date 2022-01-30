@@ -19,16 +19,12 @@ fn compute_penalty_amount(amount: Amount, rate: [u64; 2]) -> Option<Amount> {
 pub fn penalty_single(
     evidence_validator_address: &TendermintAddress,
     kind: ByzantineKind,
-    validator_staker: &mut impl MapStore<TendermintAddress, Address>,
+    staker_address: Address,
     delegators: &mut impl MapStore<TendermintAddress, BTreeMap<Address, Amount>>,
     validator_powers: &mut impl MapStore<TendermintAddress, Power>,
     global_power: &mut impl ValueStore<Power>,
     delegation_amount: &mut impl MapStore<Address, Amount>,
 ) -> Result<i64> {
-    let staker_address = validator_staker
-        .get(evidence_validator_address)?
-        .ok_or(Error::IsOptionNone)?;
-
     // process delegation detail.
     let delegator_map = delegators
         .get_mut(evidence_validator_address)?
@@ -86,10 +82,16 @@ pub fn penalty(
             .as_ref()
             .ok_or(Error::NoTendermintAddress)?;
 
+        let address = if let Some(a) = validator_staker.get(evidence_validator_address)? {
+            a.clone()
+        } else {
+            continue;
+        };
+
         let power = penalty_single(
             evidence_validator_address,
             evidence.kind.clone(),
-            validator_staker,
+            address,
             delegators,
             validator_powers,
             global_power,

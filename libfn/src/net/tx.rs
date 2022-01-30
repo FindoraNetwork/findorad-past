@@ -1,7 +1,4 @@
-use abcf_sdk::{
-    jsonrpc::{endpoint::tx::ResultResponse as TxResp, Response},
-    providers::Provider,
-};
+use abcf_sdk::{jsonrpc::endpoint::tx::ResultResponse as TxResp, providers::Provider};
 use serde_json::Value;
 
 use crate::{Error, Result};
@@ -14,12 +11,12 @@ pub async fn send_tx<P: Provider>(provider: &mut P, tx_bytes: Vec<u8>) -> Result
     });
 
     let result = provider
-        .request::<Value, Response<TxResp>>("broadcast_tx_sync", &params)
+        .request::<Value, TxResp>("broadcast_tx_async", &params)
         .await
         .map_err(|e| Error::AbcfSdkError(format!("{:?}", e)))?;
 
     if let Some(resp) = result {
-        Ok(resp.result)
+        Ok(Some(resp))
     } else {
         Ok(None)
     }

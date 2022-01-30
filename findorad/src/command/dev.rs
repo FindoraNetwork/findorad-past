@@ -48,7 +48,7 @@ pub fn define_issue_fra() -> Transaction {
     });
 
     let issue_entry = Entity::Issue(Issue {
-        amount: 210_0000_0000 * FRA.units / 2,
+        amount: 210_0000_0000 * FRA.units,
         asset_type: FRA.bare_asset_type,
         confidential_amount: false,
         keypair: kp,
