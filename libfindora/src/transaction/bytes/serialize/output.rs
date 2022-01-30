@@ -9,7 +9,10 @@ use zei::{
     xfr::structs::{XfrAmount, XfrAssetType},
 };
 
-use super::evm::build_evm;
+use super::{
+    evm::build_evm,
+    governance::{build_create_proposal, build_vote_proposal},
+};
 
 pub fn build_output(output: &Output, builder: output::Builder) -> Result<()> {
     let mut builder = builder;
@@ -115,6 +118,14 @@ pub fn build_output(output: &Output, builder: output::Builder) -> Result<()> {
             OutputOperation::EvmCall(a) => {
                 let builder = operation.init_evm_call();
                 build_evm(a, builder)?;
+            }
+            OutputOperation::CreateProposal(a) => {
+                let builder = operation.init_create_proposal();
+                build_create_proposal(a, builder)?;
+            }
+            OutputOperation::VoteProposal(a) => {
+                let builder = operation.init_vote_proposal();
+                build_vote_proposal(a, builder)?;
             }
         }
     }

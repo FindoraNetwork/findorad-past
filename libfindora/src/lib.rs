@@ -37,3 +37,7 @@ pub mod output_capnp {
 pub mod transaction_capnp {
     include!(concat!(env!("OUT_DIR"), "/transaction_capnp.rs"));
 }
+
+pub mod governance_capnp {
+    include!(concat!(env!("OUT_DIR"), "/governance_capnp.rs"));
+}

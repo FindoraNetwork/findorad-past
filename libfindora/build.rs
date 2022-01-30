@@ -7,6 +7,7 @@ fn main() {
         .file("schema/input.capnp")
         .file("schema/output.capnp")
         .file("schema/transaction.capnp")
+        .file("schema/governance.capnp")
         .run()
         .expect("schema compiler command");
 }

@@ -2,6 +2,7 @@
 
 using Evm = import "evm.capnp";
 using Address = import "address.capnp";
+using Governance = import "governance.capnp";
 
 struct ConfidentialAmount {
     point0 @0: Data;
@@ -69,6 +70,8 @@ struct Output {
         claimReward @12: ClaimData;
         delegate @13: DelegateData;
         evmCall @14: Evm.Output;
+        createProposal @15: Governance.CreateProposal;
+        voteProposal @16: Governance.VoteProposal;
     }
 
 }

@@ -6,7 +6,7 @@ use crate::{
     output_capnp::output,
     rewards,
     staking::{self, TendermintAddress, ValidatorPublicKey},
-    transaction::{bytes::deserialize::evm::from_evm, Output, OutputOperation},
+    transaction::{bytes::deserialize::{evm::from_evm, governance::{from_create_proposal, from_vote_proposal}}, Output, OutputOperation},
     utxo, Address, Result,
 };
 use zei::{
@@ -145,6 +145,16 @@ fn from_operation(reader: output::operation::Reader) -> Result<OutputOperation> 
             let reader = a?;
 
             OutputOperation::EvmCall(from_evm(reader)?)
+        }
+        operation::Which::CreateProposal(a) => {
+            let reader = a?;
+
+            OutputOperation::CreateProposal(from_create_proposal(reader)?)
+        }
+        operation::Which::VoteProposal(a) => {
+            let reader = a?;
+
+            OutputOperation::VoteProposal(from_vote_proposal(reader)?)
         }
     };
     Ok(operation)
