@@ -162,7 +162,7 @@ impl<
 
     fn original_storage(&self, address: H160, key: H256) -> Option<H256> {
         match self.latest_substate().storages.get(&address, &key) {
-            Ok(Some(e)) => Some(e.clone()),
+            Ok(Some(e)) => Some(*e),
             Ok(None) => None,
             Err(e) => {
                 log::error!("read code error: {:?}", e);
