@@ -3,8 +3,10 @@ use abcf::{
         merkle::append_only::AppendOnlyMerkle,
         model::{DoubleKeyMap, Map, Value},
     },
-    module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx, RequestBeginBlock},
-    Application, RPCContext, RPCResponse, TxnContext, AppContext,
+    module::types::{
+        RequestBeginBlock, RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx,
+    },
+    AppContext, Application, RPCContext, RPCResponse, TxnContext,
 };
 use fm_utxo::UtxoModule;
 use primitive_types::{H160, H256, U256};
@@ -65,7 +67,8 @@ impl Application for EvmModule {
         self.vicinity.block_hash = H256::from_slice(&req.hash);
         self.vicinity.block_number = U256::from(header.height);
         self.vicinity.block_coinbase = H160::from_slice(&header.proposer_address);
-        self.vicinity.block_timestamp = U256::from(header.time.expect("no timestamp from tendermint").seconds);
+        self.vicinity.block_timestamp =
+            U256::from(header.time.expect("no timestamp from tendermint").seconds);
     }
 
     async fn deliver_tx(

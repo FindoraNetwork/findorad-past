@@ -3,6 +3,7 @@ use crate::evm;
 use crate::rewards;
 use crate::staking;
 use crate::utxo;
+// use crate::governance;
 
 #[derive(Debug, Clone)]
 pub enum Operation {
@@ -14,6 +15,8 @@ pub enum Operation {
     ClaimReward(rewards::Claim),
     Undelegate(staking::Undelegate),
     EvmCall(evm::Evm),
+    //     CreateProposal(governance::CreateProposal),
+    //     VoteProposal(governance::VoteProposal),
 }
 
 #[derive(Debug, Clone)]

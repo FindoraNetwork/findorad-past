@@ -1,7 +1,7 @@
 use crate::{
+    output_capnp::output,
     staking::ValidatorPublicKey,
     transaction::{Output, OutputOperation},
-    transaction_capnp::output,
     Result,
 };
 use zei::{

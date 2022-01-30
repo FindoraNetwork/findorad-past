@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use libfindora::{Address, staking::TendermintAddress, transaction, asset::FRA};
+use libfindora::{asset::FRA, staking::TendermintAddress, transaction, Address};
 use zei::xfr::structs::XfrAmount;
 
 #[derive(Debug, Clone)]

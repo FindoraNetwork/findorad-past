@@ -1,8 +1,8 @@
 use primitive_types::H512;
 
 use crate::{
+    input_capnp::input,
     transaction::{Input, InputOperation},
-    transaction_capnp::input,
     Result,
 };
 

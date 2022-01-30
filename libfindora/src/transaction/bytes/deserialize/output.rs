@@ -1,11 +1,12 @@
 use primitive_types::U256;
 
 use crate::{
+    address_capnp::address,
     asset::AssetMeta,
+    output_capnp::output,
     rewards,
     staking::{self, TendermintAddress, ValidatorPublicKey},
     transaction::{bytes::deserialize::evm::from_evm, Output, OutputOperation},
-    transaction_capnp::{address, output},
     utxo, Address, Result,
 };
 use zei::{
@@ -59,10 +60,11 @@ fn from_owner_memo(reader: output::owner_memo::Reader) -> Result<Option<OwnerMem
 }
 
 fn from_operation(reader: output::operation::Reader) -> Result<OutputOperation> {
-    use crate::transaction_capnp::define_asset;
-    use crate::transaction_capnp::delegate_data::memo;
-    use crate::transaction_capnp::delegate_data::validator;
-    use crate::transaction_capnp::validator_key;
+    use crate::output_capnp::{
+        define_asset,
+        delegate_data::{memo, validator},
+        validator_key,
+    };
     use output::operation;
 
     let operation = match reader.which()? {
