@@ -1,5 +1,5 @@
 use abcf::{
-    bs3::{merkle::empty::EmptyMerkle, model::Value},
+    bs3::{merkle::append_only::AppendOnlyMerkle, model::Value},
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, TxnContext,
 };
@@ -13,8 +13,8 @@ use crate::transaction;
     target_height = 0
 )]
 pub struct RewardsModule {
-    #[stateful(merkle = "EmptyMerkle")]
-    pub sf_value: Value<u32>,
+    #[stateful(merkle = "AppendOnlyMerkle")]
+    pub rule: Value<Vec<u8>>,
     // Only a placeholder, will remove when abcf update.
     #[stateless]
     pub sl_value: Value<u32>,
