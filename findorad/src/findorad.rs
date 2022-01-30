@@ -5,6 +5,7 @@ use libfindora::transaction::Transaction;
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use sha3::Sha3_512;
+use std::env::current_exe;
 use std::{collections::BTreeMap, marker::PhantomData};
 use zei::setup::PublicParams;
 
@@ -39,10 +40,24 @@ type FindoradManagerWithSled = FindoradManager<SledBackend>;
 
 pub struct Findorad {
     node: abcf_node::Node<abcf::entry::Node<sha3::Sha3_512, FindoradManagerWithSled>>,
+    staking_backend: sled::Db,
+    coinbase_backend: sled::Db,
+    asset_backend: sled::Db,
+    evm_backend: sled::Db,
+    fee_backend: sled::Db,
+    utxo_backend: sled::Db,
 }
 
 impl Findorad {
-    pub fn new() -> Self {
+    pub fn new(prefix: Option<&str>) -> Self {
+        let prefix_path = if let Some(prefix) = prefix {
+            prefix.to_string()
+        } else {
+            let cur_path = current_exe().unwrap();
+            let grand_path = cur_path.parent().unwrap().parent().unwrap();
+            grand_path.join("findorad").to_str().unwrap().to_string()
+        };
+
         let staking = StakingModule::new(BTreeMap::new());
 
         let asset = AssetModule::new();
@@ -62,13 +77,23 @@ impl Findorad {
         let manager = FindoradManager::<SledBackend>::new(staking, asset, evm, fee, coinbase, utxo);
 
         let staking_backend =
-            bs3::backend::sled_db_open(Some("./target/findorad/staking")).unwrap();
+            bs3::backend::sled_db_open(Some(format!("{}/{}", prefix_path, "staking").as_str()))
+                .unwrap();
         let coinbase_backend =
-            bs3::backend::sled_db_open(Some("./target/findorad/coinbase")).unwrap();
-        let utxo_backend = bs3::backend::sled_db_open(Some("./target/findorad/utxo")).unwrap();
-        let asset_backend = bs3::backend::sled_db_open(Some("./target/findorad/asset")).unwrap();
-        let fee_backend = bs3::backend::sled_db_open(Some("./target/findorad/fee")).unwrap();
-        let evm_backend = bs3::backend::sled_db_open(Some("./target/findorad/evm")).unwrap();
+            bs3::backend::sled_db_open(Some(format!("{}/{}", prefix_path, "coinbase").as_str()))
+                .unwrap();
+        let utxo_backend =
+            bs3::backend::sled_db_open(Some(format!("{}/{}", prefix_path, "utxo").as_str()))
+                .unwrap();
+        let asset_backend =
+            bs3::backend::sled_db_open(Some(format!("{}/{}", prefix_path, "asset").as_str()))
+                .unwrap();
+        let fee_backend =
+            bs3::backend::sled_db_open(Some(format!("{}/{}", prefix_path, "fee").as_str()))
+                .unwrap();
+        let evm_backend =
+            bs3::backend::sled_db_open(Some(format!("{}/{}", prefix_path, "evm").as_str()))
+                .unwrap();
 
         let stateful = abcf::Stateful::<FindoradManager<SledBackend>> {
             staking: abcf::Stateful::<StakingModule<SledBackend, Sha3_512>> {
@@ -212,12 +237,20 @@ impl Findorad {
         let entry = abcf::entry::Node::new(stateless, stateful, manager);
         let node = abcf_node::Node::new(
             entry,
-            "./target/findorad/abcf",
+            format!("{}/{}", prefix_path, "abcf").as_str(),
             abcf_node::NodeType::Validator,
         )
         .unwrap();
 
-        Self { node }
+        Self {
+            node,
+            staking_backend,
+            utxo_backend,
+            coinbase_backend,
+            asset_backend,
+            fee_backend,
+            evm_backend,
+        }
     }
 
     pub fn genesis(&mut self, tx: Transaction) -> Result<()> {
@@ -235,6 +268,16 @@ impl Findorad {
             log::info!("{:?}", resp);
         }
 
+        Ok(())
+    }
+
+    pub fn flush(&self) -> Result<()> {
+        self.utxo_backend.flush()?;
+        self.coinbase_backend.flush()?;
+        self.evm_backend.flush()?;
+        self.asset_backend.flush()?;
+        self.staking_backend.flush()?;
+        self.fee_backend.flush()?;
         Ok(())
     }
 

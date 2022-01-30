@@ -31,11 +31,13 @@ impl ByzantineKind {
     }
 }
 
+#[derive(Debug)]
 pub struct Evidence {
     pub kind: ByzantineKind,
     pub validator: Option<TendermintAddress>,
 }
 
+#[derive(Debug)]
 pub struct BlockEvidence {
     pub evidences: Vec<Evidence>,
 }
@@ -52,6 +54,21 @@ impl From<&RequestBeginBlock> for BlockEvidence {
                 .map(|validator| TendermintAddress::from(&validator.address));
 
             evidences.push(Evidence { kind, validator });
+        }
+
+        if let Some(lci) = &req.last_commit_info {
+            for vote in &lci.votes {
+                if !vote.signed_last_block {
+                    let validator = vote
+                        .validator
+                        .as_ref()
+                        .map(|validator| TendermintAddress::from(&validator.address));
+                    evidences.push(Evidence {
+                        kind: ByzantineKind::OffLine,
+                        validator,
+                    })
+                }
+            }
         }
 
         Self { evidences }
