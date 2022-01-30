@@ -6,7 +6,13 @@ use crate::{
     output_capnp::output,
     rewards,
     staking::{self, TendermintAddress, ValidatorPublicKey},
-    transaction::{bytes::deserialize::{evm::from_evm, governance::{from_create_proposal, from_vote_proposal}}, Output, OutputOperation},
+    transaction::{
+        bytes::deserialize::{
+            evm::from_evm,
+            governance::{from_create_proposal, from_vote_proposal},
+        },
+        Output, OutputOperation,
+    },
     utxo, Address, Result,
 };
 use zei::{
