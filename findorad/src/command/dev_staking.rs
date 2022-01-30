@@ -84,7 +84,7 @@ fn start_node(path: &Path, len: usize) {
         let ef = of.try_clone().unwrap();
 
         Command::new(std::env::current_exe().unwrap().to_str().unwrap())
-            .args(["node", "-c", node_path.to_str().unwrap()])
+            .args(["staking-node", "-c", node_path.to_str().unwrap()])
             .stdout(Stdio::from(of))
             .stderr(Stdio::from(ef))
             .spawn()
