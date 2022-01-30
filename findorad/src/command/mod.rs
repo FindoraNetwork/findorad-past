@@ -1,7 +1,7 @@
 pub mod dev;
 pub mod dev_staking;
 
-use clap::{Parser, AppSettings};
+use clap::{AppSettings, Parser};
 
 /// Findora node.
 #[derive(Parser, Debug)]
