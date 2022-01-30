@@ -25,7 +25,9 @@ pub fn get_delegation_list(validator: H160, height: i64) -> Vec<H160> {
 
         let delegator = res_delegator.as_mut_ptr();
 
-        unsafe { ffi::get_delegation_list_item(validator, height, i, delegator); }
+        unsafe {
+            ffi::get_delegation_list_item(validator, height, i, delegator);
+        }
 
         res.push(res_delegator);
     }

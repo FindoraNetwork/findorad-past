@@ -12,4 +12,3 @@ pub fn set_rewards(address: H160, validator: H160, reward: u64) {
 
     unsafe { ffi::set_rewards(address, validator, reward) }
 }
-

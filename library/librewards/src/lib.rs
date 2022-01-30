@@ -12,4 +12,3 @@ pub use get_validator_list::*;
 
 mod set_rewards;
 pub use set_rewards::*;
-

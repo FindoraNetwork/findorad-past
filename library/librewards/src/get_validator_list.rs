@@ -18,11 +18,12 @@ pub fn get_validator_list(height: i64) -> Vec<H160> {
 
         let delegator = res_delegator.as_mut_ptr();
 
-        unsafe { ffi::get_validator_list_item(height, i, delegator); }
+        unsafe {
+            ffi::get_validator_list_item(height, i, delegator);
+        }
 
         res.push(res_delegator);
     }
 
     res
 }
-
