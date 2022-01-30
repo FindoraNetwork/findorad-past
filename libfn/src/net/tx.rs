@@ -1,24 +1,23 @@
 use abcf_sdk::{jsonrpc::endpoint::tx::ResultResponse as TxResp, providers::Provider};
-use libfindora::Transaction;
 use serde_json::Value;
 
 use crate::{Error, Result};
 
-pub async fn send_tx<P: Provider>(provider: &mut P, tx: Transaction) -> Result<TxResp> {
-    let tx_bytes = tx.serialize()?;
+pub async fn send_tx<P: Provider>(provider: &mut P, tx_bytes: Vec<u8>) -> Result<Option<TxResp>> {
     let hex_tx = hex::encode(tx_bytes);
     let tx_param = format!("0x{}", hex_tx);
     let params = serde_json::json!({
         "tx": tx_param,
     });
 
-    let response = provider
-        .request::<Value, TxResp>("broadcast_tx_sync", &params)
+    let result = provider
+        .request::<Value, TxResp>("broadcast_tx_async", &params)
         .await
         .map_err(|e| Error::AbcfSdkError(format!("{:?}", e)))?;
 
-    match response {
-        Some(res) => Ok(res),
-        None => Err(Error::AbcfSdkError("response is empty".to_string())),
+    if let Some(resp) = result {
+        Ok(Some(resp))
+    } else {
+        Ok(None)
     }
 }
