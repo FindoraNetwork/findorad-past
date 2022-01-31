@@ -32,7 +32,7 @@ pub struct Command {
 enum SubCommand {
     /// Create a new asset
     Create(Create),
-    /// Show a list of asset addresses or specific one for detail information
+    /// Show a list of assets information
     Show(Show),
     /// Issue an asset on ledger
     Issue(Issue),
