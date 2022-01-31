@@ -61,6 +61,9 @@ struct Create {
     /// Maximum amount of the new asset
     #[clap(short, long)]
     maximum: Option<u64>,
+    /// Custom name of the new asset
+    #[clap(short, long)]
+    name: Option<String>,
 }
 
 #[derive(Parser, Debug)]
@@ -90,9 +93,6 @@ struct Issue {
     /// To specific a plain-text input as the AssetType which is a base64-formatted string
     #[clap(short = 't', long, forbid_empty_values = true)]
     asset_type: String,
-    /// Custom name of the new asset
-    #[clap(short, long)]
-    name: Option<String>,
     /// Amount when issuing an asset
     #[clap(short = 'm', long, required = true, forbid_empty_values = true)]
     amount: u64,
@@ -142,6 +142,7 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
 
     let mut assets = entry_asset::Assets::new(home)?;
     asset.address = secret.to_public().to_address()?.to_eth()?;
+    asset.name = cmd.name.clone();
     asset.memo = cmd.memo.clone();
     asset.decimal_place = cmd.decimal_place;
     asset.maximum = cmd.maximum;
@@ -234,7 +235,6 @@ fn issue(cmd: &Issue, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         builder.build(&mut rng)?.to_bytes().unwrap(),
     )))?;
 
-    asset.name = cmd.name.clone();
     asset.is_issued = true;
     asset.is_confidential_amount = cmd.is_confidential_amount;
     entry_asset::Assets::new(home)?.update(&asset)?;
@@ -277,6 +277,7 @@ mod tests {
                 is_transferable: false,
                 decimal_place: 6,
                 maximum: None,
+                name: None,
             }),
         };
 
@@ -294,7 +295,6 @@ mod tests {
                 from_secret: None,
                 asset_type: "1TYZSwkxQI6-q49vgFsCOuXaOjaHbhtEV2GyDoPglUU=".to_string(),
                 is_confidential_amount: false,
-                name: None,
                 amount: 999,
             }),
         };
