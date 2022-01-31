@@ -87,7 +87,7 @@ impl Display {
                 f,
                 "
 {}
-Code:                   {}
+Name:                   {}
 ETH Compatible Address: {}
 Asset Type:             {}
 Memo:                   {}
@@ -140,14 +140,15 @@ Is Issued:              {}
 
         let address = self.fetcher(&self.contents[0].address)?;
         let asset_type = self.fetcher(&self.contents[0].asset_type)?;
-        let name = self.fetcher(&self.contents[0].name)?;
+        let none = "[(none found)]".to_string();
+        let name = &self.contents[0].name.as_ref().unwrap_or(&none);
         write!(
             f,
             "
 {} {}
 {} ETH Compatible Address: {}
 {} Asset Type:             {}
-{} Code:                   {}
+{} Name:                   {}
 ",
             Emoji("✨", ":)"),
             style("Success Issued").bold().green(),

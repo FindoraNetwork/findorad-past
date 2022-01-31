@@ -7,7 +7,7 @@ use crate::{
 
 use abcf::ToBytes;
 use abcf_sdk::providers::HttpGetProvider;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use async_compat::Compat;
 use clap::{ArgGroup, Parser};
 use futures::executor::block_on;
@@ -139,7 +139,8 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     )))?;
     block_on(Compat::new(send_tx(
         &mut provider,
-        builder.build(&mut rng)?.to_bytes()?,
+        // TODO: change back to ? when abcf error type is satisfying
+        builder.build(&mut rng)?.to_bytes().unwrap(),
     )))?;
 
     if is_interact {
@@ -171,31 +172,35 @@ fn show(cmd: &Show, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     let mut output_map = HashMap::with_capacity(output.len());
 
     for o in output.iter() {
-        println!(
-            "type: {:?}, amount: {}",
-            o.open_asset_record.get_asset_type(),
-            o.open_asset_record.get_amount()
-        );
         *output_map
             .entry(*o.open_asset_record.get_asset_type())
             .or_insert(0) += o.open_asset_record.get_amount();
     }
 
-    let mut result = vec![];
-    if is_interact {
-        let assets =
-            entry_asset::Assets::new(home)?.list(&secret.to_public().to_address()?.to_eth()?);
+    // mapping the local non-issued assets to be shown
+    let assets = entry_asset::Assets::new(home)?;
+    let address = secret.to_public().to_address()?.to_eth()?;
+    for a in assets.list(&address) {
+        output_map.entry(a.asset_type).or_insert(0);
+    }
 
-        for a in assets {
-            println!("output_map: {:?}", output_map);
-            if let Some(amount) = output_map.get(&a.asset_type) {
-                result.push((a, Some(*amount)))
+    let mut result = vec![];
+    for (asset_type, amount) in output_map {
+        let mut asset = entry_asset::Asset::from(asset_type);
+        // an asset that can be found in the blockchain will have below three attributes
+        asset.address = address.clone();
+        asset.is_issued = true;
+        // TODO: confirm this one,
+        // because while testing if an asset is not transferable will be not shown in the blockchain response
+        asset.is_transferable = true;
+
+        if is_interact {
+            if let Ok(a) = assets.read(&address, &asset.get_asset_type_base64()) {
+                // remap the asset information if it can be found in the local file
+                asset = a;
             }
         }
-    } else {
-        for (asset_type, amount) in output_map {
-            result.push((entry_asset::Asset::from(asset_type), Some(amount)));
-        }
+        result.push((asset, Some(amount)));
     }
 
     Ok(Box::new(display_asset::Display::new(
@@ -230,7 +235,8 @@ fn issue(cmd: &Issue, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     )))?;
     block_on(Compat::new(send_tx(
         &mut provider,
-        builder.build(&mut rng)?.to_bytes()?,
+        // TODO: change back to ? when abcf error type is satisfying
+        builder.build(&mut rng)?.to_bytes().unwrap(),
     )))?;
 
     if is_interact {
