@@ -164,6 +164,7 @@ mod tests {
         let address = "0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117".to_string();
         let asset_type = base64::encode_config(&[9; ASSET_TYPE_LENGTH], base64::URL_SAFE);
         let mut asset = Asset::new_from_asset_type_base64(&asset_type).unwrap();
+        asset.address = address.clone();
 
         assert!(assets.create(&asset).is_ok());
         assert_eq!(assets.list(&address).len(), 1);
