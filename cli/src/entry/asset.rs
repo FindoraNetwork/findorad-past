@@ -23,6 +23,7 @@ pub struct Asset {
     pub maximum: Option<u64>,
     pub is_transferable: bool,
     pub is_issued: bool,
+    pub is_confidential_amount: bool,
 }
 
 impl Default for Asset {
@@ -40,6 +41,7 @@ impl Default for Asset {
             maximum: None,
             is_transferable: false,
             is_issued: false,
+            is_confidential_amount: false,
         }
     }
 }
@@ -56,16 +58,8 @@ impl Asset {
     }
 
     pub fn new_from_asset_type_base64(asset_type: &str) -> Result<Asset> {
-        let mut u8_astyp: [u8; ASSET_TYPE_LENGTH] = Default::default();
-        let b_astyp = base64::decode_config(asset_type, base64::URL_SAFE).with_context(|| {
-            format!(
-                "new_from_asset_type_base64 decode base64 failed: {}",
-                asset_type
-            )
-        })?;
-        u8_astyp.copy_from_slice(&b_astyp);
-        let astyp = AssetType(u8_astyp);
-
+        let astyp = decode_asset_type(asset_type)
+            .context("new_from_asset_type_base64  decode asset_type failed")?;
         Ok(Asset {
             asset_type: astyp,
             ..Default::default()
@@ -130,12 +124,7 @@ impl Assets {
     }
 
     pub fn read(&self, addr: &str, asset_type: &str) -> Result<Asset> {
-        let mut u8_astyp: [u8; ASSET_TYPE_LENGTH] = Default::default();
-        let b_astyp = base64::decode_config(asset_type, base64::URL_SAFE)
-            .with_context(|| format!("read decode base64 failed: {}", asset_type))?;
-        u8_astyp.copy_from_slice(&b_astyp);
-        let astyp = AssetType(u8_astyp);
-
+        let astyp = decode_asset_type(asset_type).context("read decode asset_type failed")?;
         match self
             .assets
             .iter()
@@ -155,6 +144,14 @@ impl Assets {
     }
 }
 
+fn decode_asset_type(asset_type: &str) -> Result<AssetType> {
+    let mut u8_astyp: [u8; ASSET_TYPE_LENGTH] = Default::default();
+    let b_astyp = base64::decode_config(asset_type, base64::URL_SAFE)
+        .with_context(|| format!("decode base64 failed: {}", asset_type))?;
+    u8_astyp.copy_from_slice(&b_astyp);
+    Ok(AssetType(u8_astyp))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -166,17 +163,7 @@ mod tests {
         let mut assets = Assets::new(home.path()).unwrap();
         let address = "0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117".to_string();
         let asset_type = base64::encode_config(&[9; ASSET_TYPE_LENGTH], base64::URL_SAFE);
-
-        let mut asset = Asset {
-            address: address.clone(),
-            asset_type: AssetType([9; ASSET_TYPE_LENGTH]),
-            memo: Some("this is a test asset 1".to_string()),
-            name: None,
-            decimal_place: 6,
-            maximum: Some(9999999),
-            is_transferable: true,
-            is_issued: true,
-        };
+        let mut asset = Asset::new_from_asset_type_base64(&asset_type).unwrap();
 
         assert!(assets.create(&asset).is_ok());
         assert_eq!(assets.list(&address).len(), 1);

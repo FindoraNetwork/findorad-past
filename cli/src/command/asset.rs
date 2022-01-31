@@ -50,7 +50,7 @@ struct Create {
     #[clap(short = 's', long, value_name = "SECRET", forbid_empty_values = true)]
     from_secret: Option<String>,
     /// Memo is a note for this new asset
-    #[clap(long)]
+    #[clap(short = 'e', long)]
     memo: Option<String>,
     /// Is transferable for the new asset
     #[clap(short = 't', long)]
@@ -88,7 +88,7 @@ struct Issue {
     #[clap(short = 's', long, value_name = "SECRET", forbid_empty_values = true)]
     from_secret: Option<String>,
     /// To specific a plain-text input as the AssetType which is a base64-formatted string
-    #[clap(short, long, forbid_empty_values = true)]
+    #[clap(short = 't', long, forbid_empty_values = true)]
     asset_type: String,
     /// Custom name of the new asset
     #[clap(short, long)]
@@ -173,6 +173,8 @@ fn show(cmd: &Show, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     }
 
     // mapping the local non-issued assets to be shown
+    // caution: if the blockchain network has been reset (very unlikely in production)
+    // then the display will be corrupted
     let assets = entry_asset::Assets::new(home)?;
     let address = secret.to_public().to_address()?.to_eth()?;
     for a in assets.list(&address) {
@@ -234,6 +236,7 @@ fn issue(cmd: &Issue, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
 
     asset.name = cmd.name.clone();
     asset.is_issued = true;
+    asset.is_confidential_amount = cmd.is_confidential_amount;
     entry_asset::Assets::new(home)?.update(&asset)?;
 
     Ok(Box::new(display_asset::Display::new(

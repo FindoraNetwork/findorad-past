@@ -14,6 +14,7 @@ pub struct Content {
     pub amount: Option<String>,
     pub is_transferable: Option<String>,
     pub is_issued: Option<String>,
+    pub is_confidential_amount: Option<String>,
 }
 
 #[derive(Debug)]
@@ -38,10 +39,20 @@ impl Display {
                 address: Some(a.0.address.clone()),
                 asset_type: Some(a.0.get_asset_type_base64()),
                 memo: a.0.memo.clone(),
-                maximun: a.0.maximum.map(|u| u.to_string()),
-                amount: a.1.map(|u| u.to_string()),
+                maximun: a
+                    .0
+                    .maximum
+                    .map(|u| ((u as f64) / (10_f64.powf(a.0.decimal_place as f64))).to_string()),
+                amount: a.1.map(|u| {
+                    if a.0.is_confidential_amount {
+                        "[(confidential)]".to_string()
+                    } else {
+                        ((u as f64) / (10_f64.powf(a.0.decimal_place as f64))).to_string()
+                    }
+                }),
                 is_transferable: Some(a.0.is_transferable.to_string()),
                 is_issued: Some(a.0.is_issued.to_string()),
+                is_confidential_amount: Some(a.0.is_confidential_amount.to_string()),
             })
             .collect();
 
@@ -70,18 +81,23 @@ impl Display {
         }
 
         for index in 0..self.contents.len() {
-            let none = "[(none found)]".to_string();
+            let none = "[(none)]".to_string();
+            let unlimited = "[(unlimited)]".to_string();
             let name = &self.contents[index].name.as_ref().unwrap_or(&none);
             let address = self.fetcher(&self.contents[index].address)?;
             let asset_type = self.fetcher(&self.contents[index].asset_type)?;
             let memo = &self.contents[index].memo.as_ref().unwrap_or(&none);
-            let maximun = &self.contents[index].maximun.as_ref().unwrap_or(&none);
+            let maximun = &self.contents[index].maximun.as_ref().unwrap_or(&unlimited);
             let amount = self.fetcher(&self.contents[index].amount)?;
             let is_transferable = &self.contents[index]
                 .is_transferable
                 .as_ref()
                 .unwrap_or(&none);
             let is_issued = &self.contents[index].is_issued.as_ref().unwrap_or(&none);
+            let is_confidential_amount = &self.contents[index]
+                .is_confidential_amount
+                .as_ref()
+                .unwrap_or(&none);
 
             write!(
                 f,
@@ -95,16 +111,18 @@ Maximun:                {}
 Amount:                 {}
 Is Transferable:        {}
 Is Issued:              {}
+Is Confidential Amount: {}
             ",
                 Emoji("🪙", "$ "),
                 style(name).bold().cyan(),
                 style(address).bold().cyan(),
-                style(asset_type).bold().white(),
+                style(asset_type).bold().yellow(),
                 style(memo).bold().cyan(),
                 style(maximun).bold().cyan(),
                 style(amount).bold().cyan(),
                 style(is_transferable).bold().magenta(),
                 style(is_issued).bold().magenta(),
+                style(is_confidential_amount).bold().magenta(),
             )?;
         }
         Ok(())
@@ -140,15 +158,12 @@ Is Issued:              {}
 
         let address = self.fetcher(&self.contents[0].address)?;
         let asset_type = self.fetcher(&self.contents[0].asset_type)?;
-        let none = "[(none found)]".to_string();
-        let name = &self.contents[0].name.as_ref().unwrap_or(&none);
         write!(
             f,
             "
 {} {}
 {} ETH Compatible Address: {}
 {} Asset Type:             {}
-{} Name:                   {}
 ",
             Emoji("✨", ":)"),
             style("Success Issued").bold().green(),
@@ -156,8 +171,6 @@ Is Issued:              {}
             style(address).white(),
             Emoji("★ ", "* "),
             style(asset_type).white(),
-            Emoji("★ ", "* "),
-            style(name).white(),
         )
     }
 }
