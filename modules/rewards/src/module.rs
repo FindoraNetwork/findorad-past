@@ -1,10 +1,15 @@
 use abcf::{
-    bs3::{merkle::append_only::AppendOnlyMerkle, model::Value},
+    bs3::{merkle::append_only::AppendOnlyMerkle, model::Value, ValueStore},
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
-    Application, TxnContext,
+    Application, RPCContext, RPCResponse, TxnContext,
 };
+use primitive_types::H160;
 
-use crate::transaction;
+use crate::{
+    rpc::{self, RuleVersionResponse},
+    runtime::{self, version},
+    transaction, Error, Result,
+};
 
 #[abcf::module(
     name = "rewards",
@@ -20,8 +25,29 @@ pub struct RewardsModule {
     pub sl_value: Value<u32>,
 }
 
+fn load_version(store: &impl ValueStore<Vec<u8>>) -> Result<Option<H160>> {
+    Ok(if let Some(code) = store.get()? {
+        let v = runtime::version(&code)?;
+        Some(v)
+    } else {
+        None
+    })
+}
+
 #[abcf::rpcs]
-impl RewardsModule {}
+impl RewardsModule {
+    pub async fn rule_version<'a>(
+        &mut self,
+        ctx: &mut RPCContext<'a, Self>,
+        _params: rpc::RuleVersionRequest,
+    ) -> RPCResponse<rpc::RuleVersionResponse> {
+        let rule = &ctx.stateful.rule;
+        match load_version(rule) {
+            Ok(e) => RPCResponse::new(RuleVersionResponse { version: e }),
+            Err(e) => e.into(),
+        }
+    }
+}
 
 /// Module's block logic.
 #[abcf::application]
