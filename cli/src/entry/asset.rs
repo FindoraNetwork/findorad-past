@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::{bail, Context, Result};
-use libfindora::asset::{AssetType, ASSET_TYPE_LENGTH};
+use libfindora::asset::{AssetType, ASSET_TYPE_LENGTH, FRA};
 use rand_chacha::{rand_core::RngCore, rand_core::SeedableRng, ChaChaRng};
 use serde::{Deserialize, Serialize};
 
@@ -60,16 +60,18 @@ impl Asset {
     pub fn new_from_asset_type_base64(asset_type: &str) -> Result<Asset> {
         let astyp = decode_asset_type(asset_type)
             .context("new_from_asset_type_base64  decode asset_type failed")?;
-        Ok(Asset {
-            asset_type: astyp,
-            ..Default::default()
-        })
+        Ok(Asset::from(astyp))
     }
 }
 
 impl std::convert::From<AssetType> for Asset {
     fn from(asset_type: AssetType) -> Asset {
         Asset {
+            name: if asset_type == FRA.bare_asset_type {
+                Some("FRA".to_string())
+            } else {
+                None
+            },
             asset_type,
             ..Default::default()
         }
