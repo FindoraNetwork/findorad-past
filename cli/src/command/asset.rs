@@ -47,7 +47,6 @@ struct Create {
     #[clap(short = 'f', long, value_name = "ADDRESS", forbid_empty_values = true)]
     from_address: Option<String>,
     /// To specific a plain-text input as the Findora wallet which is a base64-formatted secret
-    /// Note: using this option will not interact with any local wallet and asset records
     #[clap(short = 's', long, value_name = "SECRET", forbid_empty_values = true)]
     from_secret: Option<String>,
     /// Memo is a note for this new asset
@@ -73,7 +72,6 @@ struct Show {
     #[clap(short = 'f', long, value_name = "ADDRESS", forbid_empty_values = true)]
     from_address: Option<String>,
     /// To specific a plain-text input as the Findora wallet which is a base64-formatted secret
-    /// Note: using this option will not interact with any local wallet and asset records
     #[clap(short = 's', long, value_name = "SECRET", forbid_empty_values = true)]
     from_secret: Option<String>,
 }
@@ -87,7 +85,6 @@ struct Issue {
     #[clap(short = 'f', long, value_name = "ADDRESS", forbid_empty_values = true)]
     from_address: Option<String>,
     /// To specific a plain-text input as the Findora wallet which is a base64-formatted secret
-    /// Note: using this option will not interact with any local wallet and asset records
     #[clap(short = 's', long, value_name = "SECRET", forbid_empty_values = true)]
     from_secret: Option<String>,
     /// To specific a plain-text input as the AssetType which is a base64-formatted string
@@ -115,7 +112,7 @@ impl Command {
 }
 
 fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
-    let (secret, is_interact) = get_secret(home, &cmd.from_address, &cmd.from_secret)?;
+    let secret = get_secret(home, &cmd.from_address, &cmd.from_secret)?;
     let maximum = match &cmd.maximum {
         Some(max) => Some(U256::from_str_radix(max.to_string().as_str(), 10)?),
         None => None,
@@ -143,15 +140,13 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         builder.build(&mut rng)?.to_bytes().unwrap(),
     )))?;
 
-    if is_interact {
-        let mut assets = entry_asset::Assets::new(home)?;
-        asset.address = secret.to_public().to_address()?.to_eth()?;
-        asset.memo = cmd.memo.clone();
-        asset.decimal_place = cmd.decimal_place;
-        asset.maximum = cmd.maximum;
-        asset.is_transferable = cmd.is_transferable;
-        assets.create(&asset)?;
-    }
+    let mut assets = entry_asset::Assets::new(home)?;
+    asset.address = secret.to_public().to_address()?.to_eth()?;
+    asset.memo = cmd.memo.clone();
+    asset.decimal_place = cmd.decimal_place;
+    asset.maximum = cmd.maximum;
+    asset.is_transferable = cmd.is_transferable;
+    assets.create(&asset)?;
 
     Ok(Box::new(display_asset::Display::new(
         display_asset::DisplayType::Create,
@@ -160,7 +155,7 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
 }
 
 fn show(cmd: &Show, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
-    let (secret, is_interact) = get_secret(home, &cmd.from_address, &cmd.from_secret)?;
+    let secret = get_secret(home, &cmd.from_address, &cmd.from_secret)?;
     let mut provider = HttpGetProvider::new(addr);
 
     let (_, entrypt_output) = block_on(Compat::new(owned_outputs::get(
@@ -194,11 +189,9 @@ fn show(cmd: &Show, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         // because while testing if an asset is not transferable will be not shown in the blockchain response
         asset.is_transferable = true;
 
-        if is_interact {
-            if let Ok(a) = assets.read(&address, &asset.get_asset_type_base64()) {
-                // remap the asset information if it can be found in the local file
-                asset = a;
-            }
+        if let Ok(a) = assets.read(&address, &asset.get_asset_type_base64()) {
+            // remap the asset information if it can be found in the local file
+            asset = a;
         }
         result.push((asset, Some(amount)));
     }
@@ -210,12 +203,12 @@ fn show(cmd: &Show, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
 }
 
 fn issue(cmd: &Issue, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
-    let (secret, is_interact) = get_secret(home, &cmd.from_address, &cmd.from_secret)?;
-    let mut asset = if is_interact {
-        entry_asset::Assets::new(home)?
-            .read(&secret.to_public().to_address()?.to_eth()?, &cmd.asset_type)?
-    } else {
-        entry_asset::Asset::new_from_asset_type_base64(&cmd.asset_type)?
+    let secret = get_secret(home, &cmd.from_address, &cmd.from_secret)?;
+    let mut asset = match entry_asset::Assets::new(home)?
+        .read(&secret.to_public().to_address()?.to_eth()?, &cmd.asset_type)
+    {
+        Ok(a) => a,
+        Err(_) => entry_asset::Asset::new_from_asset_type_base64(&cmd.asset_type)?,
     };
 
     let issue = Entity::Issue(EntityIssue {
@@ -239,11 +232,9 @@ fn issue(cmd: &Issue, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         builder.build(&mut rng)?.to_bytes().unwrap(),
     )))?;
 
-    if is_interact {
-        asset.name = cmd.name.clone();
-        asset.is_issued = true;
-        entry_asset::Assets::new(home)?.update(&asset)?;
-    }
+    asset.name = cmd.name.clone();
+    asset.is_issued = true;
+    entry_asset::Assets::new(home)?.update(&asset)?;
 
     Ok(Box::new(display_asset::Display::new(
         display_asset::DisplayType::Issue,
@@ -251,24 +242,17 @@ fn issue(cmd: &Issue, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     )))
 }
 
-fn get_secret(
-    home: &Path,
-    addr: &Option<String>,
-    secret: &Option<String>,
-) -> Result<(SecretKey, bool)> {
+fn get_secret(home: &Path, addr: &Option<String>, secret: &Option<String>) -> Result<SecretKey> {
     if let Some(addr) = addr {
-        Ok((
-            SecretKey::from_base64(
-                &entry_wallet::Wallets::new(home)?
-                    .read()
-                    .by_address(addr)
-                    .build()?
-                    .secret,
-            )?,
-            true,
-        ))
+        Ok(SecretKey::from_base64(
+            &entry_wallet::Wallets::new(home)?
+                .read()
+                .by_address(addr)
+                .build()?
+                .secret,
+        )?)
     } else if let Some(secret) = secret {
-        Ok((SecretKey::from_base64(secret)?, false))
+        Ok(SecretKey::from_base64(secret)?)
     } else {
         unreachable!()
     }
