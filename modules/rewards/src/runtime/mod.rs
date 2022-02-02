@@ -22,7 +22,7 @@ pub fn version(code: &[u8]) -> Result<H160> {
         .ok_or(Error::NoMemoryExport)?;
 
     if let ExternVal::Memory(m) = memory {
-        let res = H160::default();
+        let mut res = H160::default();
 
         m.get_into(index, res.as_bytes_mut())?;
 

@@ -44,7 +44,7 @@ impl RewardsModule {
         let rule = &ctx.stateful.rule;
         match load_version(rule) {
             Ok(e) => RPCResponse::new(RuleVersionResponse { version: e }),
-            Err(e) => e.into(),
+            Err(e) => e.to_rpc_error().into(),
         }
     }
 }

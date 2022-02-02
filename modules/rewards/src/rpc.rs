@@ -6,5 +6,5 @@ pub struct RuleVersionRequest {}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RuleVersionResponse {
-    version: Option<H160>,
+    pub version: Option<H160>,
 }
