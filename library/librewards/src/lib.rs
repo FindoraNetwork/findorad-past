@@ -1,3 +1,5 @@
+extern crate alloc;
+
 mod get_proposer;
 pub use get_proposer::*;
 
