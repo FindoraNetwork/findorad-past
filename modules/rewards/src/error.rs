@@ -24,10 +24,18 @@ impl Error {
         match self {
             Error::WasmiError(e) => abcf::Error::RPCApplicationError(90001, format!("{:?}", e)),
             Error::Bs3Error(e) => abcf::Error::RPCApplicationError(90002, format!("{:?}", e)),
-            Error::VersionNoReturnValue => abcf::Error::RPCApplicationError(90003, String::from("version return no value")),
-            Error::NoMemoryExport => abcf::Error::RPCApplicationError(90004, String::from("No exported memory")),
-            Error::ConvertIndexError => abcf::Error::RPCApplicationError(90005, String::from("convert index error")),
-            Error::InsufficientBalance => abcf::Error::RPCApplicationError(90006, String::from("Insufficient balance")),
+            Error::VersionNoReturnValue => {
+                abcf::Error::RPCApplicationError(90003, String::from("version return no value"))
+            }
+            Error::NoMemoryExport => {
+                abcf::Error::RPCApplicationError(90004, String::from("No exported memory"))
+            }
+            Error::ConvertIndexError => {
+                abcf::Error::RPCApplicationError(90005, String::from("convert index error"))
+            }
+            Error::InsufficientBalance => {
+                abcf::Error::RPCApplicationError(90006, String::from("Insufficient balance"))
+            }
         }
     }
 
@@ -35,10 +43,18 @@ impl Error {
         match self {
             Error::WasmiError(e) => abcf::Error::RPCApplicationError(90001, format!("{:?}", e)),
             Error::Bs3Error(e) => abcf::Error::RPCApplicationError(90002, format!("{:?}", e)),
-            Error::VersionNoReturnValue => abcf::Error::RPCApplicationError(90003, String::from("version return no value")),
-            Error::NoMemoryExport => abcf::Error::RPCApplicationError(90004, String::from("No exported memory")),
-            Error::ConvertIndexError => abcf::Error::RPCApplicationError(90005, String::from("convert index error")),
-            Error::InsufficientBalance => abcf::Error::RPCApplicationError(90006, String::from("Insufficient balance")),
+            Error::VersionNoReturnValue => {
+                abcf::Error::RPCApplicationError(90003, String::from("version return no value"))
+            }
+            Error::NoMemoryExport => {
+                abcf::Error::RPCApplicationError(90004, String::from("No exported memory"))
+            }
+            Error::ConvertIndexError => {
+                abcf::Error::RPCApplicationError(90005, String::from("convert index error"))
+            }
+            Error::InsufficientBalance => {
+                abcf::Error::RPCApplicationError(90006, String::from("Insufficient balance"))
+            }
         }
     }
 }

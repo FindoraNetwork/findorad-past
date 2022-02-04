@@ -32,28 +32,24 @@ pub fn version(code: &[u8]) -> Result<H160> {
     }
 }
 
-pub struct RewardsRuleRuntime<D, R> {
+pub struct RewardsRuleRuntime {
     instance: ModuleRef,
-    delegators: D,
-    rewards: R,
 }
 
-impl<D, R> RewardsRuleRuntime<D, R>
-where
-    D: MapStore<TendermintAddress, BTreeMap<Address, Amount>>,
-    R: MapStore<TendermintAddress, BTreeMap<Address, Amount>>,
-{
-    pub fn new(code: &[u8], delegators: D, rewards: R) -> Result<Self> {
+impl RewardsRuleRuntime {
+    pub fn new(code: &[u8]) -> Result<Self> {
         let module = Module::from_buffer(code)?;
         let instance = ModuleInstance::new(&module, &ImportsBuilder::default())?.assert_no_start();
         Ok(Self {
             instance,
-            delegators,
-            rewards,
         })
     }
 
-    pub fn start(&mut self) -> Result<()> {
+    pub fn start<D, R>(&mut self, delegator: D, validators: R) -> Result<()>
+    where
+        D: MapStore<TendermintAddress, BTreeMap<Address, Amount>>,
+        R: MapStore<TendermintAddress, BTreeMap<Address, Amount>>,
+    {
         Ok(())
     }
 }

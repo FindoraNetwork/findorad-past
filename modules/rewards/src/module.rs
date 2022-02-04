@@ -1,16 +1,20 @@
-use std::{collections::BTreeMap};
+use std::collections::BTreeMap;
 
 use abcf::{
-    bs3::{merkle::append_only::AppendOnlyMerkle, model::{Value, Map}, ValueStore, MapStore},
+    bs3::{
+        merkle::append_only::AppendOnlyMerkle,
+        model::{Map, Value},
+        MapStore, ValueStore,
+    },
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCContext, RPCResponse, TxnContext,
 };
-use libfindora::{Address, staking::TendermintAddress, asset::Amount};
+use libfindora::{asset::Amount, staking::TendermintAddress, Address};
 use primitive_types::H160;
 
 use crate::{
     rpc::{self, RuleVersionResponse},
-    transaction, Error, Result, runtime,
+    runtime::{self, RewardsRuleRuntime}, transaction, Error, Result,
 };
 
 #[abcf::module(
@@ -20,8 +24,8 @@ use crate::{
     target_height = 0
 )]
 pub struct RewardsModule {
-    #[stateful(merkle = "AppendOnlyMerkle")]
-    pub rule: Value<Vec<u8>>,
+    pub rule: Option<Vec<u8>>,
+
     #[stateful(merkle = "AppendOnlyMerkle")]
     pub rewards: Map<TendermintAddress, BTreeMap<Address, Amount>>,
     // Only a placeholder, will remove when abcf update.
@@ -29,27 +33,31 @@ pub struct RewardsModule {
     pub sl_value: Value<u32>,
 }
 
-fn load_version(store: &impl ValueStore<Vec<u8>>) -> Result<Option<H160>> {
-    Ok(if let Some(code) = store.get()? {
-        let v = runtime::version(&code)?;
-        Some(v)
-    } else {
-        None
-    })
-}
+// fn load_version(store: &impl ValueStore<Vec<u8>>) -> Result<Option<H160>> {
+    // Ok(if let Some(code) = store.get()? {
+    //     let v = runtime::version(&code)?;
+    //     Some(v)
+    // } else {
+    //     None
+    // })
+// }
 
 #[abcf::rpcs]
 impl RewardsModule {
     pub async fn rule_version<'a>(
         &mut self,
-        ctx: &mut RPCContext<'a, Self>,
+        _ctx: &mut RPCContext<'a, Self>,
         _params: rpc::RuleVersionRequest,
     ) -> RPCResponse<rpc::RuleVersionResponse> {
-        let rule = &ctx.stateful.rule;
-        match load_version(rule) {
-            Ok(e) => RPCResponse::new(RuleVersionResponse { version: e }),
-            Err(e) => e.to_rpc_error().into(),
+        if let Some(rule) = &self.rule {
+            match runtime::version(&rule) {
+                Ok(e) => RPCResponse::new(RuleVersionResponse { version: Some(e) }),
+                Err(e) => e.to_rpc_error().into(),
+            }
+        } else {
+            RPCResponse::new(RuleVersionResponse { version: None })
         }
+
     }
 }
 
@@ -69,13 +77,13 @@ impl Application for RewardsModule {
             if let Some(a) = context.stateful.rewards.get(&info.validator)? {
                 if let Some(amount) = a.get(&info.delegator) {
                     if let None = amount.checked_sub(info.amount) {
-                        return Err(Error::InsufficientBalance.to_application_error())
+                        return Err(Error::InsufficientBalance.to_application_error());
                     }
                 } else {
-                    return Err(Error::InsufficientBalance.to_application_error())
+                    return Err(Error::InsufficientBalance.to_application_error());
                 }
             } else {
-                return Err(Error::InsufficientBalance.to_application_error())
+                return Err(Error::InsufficientBalance.to_application_error());
             }
         }
 
@@ -96,10 +104,10 @@ impl Application for RewardsModule {
                     *amount -= info.amount;
                     // Coinbase issue.
                 } else {
-                    return Err(Error::InsufficientBalance.to_application_error())
+                    return Err(Error::InsufficientBalance.to_application_error());
                 }
             } else {
-                return Err(Error::InsufficientBalance.to_application_error())
+                return Err(Error::InsufficientBalance.to_application_error());
             }
         }
 
