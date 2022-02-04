@@ -4,17 +4,16 @@ use abcf::{
     bs3::{
         merkle::append_only::AppendOnlyMerkle,
         model::{Map, Value},
-        MapStore, ValueStore,
+        MapStore,
     },
     module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
     Application, RPCContext, RPCResponse, TxnContext,
 };
 use libfindora::{asset::Amount, staking::TendermintAddress, Address};
-use primitive_types::H160;
 
 use crate::{
     rpc::{self, RuleVersionResponse},
-    runtime::{self, RewardsRuleRuntime}, transaction, Error, Result,
+    runtime, transaction, Error,
 };
 
 #[abcf::module(
@@ -34,12 +33,12 @@ pub struct RewardsModule {
 }
 
 // fn load_version(store: &impl ValueStore<Vec<u8>>) -> Result<Option<H160>> {
-    // Ok(if let Some(code) = store.get()? {
-    //     let v = runtime::version(&code)?;
-    //     Some(v)
-    // } else {
-    //     None
-    // })
+// Ok(if let Some(code) = store.get()? {
+//     let v = runtime::version(&code)?;
+//     Some(v)
+// } else {
+//     None
+// })
 // }
 
 #[abcf::rpcs]
@@ -57,7 +56,6 @@ impl RewardsModule {
         } else {
             RPCResponse::new(RuleVersionResponse { version: None })
         }
-
     }
 }
 

@@ -1,3 +1,9 @@
+mod external;
+pub use external::*;
+
+mod resolver;
+pub use resolver::*;
+
 use std::collections::BTreeMap;
 
 use abcf::bs3::MapStore;
@@ -40,9 +46,7 @@ impl RewardsRuleRuntime {
     pub fn new(code: &[u8]) -> Result<Self> {
         let module = Module::from_buffer(code)?;
         let instance = ModuleInstance::new(&module, &ImportsBuilder::default())?.assert_no_start();
-        Ok(Self {
-            instance,
-        })
+        Ok(Self { instance })
     }
 
     pub fn start<D, R>(&mut self, delegator: D, validators: R) -> Result<()>
