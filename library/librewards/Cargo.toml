@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 primitive-types = { version = "0.10.1", default-features = false }
+log = "0.4"

@@ -18,7 +18,7 @@ impl Resolver {
     ) -> bool {
         let (params, ret_ty): (&[ValueType], Option<ValueType>) = match index {
             INDEX_SET_REWARDS => (&[ValueType::I32, ValueType::I32, ValueType::I64], None),
-            INDEX_GET_PROPOSER => (&[ValueType::I32, ValueType::I32], None),
+            INDEX_GET_PROPOSER => (&[ValueType::I64, ValueType::I32], None),
             INDEX_GET_VALIDATOR_LIST_LEN => (&[ValueType::I64], Some(ValueType::I32)),
             INDEX_GET_VALIDATOR_LIST_ITEM => (&[ValueType::I64, ValueType::I32, ValueType::I32], Some(ValueType::I32)),
             _ => return false,
