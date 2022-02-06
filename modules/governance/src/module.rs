@@ -7,12 +7,12 @@ use abcf::{
 use crate::transaction;
 
 #[abcf::module(
-    name = "rewards",
+    name = "governance",
     version = 1,
     impl_version = "0.1.1",
     target_height = 0
 )]
-pub struct RewardsModule {
+pub struct GovernanceModule {
     #[stateful(merkle = "EmptyMerkle")]
     pub sf_value: Value<u32>,
     // Only a placeholder, will remove when abcf update.
@@ -21,11 +21,11 @@ pub struct RewardsModule {
 }
 
 #[abcf::rpcs]
-impl RewardsModule {}
+impl GovernanceModule {}
 
 /// Module's block logic.
 #[abcf::application]
-impl Application for RewardsModule {
+impl Application for GovernanceModule {
     type Transaction = transaction::Transaction;
 
     async fn check_tx(
@@ -48,4 +48,4 @@ impl Application for RewardsModule {
 
 /// Module's methods.
 #[abcf::methods]
-impl RewardsModule {}
+impl GovernanceModule {}

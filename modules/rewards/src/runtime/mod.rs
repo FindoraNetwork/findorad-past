@@ -9,7 +9,9 @@ use std::collections::BTreeMap;
 use abcf::bs3::MapStore;
 use libfindora::{asset::Amount, staking::TendermintAddress, Address};
 use primitive_types::H160;
-use wasmi::{ExternVal, ImportsBuilder, Module, ModuleInstance, ModuleRef, NopExternals, RuntimeValue};
+use wasmi::{
+    ExternVal, ImportsBuilder, Module, ModuleInstance, ModuleRef, NopExternals, RuntimeValue,
+};
 
 use crate::{Error, Result};
 

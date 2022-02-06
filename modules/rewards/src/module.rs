@@ -6,11 +6,13 @@ use abcf::{
         model::{Map, Value},
         MapStore,
     },
-    module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx, ResponseEndBlock},
+    module::types::{
+        RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx, ResponseEndBlock,
+    },
     Application, RPCContext, RPCResponse, TxnContext,
 };
-use libfindora::{asset::Amount, staking::TendermintAddress, Address};
 use fm_staking::StakingModule;
+use libfindora::{asset::Amount, staking::TendermintAddress, Address};
 
 use crate::{
     rpc::{self, RuleVersionResponse},
@@ -118,7 +120,6 @@ impl Application for RewardsModule {
             }
         }
     }
-
 }
 
 /// Module's methods.
@@ -131,7 +132,7 @@ impl RewardsModule {
     ) -> Result<ResponseEndBlock> {
         let resp = ResponseEndBlock::default();
 
-        if let Some (code) = &self.rule {
+        if let Some(code) = &self.rule {
             let mut rt = runtime::RewardsRuleRuntime::new(&code)?;
 
             let delegator = &mut context.deps.staking.stateful.delegators;
