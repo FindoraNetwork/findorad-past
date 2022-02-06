@@ -6,14 +6,15 @@ use abcf::{
         model::{Map, Value},
         MapStore,
     },
-    module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx},
+    module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx, ResponseEndBlock},
     Application, RPCContext, RPCResponse, TxnContext,
 };
 use libfindora::{asset::Amount, staking::TendermintAddress, Address};
+use fm_staking::StakingModule;
 
 use crate::{
     rpc::{self, RuleVersionResponse},
-    runtime, transaction, Error,
+    runtime, transaction, Error, Result,
 };
 
 #[abcf::module(
@@ -22,6 +23,7 @@ use crate::{
     impl_version = "0.1.1",
     target_height = 0
 )]
+#[dependence(staking = "StakingModule")]
 pub struct RewardsModule {
     pub rule: Option<Vec<u8>>,
 
@@ -31,15 +33,6 @@ pub struct RewardsModule {
     #[stateless]
     pub sl_value: Value<u32>,
 }
-
-// fn load_version(store: &impl ValueStore<Vec<u8>>) -> Result<Option<H160>> {
-// Ok(if let Some(code) = store.get()? {
-//     let v = runtime::version(&code)?;
-//     Some(v)
-// } else {
-//     None
-// })
-// }
 
 #[abcf::rpcs]
 impl RewardsModule {
@@ -111,8 +104,44 @@ impl Application for RewardsModule {
 
         Ok(res)
     }
+
+    async fn end_block(
+        &mut self,
+        context: &mut abcf::AppContext<'_, Self>,
+        req: &abcf::tm_protos::abci::RequestEndBlock,
+    ) -> ResponseEndBlock {
+        match self._end_block(context, req).await {
+            Ok(resp) => resp,
+            Err(e) => {
+                log::error!("{:?}", e);
+                ResponseEndBlock::default()
+            }
+        }
+    }
+
 }
 
 /// Module's methods.
 #[abcf::methods]
-impl RewardsModule {}
+impl RewardsModule {
+    async fn _end_block(
+        &mut self,
+        context: &mut abcf::AppContext<'_, Self>,
+        _req: &abcf::tm_protos::abci::RequestEndBlock,
+    ) -> Result<ResponseEndBlock> {
+        let resp = ResponseEndBlock::default();
+
+        if let Some (code) = &self.rule {
+            let mut rt = runtime::RewardsRuleRuntime::new(&code)?;
+
+            let delegator = &mut context.deps.staking.stateful.delegators;
+            let rewards = &mut context.stateful.rewards;
+
+            rt.start(delegator, rewards)?;
+        } else {
+            log::warn!("No reward code.");
+        }
+
+        Ok(resp)
+    }
+}

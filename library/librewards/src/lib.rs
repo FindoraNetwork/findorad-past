@@ -17,4 +17,3 @@ pub use set_rewards::*;
 
 mod logger;
 pub use logger::*;
-

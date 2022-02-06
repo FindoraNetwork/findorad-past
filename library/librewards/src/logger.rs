@@ -1,4 +1,4 @@
-use log::{Record, Level, Metadata, SetLoggerError, LevelFilter};
+use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
 
 mod logger {
     extern "C" {
@@ -31,7 +31,6 @@ impl log::Log for RewardsLogger {
             unsafe {
                 logger::log(level, s.as_ptr(), s.len());
             }
-
         }
     }
 
@@ -41,6 +40,5 @@ impl log::Log for RewardsLogger {
 static LOGGER: RewardsLogger = RewardsLogger;
 
 pub fn init() -> Result<(), SetLoggerError> {
-    log::set_logger(&LOGGER)
-        .map(|()| log::set_max_level(LevelFilter::Info))
+    log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Info))
 }

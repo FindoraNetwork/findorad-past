@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 use abcf::bs3::MapStore;
 use libfindora::{asset::Amount, staking::TendermintAddress, Address};
 use primitive_types::H160;
-use wasmi::{ExternVal, ImportsBuilder, Module, ModuleInstance, ModuleRef, NopExternals};
+use wasmi::{ExternVal, ImportsBuilder, Module, ModuleInstance, ModuleRef, NopExternals, RuntimeValue};
 
 use crate::{Error, Result};
 
@@ -45,15 +45,32 @@ pub struct RewardsRuleRuntime {
 impl RewardsRuleRuntime {
     pub fn new(code: &[u8]) -> Result<Self> {
         let module = Module::from_buffer(code)?;
+        let mut imports = ImportsBuilder::new();
+
+        let resolver = resolver::Resolver;
+
+        imports.push_resolver("env", &resolver);
         let instance = ModuleInstance::new(&module, &ImportsBuilder::default())?.assert_no_start();
         Ok(Self { instance })
     }
 
-    pub fn start<D, R>(&mut self, delegator: D, validators: R) -> Result<()>
+    pub fn start<D, R>(&mut self, delegator: &mut D, rewards: &mut R) -> Result<bool>
     where
         D: MapStore<TendermintAddress, BTreeMap<Address, Amount>>,
         R: MapStore<TendermintAddress, BTreeMap<Address, Amount>>,
     {
-        Ok(())
+        if let Some(ExternVal::Memory(memory)) = self.instance.export_by_name("memory") {
+            let mut ext = external::External {
+                memory,
+                delegator,
+                rewards,
+            };
+
+            let r = self.instance.invoke_export("_main", &[], &mut ext)?;
+
+            Ok(r == Some(RuntimeValue::from(0)))
+        } else {
+            Err(Error::NoMemoryExport)
+        }
     }
 }

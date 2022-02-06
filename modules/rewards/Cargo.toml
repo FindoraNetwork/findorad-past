@@ -26,3 +26,6 @@ libfindora = { path = "../../libfindora" }
 wasmi = "0.11.0"
 
 primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
+
+fm-staking = { path = "../staking" }
+
