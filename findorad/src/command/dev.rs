@@ -30,7 +30,7 @@ impl abcf_sdk::providers::Provider for EmptyP {
 }
 
 pub fn define_issue_fra() -> Transaction {
-    // ETH Compatible Address: 0x75fc8ac096a993c48ce9b50e283590e19dee343e
+    // ETH Compatible Address: 0x283590e19dee343ea0a8f4ecec906d53308068b5
     // Findora Address:        fra11wh7g4syk4xfufr8fk58zsdvsuxw7udp7pr5gn8
     // Findora Public Key:     7C2budB1QtXfoRJ-g-GN4BMdXpgkLv7MtTXG2yC3K3Q=
     // Secret:                 _12euPXJxDbpcw7fMNJufUZgrTgcK7ShTJmXuZZe8eM=

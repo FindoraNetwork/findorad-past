@@ -1,5 +1,6 @@
 use crate::asset::AssetMeta;
 use crate::evm;
+use crate::governance;
 use crate::rewards;
 use crate::staking;
 use crate::utxo;
@@ -14,6 +15,8 @@ pub enum Operation {
     ClaimReward(rewards::Claim),
     Undelegate(staking::Undelegate),
     EvmCall(evm::Evm),
+    CreateProposal(governance::CreateProposal),
+    VoteProposal(governance::VoteProposal),
 }
 
 #[derive(Debug, Clone)]

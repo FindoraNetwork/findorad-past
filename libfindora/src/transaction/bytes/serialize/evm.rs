@@ -11,6 +11,8 @@ pub fn build_evm(evm: &Evm, builder: output::Builder) -> Result<()> {
     builder.set_data(&evm.data);
     builder.set_chain_id(evm.chain_id);
     builder.set_gas_limit(evm.gas_limit);
+    builder.set_gas_price(evm.gas_price);
+    builder.set_caller(evm.caller.0.as_bytes());
 
     let mut action = builder.get_action()?;
 

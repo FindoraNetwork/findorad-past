@@ -1,22 +1,13 @@
 use std::convert::TryFrom;
 
+use libfindora::{asset::FRA, staking::TendermintAddress, transaction, Address};
 use zei::xfr::structs::XfrAmount;
-
-mod claim;
-pub use claim::Claim;
-
-use crate::{asset::FRA, transaction, Address};
-
-#[derive(Debug, Clone)]
-pub enum Operation {
-    Claim(Claim),
-}
 
 #[derive(Debug, Clone)]
 pub struct RewardInfo {
     pub delegator: Address,
     pub amount: u64,
-    pub operation: Operation,
+    pub validator: TendermintAddress,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -48,12 +39,12 @@ impl TryFrom<&transaction::Transaction> for Transaction {
                         String::from("Undelegate amount must be Non-confidential"),
                     ));
                 };
-                let operation = Operation::Claim(op.clone());
+                let validator = op.validator.clone();
 
                 let info = RewardInfo {
                     delegator,
                     amount,
-                    operation,
+                    validator,
                 };
 
                 infos.push(info);

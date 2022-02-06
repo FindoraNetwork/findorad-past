@@ -36,13 +36,15 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
         let mut inputs = Vec::new();
 
         for input in &tx.inputs {
-            if let libfindora::InputOperation::TransferAsset = input.operation {
-                let txid = if input.txid == H512::zero() {
-                    tx.txid
-                } else {
-                    input.txid
-                };
-                inputs.push(OutputId { txid, n: input.n })
+            match input.operation {
+                libfindora::InputOperation::TransferAsset => {
+                    let txid = if input.txid == H512::zero() {
+                        tx.txid
+                    } else {
+                        input.txid
+                    };
+                    inputs.push(OutputId { txid, n: input.n })
+                }
             }
         }
 
