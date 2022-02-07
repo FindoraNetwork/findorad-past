@@ -81,7 +81,7 @@ mod tests {
     use crate::utils::test_utils::TempDir;
 
     #[test]
-    fn test_entry_transfer_create_read_delete() {
+    fn test_entry_transfer_create_read_delete_list() {
         let home = TempDir::new("test_entry_transfer_create_read_delete").unwrap();
         let mut transfers = Transfers::new(home.path()).unwrap();
         assert_eq!(0, transfers.list().len());

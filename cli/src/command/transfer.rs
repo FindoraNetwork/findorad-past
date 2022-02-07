@@ -1,7 +1,7 @@
 // use std::future::poll_fn;
 use std::{fmt::Display, path::Path};
 
-use crate::entry::wallet as entry_wallet;
+use crate::entry::{transfer as entry_transfer, wallet as entry_wallet};
 
 use anyhow::Result;
 use async_compat::Compat;
@@ -89,35 +89,90 @@ impl Command {
     pub fn execute(&self, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         match &self.subcmd {
             SubCommand::Send(cmd) => send(cmd, home, addr),
-            SubCommand::Save(cmd) => save(cmd),
-            SubCommand::Batch(cmd) => batch(cmd),
-            SubCommand::Show(cmd) => show(cmd),
+            SubCommand::Save(cmd) => save(cmd, home),
+            SubCommand::Batch(cmd) => batch(cmd, home, addr),
+            SubCommand::Show(cmd) => show(cmd, home),
         }
     }
 }
 
 fn send(cmd: &Send, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
-    let wallets = entry_wallet::Wallets::new(home)?;
-    let wallet = if let Some(addr) = &cmd.from_address {
-        wallets.read().by_address(addr).build()?
-    } else if let Some(secret) = &cmd.from_secret {
-        wallets.read().by_secret(secret).build()?
-    } else {
-        // since the clap will check the input cannot be empty by atribute
-        // forbid_empty_values = true
-        unreachable!()
-    };
+    let wallet = get_wallet(home, &cmd.from_address, &cmd.from_secret)?;
 
-    let t = entity::Transfer::builder()
-        .from(&wallet.address)
-        .public_key(&wallet.public)
-        .address(&entry_wallet::detect_address(&cmd.to_address)?)
-        .amount(cmd.amount)
-        .asset_type(&cmd.asset_type)
-        .confidential_amount(cmd.is_confidential_amount)
-        .confidential_asset(cmd.is_confidential_asset)
-        .build()?;
+    send_tx(
+        addr,
+        vec![entity::Entity::Transfer(
+            entity::Transfer::builder()
+                .from(&wallet.address)
+                .public_key(&wallet.public)
+                .address(&entry_wallet::detect_address(&cmd.to_address)?)
+                .amount(cmd.amount)
+                .asset_type(&cmd.asset_type)
+                .confidential_amount(cmd.is_confidential_amount)
+                .confidential_asset(cmd.is_confidential_asset)
+                .build()?,
+        )],
+    )?;
+    Ok(Box::new(0))
+}
 
+fn save(cmd: &Save, home: &Path) -> Result<Box<dyn Display>> {
+    println!("{:?}", cmd);
+    let wallet = get_wallet(home, &cmd.request.from_address, &cmd.request.from_secret)?;
+
+    entry_transfer::Transfers::new(home)?.create(&entry_transfer::Transfer {
+        name: cmd.batch_name.clone(),
+        from_address: wallet.address.clone(),
+        to_address: cmd.request.to_address.clone(),
+        public_key: wallet.public,
+        amount: cmd.request.amount,
+        asset_type: cmd.request.asset_type.clone(),
+        is_confidential_amount: cmd.request.is_confidential_amount,
+        is_confidential_asset: cmd.request.is_confidential_asset,
+    })?;
+
+    Ok(Box::new(0))
+}
+
+fn batch(cmd: &Batch, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
+    let mut tfs = entry_transfer::Transfers::new(home)?;
+    let transfers = tfs.read(&cmd.batch_name)?;
+    let mut entities = Vec::with_capacity(transfers.len());
+
+    for t in transfers {
+        entities.push(entity::Entity::Transfer(
+            entity::Transfer::builder()
+                .from(&t.from_address)
+                .public_key(&t.public_key)
+                .address(&t.to_address)
+                .amount(t.amount)
+                .asset_type(&t.asset_type)
+                .confidential_amount(t.is_confidential_amount)
+                .confidential_asset(t.is_confidential_asset)
+                .build()?,
+        ));
+    }
+
+    send_tx(addr, entities)?;
+    tfs.delete(&cmd.batch_name)?;
+    Ok(Box::new(0))
+}
+
+fn show(cmd: &Show, home: &Path) -> Result<Box<dyn Display>> {
+    let transfers = entry_transfer::Transfers::new(home)?;
+    match &cmd.batch_name {
+        Some(name) => {
+            transfers.read(name)?;
+            Ok(Box::new(0))
+        }
+        None => {
+            transfers.list();
+            Ok(Box::new(0))
+        }
+    }
+}
+
+fn send_tx(addr: &str, entities: Vec<entity::Entity>) -> Result<()> {
     let mut prng = ChaChaRng::from_entropy();
     let mut provider = HttpGetProvider::new(addr);
     let mut builder = Builder::default();
@@ -125,23 +180,110 @@ fn send(cmd: &Send, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     block_on(Compat::new(builder.from_entities(
         &mut prng,
         &mut provider,
-        vec![entity::Entity::Transfer(t)],
+        entities,
     )))?;
 
     let tx = builder.build(&mut prng)?;
     tx.serialize()?;
-
-    Ok(Box::new(0))
+    Ok(())
 }
 
-fn save(_cmd: &Save) -> Result<Box<dyn Display>> {
-    Ok(Box::new(0))
+fn get_wallet(
+    home: &Path,
+    addr: &Option<String>,
+    secret: &Option<String>,
+) -> Result<entry_wallet::Wallet> {
+    if let Some(addr) = addr {
+        Ok(entry_wallet::Wallets::new(home)?
+            .read()
+            .by_address(addr)
+            .build()?)
+    } else if let Some(secret) = secret {
+        Ok(entry_wallet::Wallets::new(home)?
+            .read()
+            .by_secret(secret)
+            .build()?)
+    } else {
+        // since the clap will check the input cannot be empty by atribute
+        // forbid_empty_values = true
+        unreachable!()
+    }
 }
 
-fn batch(_cmd: &Batch) -> Result<Box<dyn Display>> {
-    Ok(Box::new(0))
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utils::test_utils::TempDir;
 
-fn show(_cmd: &Show) -> Result<Box<dyn Display>> {
-    Ok(Box::new(0))
+    #[test]
+    fn test_command_transfer_execute_send() {
+        let home = TempDir::new("test_command_transfer_execute_send").unwrap();
+        let cmd = Command {
+            subcmd: SubCommand::Send(Send {
+                from_address: Some("0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117".to_string()),
+                from_secret: None,
+                asset_type: "1TYZSwkxQI6-q49vgFsCOuXaOjaHbhtEV2GyDoPglUU=".to_string(),
+                amount: 99,
+                to_address: "0x283590e19dee343ea0a8f4ecec906d53308068b5".to_string(),
+                is_confidential_amount: false,
+                is_confidential_asset: false,
+            }),
+        };
+
+        // because we did not setup the findorad server
+        // should be connection refused error
+        assert!(cmd.execute(home.path(), "127.0.0.1").is_err());
+    }
+
+    #[test]
+    fn test_command_transfer_execute_save_show_batch() {
+        let home = TempDir::new("test_command_transfer_execute_save_show_batch").unwrap();
+        entry_wallet::Wallets::new(home.path())
+            .unwrap()
+            .create(&entry_wallet::Wallet {
+                name: None,
+                mnemonic: "".to_string(),
+                address: "KDWQ4Z3uND6gqPTs7JBtUzCAaLU=".to_string(),
+                public: "".to_string(),
+                secret: "".to_string(),
+            })
+            .unwrap();
+
+        let cmd = Command {
+            subcmd: SubCommand::Save(Save {
+                batch_name: "test_command_transfer_execute_save_show_batch".to_string(),
+                request: Send {
+                    from_address: Some("0x283590e19dee343ea0a8f4ecec906d53308068b5".to_string()),
+                    from_secret: None,
+                    asset_type: "1TYZSwkxQI6-q49vgFsCOuXaOjaHbhtEV2GyDoPglUU=".to_string(),
+                    amount: 99,
+                    to_address: "0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117".to_string(),
+                    is_confidential_amount: false,
+                    is_confidential_asset: false,
+                },
+            }),
+        };
+        assert!(cmd.execute(home.path(), "127.0.0.1").is_ok());
+
+        let cmd = Command {
+            subcmd: SubCommand::Show(Show { batch_name: None }),
+        };
+        assert!(cmd.execute(home.path(), "127.0.0.1").is_ok());
+
+        let cmd = Command {
+            subcmd: SubCommand::Show(Show {
+                batch_name: Some("test_command_transfer_execute_save_show_batch".to_string()),
+            }),
+        };
+        assert!(cmd.execute(home.path(), "127.0.0.1").is_ok());
+
+        let cmd = Command {
+            subcmd: SubCommand::Batch(Batch {
+                batch_name: "test_command_transfer_execute_save_show_batch".to_string(),
+            }),
+        };
+        // because we did not setup the findorad server
+        // should be connection refused error
+        assert!(cmd.execute(home.path(), "127.0.0.1").is_err());
+    }
 }
