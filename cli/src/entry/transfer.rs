@@ -71,29 +71,58 @@ impl Transfers {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use crate::utils::test_utils::TempDir;
-//
-//     #[test]
-//     fn test_entry_asset_create_read_update() {
-//         let home = TempDir::new("test_entry_asset_create_read").unwrap();
-//         let mut assets = Assets::new(home.path()).unwrap();
-//         let address = "0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117".to_string();
-//         let asset_type = base64::encode_config(&[9; ASSET_TYPE_LENGTH], base64::URL_SAFE);
-//         let mut asset = Transfer::new_from_asset_type_base64(&asset_type).unwrap();
-//         asset.address = address.clone();
-//
-//         assert!(assets.create(&asset).is_ok());
-//         assert_eq!(assets.list(&address).len(), 1);
-//         let got = assets.read(&address, &asset_type).unwrap();
-//         assert_eq!(asset, got);
-//
-//         asset.name = Some("TEST1".to_string());
-//         assert!(assets.update(&asset).is_ok());
-//         assert_eq!(assets.list(&address).len(), 1);
-//         let got = assets.read(&address, &asset_type).unwrap();
-//         assert_eq!(asset, got);
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utils::test_utils::TempDir;
+
+    #[test]
+    fn test_entry_transfer_create_read_delete() {
+        let home = TempDir::new("test_entry_transfer_create_read_delete").unwrap();
+        let mut transfers = Transfers::new(home.path()).unwrap();
+
+        let t1_1 = Transfer {
+            name: "name_t1 ".to_string(),
+            from_address: "from_address_t1_1 ".to_string(),
+            to_address: "to_address_t1_1 ".to_string(),
+            public_key: "public_key_t1_1 ".to_string(),
+            amount: 99,
+            asset_type: "asset_type_t1_1 ".to_string(),
+            is_confidential_amount: true,
+            is_confidential_asset: true,
+        };
+        let t1_2 = Transfer {
+            name: "name_t1 ".to_string(),
+            from_address: "from_address_t1_2 ".to_string(),
+            to_address: "to_address_t1_2 ".to_string(),
+            public_key: "public_key_t1_2 ".to_string(),
+            amount: 99,
+            asset_type: "asset_type_t1_2 ".to_string(),
+            is_confidential_amount: true,
+            is_confidential_asset: true,
+        };
+
+        transfers.create(&t1_1).unwrap();
+        transfers.create(&t1_2).unwrap();
+        assert_eq!(
+            vec![t1_1.clone(), t1_2.clone()],
+            transfers.read(&t1_1.name).unwrap()
+        );
+
+        let t2 = Transfer {
+            name: "name_t2 ".to_string(),
+            from_address: "from_address_t2 ".to_string(),
+            to_address: "to_address_t2 ".to_string(),
+            public_key: "public_key_t2 ".to_string(),
+            amount: 9,
+            asset_type: "asset_type_t2 ".to_string(),
+            is_confidential_amount: false,
+            is_confidential_asset: false,
+        };
+        transfers.create(&t2).unwrap();
+        assert_eq!(vec![t2.clone()], transfers.read(&t2.name).unwrap());
+
+        transfers.delete(&t2.name).unwrap();
+        assert!(transfers.read(&t2.name).is_err());
+    }
+}
