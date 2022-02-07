@@ -53,7 +53,7 @@ struct Create {
     #[clap(short = 'e', long)]
     memo: Option<String>,
     /// Is transferable for the new asset
-    #[clap(short = 't', long)]
+    #[clap(short = 'T', long)]
     is_transferable: bool,
     /// Decimal place to mark the maximum in floating of the new asset
     #[clap(short, long, default_value = "6")]
@@ -97,7 +97,7 @@ struct Issue {
     #[clap(short = 'm', long, required = true, forbid_empty_values = true)]
     amount: u64,
     /// Is the amount confidential when issuing an asset
-    #[clap(short, long)]
+    #[clap(short = 'M', long)]
     is_confidential_amount: bool,
 }
 
