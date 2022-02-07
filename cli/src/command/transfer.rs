@@ -4,6 +4,7 @@ use std::{fmt::Display, path::Path};
 use crate::entry::wallet as entry_wallet;
 
 use anyhow::Result;
+use async_compat::Compat;
 use clap::{ArgGroup, Parser};
 use libfn::{entity, Builder};
 
@@ -42,10 +43,10 @@ struct Send {
     #[clap(short = 's', long, value_name = "SECRET", forbid_empty_values = true)]
     from_secret: Option<String>,
     /// Asset Type to send which is a base64-formatted string
-    #[clap(short = 'e', long, required = true, forbid_empty_values = true)]
+    #[clap(short = 'a', long, required = true, forbid_empty_values = true)]
     asset_type: String,
     /// Amount of the Asset Type to send
-    #[clap(short = 'a', long, required = true, forbid_empty_values = true)]
+    #[clap(short = 'm', long, required = true, forbid_empty_values = true)]
     amount: u64,
     /// Address to send which is a
     /// 1. ETH compatible address (0x...) or
@@ -53,10 +54,10 @@ struct Send {
     #[clap(short = 't', long, required = true, forbid_empty_values = true)]
     to_address: String,
     /// Make the amount confidential in the transaction
-    #[clap(short = 'A', long)]
+    #[clap(short = 'M', long)]
     is_confidential_amount: bool,
     /// Make the asset code confidential in the transaction
-    #[clap(short = 'T', long)]
+    #[clap(short = 'A', long)]
     is_confidential_asset: bool,
 }
 
@@ -85,10 +86,9 @@ struct Show {
 }
 
 impl Command {
-    pub fn execute(&self, home: &Path) -> Result<Box<dyn Display>> {
-        let wallets = entry_wallet::Wallets::new(home)?;
+    pub fn execute(&self, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         match &self.subcmd {
-            SubCommand::Send(cmd) => send(cmd, &wallets),
+            SubCommand::Send(cmd) => send(cmd, home, addr),
             SubCommand::Save(cmd) => save(cmd),
             SubCommand::Batch(cmd) => batch(cmd),
             SubCommand::Show(cmd) => show(cmd),
@@ -96,7 +96,8 @@ impl Command {
     }
 }
 
-fn send(cmd: &Send, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>> {
+fn send(cmd: &Send, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
+    let wallets = entry_wallet::Wallets::new(home)?;
     let wallet = if let Some(addr) = &cmd.from_address {
         wallets.read().by_address(addr).build()?
     } else if let Some(secret) = &cmd.from_secret {
@@ -118,12 +119,15 @@ fn send(cmd: &Send, wallets: &entry_wallet::Wallets) -> Result<Box<dyn Display>>
         .build()?;
 
     let mut prng = ChaChaRng::from_entropy();
-    let mut provider = HttpGetProvider {
-        url: String::from("http://127.0.0.1"),
-    };
+    let mut provider = HttpGetProvider::new(addr);
     let mut builder = Builder::default();
 
-    block_on(builder.from_entities(&mut prng, &mut provider, vec![entity::Entity::Transfer(t)]))?;
+    block_on(Compat::new(builder.from_entities(
+        &mut prng,
+        &mut provider,
+        vec![entity::Entity::Transfer(t)],
+    )))?;
+
     let tx = builder.build(&mut prng)?;
     tx.serialize()?;
     Ok(Box::new(0))
