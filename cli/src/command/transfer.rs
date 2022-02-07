@@ -130,6 +130,7 @@ fn send(cmd: &Send, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
 
     let tx = builder.build(&mut prng)?;
     tx.serialize()?;
+
     Ok(Box::new(0))
 }
 
