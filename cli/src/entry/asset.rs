@@ -101,15 +101,13 @@ impl Assets {
     pub fn create(&mut self, asset: &Asset) -> Result<()> {
         self.assets.push(asset.clone());
         self.save()
-            .with_context(|| format!("create on save failed: {:?}", asset))?;
-        Ok(())
+            .with_context(|| format!("create on save failed: {:?}", asset))
     }
 
     fn save(&self) -> Result<()> {
         let data = serde_json::to_vec(&self.assets).context("save serialize json failed")?;
         fs::write(&self.f_path, data)
-            .with_context(|| format!("save write json file failed: {:?}", self.f_path))?;
-        Ok(())
+            .with_context(|| format!("save write json file failed: {:?}", self.f_path))
     }
 
     pub fn update(&mut self, asset: &Asset) -> Result<()> {
@@ -133,7 +131,7 @@ impl Assets {
             .find(|a| a.address == addr && a.asset_type == astyp)
         {
             Some(a) => Ok(a.clone()),
-            None => bail!("read connot find"),
+            None => bail!("read cannot find addr:{}, asset_type:{}", addr, asset_type),
         }
     }
 
