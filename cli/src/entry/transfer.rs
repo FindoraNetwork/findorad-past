@@ -56,6 +56,10 @@ impl Transfers {
             .with_context(|| format!("save write json file failed: {:?}", self.f_path))
     }
 
+    pub fn list(&self) -> Vec<String> {
+        self.transfers.keys().cloned().collect()
+    }
+
     pub fn read(&self, name: &str) -> Result<Vec<Transfer>> {
         Ok(self
             .transfers
@@ -80,6 +84,7 @@ mod tests {
     fn test_entry_transfer_create_read_delete() {
         let home = TempDir::new("test_entry_transfer_create_read_delete").unwrap();
         let mut transfers = Transfers::new(home.path()).unwrap();
+        assert_eq!(0, transfers.list().len());
 
         let t1_1 = Transfer {
             name: "name_t1 ".to_string(),
@@ -108,6 +113,7 @@ mod tests {
             vec![t1_1.clone(), t1_2.clone()],
             transfers.read(&t1_1.name).unwrap()
         );
+        assert_eq!(1, transfers.list().len());
 
         let t2 = Transfer {
             name: "name_t2 ".to_string(),
@@ -121,8 +127,10 @@ mod tests {
         };
         transfers.create(&t2).unwrap();
         assert_eq!(vec![t2.clone()], transfers.read(&t2.name).unwrap());
+        assert_eq!(2, transfers.list().len());
 
         transfers.delete(&t2.name).unwrap();
         assert!(transfers.read(&t2.name).is_err());
+        assert_eq!(1, transfers.list().len());
     }
 }
