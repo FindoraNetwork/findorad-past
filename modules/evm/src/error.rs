@@ -11,7 +11,6 @@ pub enum Error {
     Secp256k1Error(libsecp256k1::Error),
     AmountTypeMustBeNonConfidential,
     EvmExitError(evm::ExitError),
-    AddOverflow,
     SubOverflow,
     InsufficientBalance,
 }
@@ -61,9 +60,6 @@ impl From<Error> for abcf::Error {
                 String::from("Amount type must be non-confidential."),
             ),
             Error::EvmExitError(e) => abcf::Error::ABCIApplicationError(80005, format!("{:?}", e)),
-            Error::AddOverflow => {
-                abcf::Error::ABCIApplicationError(80005, String::from("Add overflow."))
-            }
             Error::SubOverflow => {
                 abcf::Error::ABCIApplicationError(80005, String::from("Sub overflow."))
             }

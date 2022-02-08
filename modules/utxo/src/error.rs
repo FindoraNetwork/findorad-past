@@ -9,6 +9,7 @@ pub enum Error {
     DuplicateOutput(OutputId),
     MissingOutput(OutputId),
     RucError(Box<dyn ruc::RucError>),
+    AddOverflow,
 }
 
 impl From<Error> for abcf::Error {
@@ -27,6 +28,9 @@ impl From<Error> for abcf::Error {
             Error::Bs3Error(e) => e.into(),
             Error::TryFromIntError(e) => Self::ABCIApplicationError(90003, format!("{:?}", e)),
             Error::RucError(e) => Self::ABCIApplicationError(90003, format!("{:?}", e)),
+            Error::AddOverflow => {
+                abcf::Error::ABCIApplicationError(80005, String::from("Add overflow."))
+            }
         }
     }
 }

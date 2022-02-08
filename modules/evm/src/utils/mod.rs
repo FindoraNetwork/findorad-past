@@ -3,6 +3,3 @@
 
 mod transfer;
 pub use transfer::*;
-
-mod balance;
-pub use balance::*;

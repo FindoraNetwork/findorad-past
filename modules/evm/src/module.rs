@@ -3,8 +3,10 @@ use abcf::{
         merkle::append_only::AppendOnlyMerkle,
         model::{DoubleKeyMap, Map, Value},
     },
-    module::types::{RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx, RequestBeginBlock},
-    Application, RPCContext, RPCResponse, TxnContext, AppContext,
+    module::types::{
+        RequestBeginBlock, RequestCheckTx, RequestDeliverTx, ResponseCheckTx, ResponseDeliverTx,
+    },
+    AppContext, Application, RPCContext, RPCResponse, TxnContext,
 };
 use fm_utxo::UtxoModule;
 use primitive_types::{H160, H256, U256};
@@ -22,7 +24,7 @@ pub struct EvmModule {
     #[stateful(merkle = "AppendOnlyMerkle")]
     pub accounts: Map<H160, Account>,
     #[stateful(merkle = "AppendOnlyMerkle")]
-    pub storages: DoubleKeyMap<H160, U256, H256>,
+    pub storages: DoubleKeyMap<H160, H256, H256>,
     // Only a placeholder, will remove when abcf update.
     #[stateless]
     pub sl_value: Value<u32>,
@@ -65,7 +67,8 @@ impl Application for EvmModule {
         self.vicinity.block_hash = H256::from_slice(&req.hash);
         self.vicinity.block_number = U256::from(header.height);
         self.vicinity.block_coinbase = H160::from_slice(&header.proposer_address);
-        self.vicinity.block_timestamp = U256::from(header.time.expect("no timestamp from tendermint").seconds);
+        self.vicinity.block_timestamp =
+            U256::from(header.time.expect("no timestamp from tendermint").seconds);
     }
 
     async fn deliver_tx(
