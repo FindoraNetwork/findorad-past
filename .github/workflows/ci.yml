@@ -32,11 +32,19 @@ jobs:
         sudo apt-get update -y
         sudo apt-get install -y capnproto
 
+    - name: Using cache to speed up
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
     - name: Check Clippy Lints 
-      # there has a clippy warning "clippy::needless-question-mark" at findorad/src/main.rs
-      # but it depends on the outside library abcf::manager
-      # so allow it temporary.
-      run: cargo clippy --all-targets --all-features -- -D warnings -Z macro-backtrace -A clippy::needless_question_mark
+      run: cargo clippy --all-targets --all-features -- -D warnings -Z macro-backtrace
 
     - name: Run Tests 
       run: cargo test --all --all-features --no-fail-fast
