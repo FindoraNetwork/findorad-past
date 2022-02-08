@@ -61,7 +61,7 @@ impl Display {
                 f,
                 "
 {} [{}]
-Batch Name: {} ({})
+Batch Name: {} (records: {})
                 ",
                 Emoji("🚚", "<<"),
                 index + 1,
@@ -98,14 +98,14 @@ Is Confidential Amount: {}
 Is Confidential Asset:  {}
 ",
                 Emoji("📦", "P "),
-                style(name).bold().white(),
-                style(from_address).bold().white(),
-                style(to_address).bold().white(),
-                style(amount).bold().white(),
-                style(public_key).bold().white(),
-                style(asset_type).bold().white(),
-                style(is_confidential_amount).bold().white(),
-                style(is_confidential_asset).bold().white(),
+                style(name).bold().cyan(),
+                style(from_address).bold().cyan(),
+                style(to_address).bold().cyan(),
+                style(amount).bold().yellow(),
+                style(public_key).bold().cyan(),
+                style(asset_type).bold().cyan(),
+                style(is_confidential_amount).bold().magenta(),
+                style(is_confidential_asset).bold().magenta(),
             )?;
         }
         Ok(())

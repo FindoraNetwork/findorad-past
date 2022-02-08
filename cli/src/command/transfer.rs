@@ -34,7 +34,7 @@ enum SubCommand {
     Save(Save),
     /// Batch sending the saved requests
     Batch(Batch),
-    /// Show a list of saved batch process names or specific one for detail information
+    /// Show a list of saved batch process names or a specific one for detailed information
     Show(Show),
 }
 

@@ -59,7 +59,7 @@ enum SubCommand {
     Delegate(delegate::Command),
     /// Setup configuration entry
     Setup(setup::Command),
-    /// Transfer asset to other user
+    /// Transfer asset to another user
     Transfer(transfer::Command),
     /// Manage wallet
     Wallet(wallet::Command),
