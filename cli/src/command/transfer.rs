@@ -1,7 +1,10 @@
 // use std::future::poll_fn;
 use std::{fmt::Display, path::Path};
 
-use crate::entry::{transfer as entry_transfer, wallet as entry_wallet};
+use crate::{
+    display::transfer as display_transfer,
+    entry::{transfer as entry_transfer, wallet as entry_wallet},
+};
 
 use anyhow::Result;
 use async_compat::Compat;
@@ -113,11 +116,15 @@ fn send(cmd: &Send, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
                 .build()?,
         )],
     )?;
-    Ok(Box::new(0))
+
+    Ok(Box::new(display_transfer::Display::from((
+        wallet.address,
+        cmd.to_address.clone(),
+        cmd.amount,
+    ))))
 }
 
 fn save(cmd: &Save, home: &Path) -> Result<Box<dyn Display>> {
-    println!("{:?}", cmd);
     let wallet = get_wallet(home, &cmd.request.from_address, &cmd.request.from_secret)?;
 
     entry_transfer::Transfers::new(home)?.create(&entry_transfer::Transfer {
@@ -131,7 +138,10 @@ fn save(cmd: &Save, home: &Path) -> Result<Box<dyn Display>> {
         is_confidential_asset: cmd.request.is_confidential_asset,
     })?;
 
-    Ok(Box::new(0))
+    Ok(Box::new(display_transfer::Display::from((
+        cmd.batch_name.clone(),
+        display_transfer::DisplayType::Save,
+    ))))
 }
 
 fn batch(cmd: &Batch, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
@@ -155,20 +165,31 @@ fn batch(cmd: &Batch, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
 
     send_tx(addr, entities)?;
     tfs.delete(&cmd.batch_name)?;
-    Ok(Box::new(0))
+
+    Ok(Box::new(display_transfer::Display::from((
+        cmd.batch_name.clone(),
+        display_transfer::DisplayType::Batch,
+    ))))
 }
 
 fn show(cmd: &Show, home: &Path) -> Result<Box<dyn Display>> {
     let transfers = entry_transfer::Transfers::new(home)?;
     match &cmd.batch_name {
-        Some(name) => {
-            transfers.read(name)?;
-            Ok(Box::new(0))
-        }
-        None => {
-            transfers.list();
-            Ok(Box::new(0))
-        }
+        Some(name) => Ok(Box::new(display_transfer::Display::from(
+            transfers.read(name)?,
+        ))),
+        None => Ok(Box::new(display_transfer::Display::from(
+            transfers
+                .list()
+                .into_iter()
+                .map(|name| {
+                    (
+                        name.clone(),
+                        transfers.read(&name).unwrap_or_default().len(),
+                    )
+                })
+                .collect::<Vec<(String, usize)>>(),
+        ))),
     }
 }
 
