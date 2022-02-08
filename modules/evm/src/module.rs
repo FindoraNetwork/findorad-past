@@ -25,6 +25,7 @@ pub struct EvmModule {
     pub accounts: Map<H160, Account>,
     #[stateful(merkle = "AppendOnlyMerkle")]
     pub storages: DoubleKeyMap<H160, H256, H256>,
+
     // Only a placeholder, will remove when abcf update.
     #[stateless]
     pub sl_value: Value<u32>,
