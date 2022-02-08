@@ -2,20 +2,13 @@ use abcf::bs3::{DoubleKeyMapStore, MapStore};
 use evm::backend::Basic;
 use fm_utxo::Result;
 use libfindora::{
+    asset::FRA,
     utxo::{Output, OutputId},
-    Address, asset::FRA,
+    Address,
 };
 use primitive_types::{H160, H256, U256};
 
 use super::{account::Account, vicinity::Vicinity};
-
-// pub struct MemoryAccount {
-// pub nonce: U256,
-// pub balance: U256,
-// pub assets: BTreeMap<H160, U256>,
-// pub storage: BTreeMap<H256, H256>,
-// pub code: Vec<u8>,
-// }
 
 pub struct Backend<'a, OS, OO, A, S> {
     pub vicinity: &'a Vicinity,
@@ -134,7 +127,7 @@ where
 
     fn storage(&self, address: H160, index: H256) -> H256 {
         match self.storages.get(&address, &index) {
-            Ok(Some(e)) => e.clone(),
+            Ok(Some(e)) => *e,
             Ok(None) => H256::default(),
             Err(e) => {
                 log::error!("Faild to get basic: {:?}", e);
