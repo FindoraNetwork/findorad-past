@@ -12,8 +12,8 @@ const DEFAULT_TRANSFER_FILE: &str = "transfers.json";
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Transfer {
     pub name: String,
-    pub from_address: String,
-    pub to_address: String,
+    pub from_secret: String,
+    pub to_base64_address: String,
     pub public_key: String,
     pub amount: u64,
     pub asset_type: String,
@@ -88,8 +88,8 @@ mod tests {
 
         let t1_1 = Transfer {
             name: "name_t1 ".to_string(),
-            from_address: "from_address_t1_1 ".to_string(),
-            to_address: "to_address_t1_1 ".to_string(),
+            from_secret: "from_address_t1_1 ".to_string(),
+            to_base64_address: "to_address_t1_1 ".to_string(),
             public_key: "public_key_t1_1 ".to_string(),
             amount: 99,
             asset_type: "asset_type_t1_1 ".to_string(),
@@ -98,8 +98,8 @@ mod tests {
         };
         let t1_2 = Transfer {
             name: "name_t1 ".to_string(),
-            from_address: "from_address_t1_2 ".to_string(),
-            to_address: "to_address_t1_2 ".to_string(),
+            from_secret: "from_address_t1_2 ".to_string(),
+            to_base64_address: "to_address_t1_2 ".to_string(),
             public_key: "public_key_t1_2 ".to_string(),
             amount: 99,
             asset_type: "asset_type_t1_2 ".to_string(),
@@ -117,8 +117,8 @@ mod tests {
 
         let t2 = Transfer {
             name: "name_t2 ".to_string(),
-            from_address: "from_address_t2 ".to_string(),
-            to_address: "to_address_t2 ".to_string(),
+            from_secret: "from_address_t2 ".to_string(),
+            to_base64_address: "to_address_t2 ".to_string(),
             public_key: "public_key_t2 ".to_string(),
             amount: 9,
             asset_type: "asset_type_t2 ".to_string(),

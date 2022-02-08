@@ -9,7 +9,11 @@ use crate::{
 use anyhow::Result;
 use async_compat::Compat;
 use clap::{ArgGroup, Parser};
-use libfn::{entity, Builder};
+use libfn::{
+    entity,
+    types::{Address, SecretKey},
+    Builder,
+};
 
 use abcf_sdk::providers::HttpGetProvider;
 use futures::executor::block_on;
@@ -84,7 +88,7 @@ struct Batch {
 #[derive(Parser, Debug)]
 struct Show {
     /// Name of the batch process to show the request information of the specific one
-    #[clap(short, long, forbid_empty_values = true)]
+    #[clap(short = 'n', long, forbid_empty_values = true)]
     batch_name: Option<String>,
 }
 
@@ -100,14 +104,14 @@ impl Command {
 }
 
 fn send(cmd: &Send, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
-    let wallet = get_wallet(home, &cmd.from_address, &cmd.from_secret)?;
+    let secret = get_secret(home, &cmd.from_address, &cmd.from_secret)?;
 
     send_tx(
         addr,
         vec![entity::Entity::Transfer(
             entity::Transfer::builder()
-                .from(&wallet.address)
-                .public_key(&wallet.public)
+                .from(&secret.to_base64()?)
+                .public_key(&secret.to_public().to_base64()?)
                 .address(&entry_wallet::detect_address(&cmd.to_address)?)
                 .amount(cmd.amount)
                 .asset_type(&cmd.asset_type)
@@ -118,20 +122,20 @@ fn send(cmd: &Send, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     )?;
 
     Ok(Box::new(display_transfer::Display::from((
-        wallet.address,
+        secret.to_public().to_address()?.to_eth()?,
         cmd.to_address.clone(),
         cmd.amount,
     ))))
 }
 
 fn save(cmd: &Save, home: &Path) -> Result<Box<dyn Display>> {
-    let wallet = get_wallet(home, &cmd.request.from_address, &cmd.request.from_secret)?;
+    let secret = get_secret(home, &cmd.request.from_address, &cmd.request.from_secret)?;
 
     entry_transfer::Transfers::new(home)?.create(&entry_transfer::Transfer {
         name: cmd.batch_name.clone(),
-        from_address: wallet.address.clone(),
-        to_address: cmd.request.to_address.clone(),
-        public_key: wallet.public,
+        from_secret: secret.to_base64()?,
+        to_base64_address: entry_wallet::detect_address(&cmd.request.to_address)?,
+        public_key: secret.to_public().to_base64()?,
         amount: cmd.request.amount,
         asset_type: cmd.request.asset_type.clone(),
         is_confidential_amount: cmd.request.is_confidential_amount,
@@ -152,9 +156,9 @@ fn batch(cmd: &Batch, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     for t in transfers {
         entities.push(entity::Entity::Transfer(
             entity::Transfer::builder()
-                .from(&t.from_address)
+                .from(&t.from_secret)
                 .public_key(&t.public_key)
-                .address(&t.to_address)
+                .address(&t.to_base64_address)
                 .amount(t.amount)
                 .asset_type(&t.asset_type)
                 .confidential_amount(t.is_confidential_amount)
@@ -175,9 +179,31 @@ fn batch(cmd: &Batch, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
 fn show(cmd: &Show, home: &Path) -> Result<Box<dyn Display>> {
     let transfers = entry_transfer::Transfers::new(home)?;
     match &cmd.batch_name {
-        Some(name) => Ok(Box::new(display_transfer::Display::from(
-            transfers.read(name)?,
-        ))),
+        Some(name) => {
+            let tfs = transfers.read(name)?;
+            let mut contents = Vec::with_capacity(tfs.len());
+
+            for t in tfs {
+                contents.push(display_transfer::Content {
+                    name: Some(name.to_string()),
+                    from_address: Some(
+                        SecretKey::from_base64(&t.from_secret)?
+                            .to_public()
+                            .to_address()?
+                            .to_eth()?,
+                    ),
+                    to_address: Some(Address::from_base64(&t.to_base64_address)?.to_eth()?),
+                    public_key: Some(t.public_key.clone()),
+                    amount: Some(t.amount.to_string()),
+                    asset_type: Some(t.asset_type.clone()),
+                    is_confidential_amount: Some(t.is_confidential_amount.to_string()),
+                    is_confidential_asset: Some(t.is_confidential_asset.to_string()),
+                    ..Default::default()
+                });
+            }
+
+            Ok(Box::new(display_transfer::Display::from(contents)))
+        }
         None => Ok(Box::new(display_transfer::Display::from(
             transfers
                 .list()
@@ -209,24 +235,18 @@ fn send_tx(addr: &str, entities: Vec<entity::Entity>) -> Result<()> {
     Ok(())
 }
 
-fn get_wallet(
-    home: &Path,
-    addr: &Option<String>,
-    secret: &Option<String>,
-) -> Result<entry_wallet::Wallet> {
+fn get_secret(home: &Path, addr: &Option<String>, secret: &Option<String>) -> Result<SecretKey> {
     if let Some(addr) = addr {
-        Ok(entry_wallet::Wallets::new(home)?
-            .read()
-            .by_address(addr)
-            .build()?)
+        Ok(SecretKey::from_base64(
+            &entry_wallet::Wallets::new(home)?
+                .read()
+                .by_address(addr)
+                .build()?
+                .secret,
+        )?)
     } else if let Some(secret) = secret {
-        Ok(entry_wallet::Wallets::new(home)?
-            .read()
-            .by_secret(secret)
-            .build()?)
+        Ok(SecretKey::from_base64(secret)?)
     } else {
-        // since the clap will check the input cannot be empty by atribute
-        // forbid_empty_values = true
         unreachable!()
     }
 }
@@ -266,7 +286,7 @@ mod tests {
                 mnemonic: "".to_string(),
                 address: "KDWQ4Z3uND6gqPTs7JBtUzCAaLU=".to_string(),
                 public: "".to_string(),
-                secret: "".to_string(),
+                secret: "_12euPXJxDbpcw7fMNJufUZgrTgcK7ShTJmXuZZe8eM".to_string(),
             })
             .unwrap();
 

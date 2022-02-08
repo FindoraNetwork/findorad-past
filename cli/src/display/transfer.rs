@@ -2,8 +2,6 @@ use std::fmt;
 
 use console::{style, Emoji};
 
-use crate::entry::transfer::Transfer;
-
 #[derive(Default, Debug)]
 pub struct Content {
     pub name: Option<String>,
@@ -224,23 +222,8 @@ impl From<(String, String, u64)> for Display {
     }
 }
 
-impl From<Vec<Transfer>> for Display {
-    fn from(w: Vec<Transfer>) -> Display {
-        let contents = w
-            .into_iter()
-            .map(|v| Content {
-                name: Some(v.name),
-                from_address: Some(v.from_address),
-                to_address: Some(v.to_address),
-                public_key: Some(v.public_key),
-                amount: Some(v.amount.to_string()),
-                asset_type: Some(v.asset_type),
-                is_confidential_amount: Some(v.is_confidential_amount.to_string()),
-                is_confidential_asset: Some(v.is_confidential_asset.to_string()),
-                ..Default::default()
-            })
-            .collect();
-
+impl From<Vec<Content>> for Display {
+    fn from(contents: Vec<Content>) -> Display {
         Display {
             contents,
             typ: DisplayType::Show,
