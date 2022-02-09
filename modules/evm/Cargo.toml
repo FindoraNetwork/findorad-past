@@ -31,3 +31,12 @@ sha3 = "0.10.0"
 libsecp256k1 = "0.7.0"
 
 evm = "0.33.0"
+
+# Precompiles
+precompile-core = { git = "https://github.com/tiannian/evm-precompiles.git" }
+precompile-blake2 = { git = "https://github.com/tiannian/evm-precompiles.git" }
+precompile-simple = { git = "https://github.com/tiannian/evm-precompiles.git" }
+# precompile- = { git = "https://github.com/tiannian/evm-precompiles.git" }
+
+
+
