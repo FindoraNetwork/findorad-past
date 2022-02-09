@@ -4,10 +4,12 @@ use abcf::{
     Application, TxnContext,
 };
 
-use crate::{transaction::FRA_FEE_AMOUNT, Transaction};
+use crate::{transaction::FRA_FEE_AMOUNT, Transaction, Error};
 
 #[abcf::module(name = "fee", version = 1, impl_version = "0.1.1", target_height = 0)]
 pub struct FeeModule {
+    pub gas: u64,
+
     #[stateful(merkle = "EmptyMerkle")]
     pub sf_value: Value<u32>,
     // Only a placeholder, will remove when abcf update.
@@ -31,7 +33,15 @@ impl Application for FeeModule {
         let tx = &req.tx;
 
         if tx.amount >= FRA_FEE_AMOUNT {
-            Ok(Default::default())
+            let mut resp = ResponseCheckTx::default();
+
+            resp.gas_wanted = tx.amount.try_into().map_err(Error::TryFromIntError)?;
+            let gas_used = FRA_FEE_AMOUNT + self.gas;
+            resp.gas_used = gas_used.try_into().map_err(Error::TryFromIntError)?;
+
+            self.gas = 0;
+
+            Ok(resp)
         } else {
             Err(abcf::Error::ABCIApplicationError(
                 90001,
@@ -49,6 +59,14 @@ impl Application for FeeModule {
         let tx = &req.tx;
 
         if tx.amount >= FRA_FEE_AMOUNT {
+            let mut resp = ResponseDeliverTx::default();
+
+            resp.gas_wanted = tx.amount.try_into().map_err(Error::TryFromIntError)?;
+            let gas_used = FRA_FEE_AMOUNT + self.gas;
+            resp.gas_used = gas_used.try_into().map_err(Error::TryFromIntError)?;
+
+            self.gas = 0;
+
             Ok(Default::default())
         } else {
             Err(abcf::Error::ABCIApplicationError(
