@@ -36,7 +36,12 @@ evm = "0.33.0"
 precompile-core = { git = "https://github.com/tiannian/evm-precompiles.git" }
 precompile-blake2 = { git = "https://github.com/tiannian/evm-precompiles.git" }
 precompile-simple = { git = "https://github.com/tiannian/evm-precompiles.git" }
-# precompile- = { git = "https://github.com/tiannian/evm-precompiles.git" }
+precompile-modexp = { git = "https://github.com/tiannian/evm-precompiles.git" }
+precompile-sha3fips = { git = "https://github.com/tiannian/evm-precompiles.git" }
+precompile-bn128 = { git = "https://github.com/tiannian/evm-precompiles.git" }
+precompile-curve25519 = { git = "https://github.com/tiannian/evm-precompiles.git" }
+precompile-ed25519 = { git = "https://github.com/tiannian/evm-precompiles.git" }
+
 
 
 
