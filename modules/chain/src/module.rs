@@ -1,6 +1,9 @@
 use abcf::{
-    bs3::{merkle::empty::EmptyMerkle, model::{Value, Map}},
-    Application
+    bs3::{
+        merkle::empty::EmptyMerkle,
+        model::{Map, Value},
+    },
+    Application,
 };
 
 use crate::Transaction;
@@ -12,7 +15,8 @@ pub struct ChainModule {
     // Only a placeholder, will remove when abcf update.
     #[stateless]
     pub heights: Map<i64, [u8; 32]>,
-    pub hashs: Map<[u8; 32], i64>
+    #[stateless]
+    pub hashs: Map<[u8; 32], i64>,
 }
 
 #[abcf::rpcs]

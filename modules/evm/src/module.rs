@@ -8,15 +8,15 @@ use abcf::{
     },
     AppContext, Application, RPCContext, RPCResponse, TxnContext,
 };
-use fm_utxo::UtxoModule;
 use fm_chain::ChainModule;
+use fm_utxo::UtxoModule;
 use primitive_types::{H160, H256, U256};
 
 use crate::{
     evm::{account::Account, vicinity::Vicinity},
     rpc::{self, EstimateGasResponse},
     transaction::EvmTransaction,
-    Transaction, utils,
+    utils, Transaction,
 };
 
 #[abcf::module(name = "evm", version = 1, impl_version = "0.1.1", target_height = 0)]
@@ -57,12 +57,12 @@ impl EvmModule {
         let result = utils::estimate_gas();
 
         match result.0 {
-            evm::ExitReason::Succeed(_) => RPCResponse::new(EstimateGasResponse { gas: result.1}),
+            evm::ExitReason::Succeed(_) => RPCResponse::new(EstimateGasResponse { gas: result.1 }),
             _ => RPCResponse {
                 code: 80001,
                 data: Some(EstimateGasResponse { gas: result.1 }),
-                message: format!("estimate gas error: {:?}", result.0)
-            }
+                message: format!("estimate gas error: {:?}", result.0),
+            },
         }
     }
 }

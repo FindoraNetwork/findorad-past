@@ -61,7 +61,10 @@ impl Findorad {
 
         let utxo = UtxoModule::new(params, prng);
 
-        let manager = FindoradManager::<SledBackend>::new(staking, asset, evm, fee, coinbase, utxo);
+        let chain = ChainModule::new();
+
+        let manager =
+            FindoradManager::<SledBackend>::new(chain, staking, asset, evm, fee, coinbase, utxo);
 
         let staking_backend =
             bs3::backend::sled_db_open(Some("./target/findorad/staking")).unwrap();
@@ -71,8 +74,18 @@ impl Findorad {
         let asset_backend = bs3::backend::sled_db_open(Some("./target/findorad/asset")).unwrap();
         let fee_backend = bs3::backend::sled_db_open(Some("./target/findorad/fee")).unwrap();
         let evm_backend = bs3::backend::sled_db_open(Some("./target/findorad/evm")).unwrap();
+        let chain_backend = bs3::backend::sled_db_open(Some("./target/findorad/chain")).unwrap();
 
         let stateful = abcf::Stateful::<FindoradManager<SledBackend>> {
+            chain: abcf::Stateful::<ChainModule<SledBackend, Sha3_512>> {
+                sf_value: bs3::SnapshotableStorage::new(
+                    Default::default(),
+                    SledBackend::open_tree(&staking_backend, "sf_value").unwrap(),
+                )
+                .unwrap(),
+                __marker_s: PhantomData,
+                __marker_d: PhantomData,
+            },
             staking: abcf::Stateful::<StakingModule<SledBackend, Sha3_512>> {
                 global_power: bs3::SnapshotableStorage::new(
                     Default::default(),
@@ -155,6 +168,20 @@ impl Findorad {
         };
 
         let stateless = abcf::Stateless::<FindoradManager<SledBackend>> {
+            chain: abcf::Stateless::<ChainModule<SledBackend, Sha3_512>> {
+                heights: bs3::SnapshotableStorage::new(
+                    Default::default(),
+                    SledBackend::open_tree(&chain_backend, "heights").unwrap(),
+                )
+                .unwrap(),
+                hashs: bs3::SnapshotableStorage::new(
+                    Default::default(),
+                    SledBackend::open_tree(&chain_backend, "hashs").unwrap(),
+                )
+                .unwrap(),
+                __marker_s: PhantomData,
+                __marker_d: PhantomData,
+            },
             staking: abcf::Stateless::<StakingModule<SledBackend, Sha3_512>> {
                 delegation_amount: bs3::SnapshotableStorage::new(
                     Default::default(),

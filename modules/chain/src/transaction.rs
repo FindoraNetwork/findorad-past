@@ -10,4 +10,3 @@ impl TryFrom<&libfindora::Transaction> for Transaction {
         Ok(Transaction {})
     }
 }
-
