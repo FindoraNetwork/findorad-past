@@ -10,15 +10,16 @@ use primitive_types::{H160, H256, U256};
 
 use super::{account::Account, vicinity::Vicinity};
 
-pub struct Backend<'a, OS, OO, A, S> {
+pub struct Backend<'a, OS, OO, A, S, H> {
     pub vicinity: &'a Vicinity,
     pub owned_outputs: OO,
     pub outputs_sets: OS,
     pub accounts: A,
     pub storages: S,
+    pub heights: H,
 }
 
-impl<'a, OS, OO, A, S> Backend<'a, OS, OO, A, S>
+impl<'a, OS, OO, A, S, H> Backend<'a, OS, OO, A, S, H>
 where
     OS: MapStore<OutputId, Output>,
     OO: MapStore<Address, Vec<OutputId>>,
@@ -53,12 +54,13 @@ where
     }
 }
 
-impl<'a, OS, OO, A, S> evm::backend::Backend for Backend<'a, OS, OO, A, S>
+impl<'a, OS, OO, A, S, H> evm::backend::Backend for Backend<'a, OS, OO, A, S, H>
 where
     OS: MapStore<OutputId, Output>,
     OO: MapStore<Address, Vec<OutputId>>,
     A: MapStore<H160, Account>,
     S: DoubleKeyMapStore<H160, H256, H256>,
+    H: MapStore<i64, [u8; 32]>,
 {
     fn gas_price(&self) -> U256 {
         self.vicinity.gas_price
@@ -66,8 +68,16 @@ where
     fn origin(&self) -> H160 {
         self.vicinity.origin
     }
-    fn block_hash(&self, _number: U256) -> H256 {
-        self.vicinity.block_hash
+    fn block_hash(&self, number: U256) -> H256 {
+        if let Ok(height) = number.as_u64().try_into() {
+            match self.heights.get(&height) {
+                Ok(Some(e)) => H256::from(*e),
+                _ => H256::default()
+            }
+        } else {
+            log::error!("convert number error");
+            H256::default()
+        }
     }
     fn block_number(&self) -> U256 {
         self.vicinity.block_number
