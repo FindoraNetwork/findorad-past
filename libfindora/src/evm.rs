@@ -1,4 +1,5 @@
 use primitive_types::H256;
+use serde::{Deserialize, Serialize};
 
 use crate::Address;
 
@@ -8,12 +9,12 @@ pub struct EvmMemo {
     pub n: u32,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Create2 {
     pub salt: H256,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Action {
     Call,
     Create,

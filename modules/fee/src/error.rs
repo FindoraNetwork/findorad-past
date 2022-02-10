@@ -25,7 +25,9 @@ impl From<Error> for abcf::Error {
                 90002,
                 String::from("Must be non confidential amount."),
             ),
-            Error::TryFromIntError(e) => abcf::Error::ABCIApplicationError(90002, format!("{:?}", e))
+            Error::TryFromIntError(e) => {
+                abcf::Error::ABCIApplicationError(90002, format!("{:?}", e))
+            }
         }
     }
 }

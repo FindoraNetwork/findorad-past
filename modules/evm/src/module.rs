@@ -13,7 +13,9 @@ use primitive_types::{H160, H256, U256};
 
 use crate::{
     evm::{account::Account, vicinity::Vicinity},
-    rpc, Transaction,
+    rpc::{self, EstimateGasResponse},
+    transaction::EvmTransaction,
+    Transaction, utils,
 };
 
 #[abcf::module(name = "evm", version = 1, impl_version = "0.1.1", target_height = 0)]
@@ -44,6 +46,23 @@ impl EvmModule {
         };
 
         RPCResponse::new(metadata)
+    }
+
+    pub async fn estimate_gas<'a>(
+        &mut self,
+        _ctx: &mut RPCContext<'a, Self>,
+        _params: EvmTransaction,
+    ) -> RPCResponse<EstimateGasResponse> {
+        let result = utils::estimate_gas();
+
+        match result.0 {
+            evm::ExitReason::Succeed(_) => RPCResponse::new(EstimateGasResponse { gas: result.1}),
+            _ => RPCResponse {
+                code: 80001,
+                data: Some(EstimateGasResponse { gas: result.1 }),
+                message: format!("estimate gas error: {:?}", result.0)
+            }
+        }
     }
 }
 

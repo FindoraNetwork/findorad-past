@@ -2,8 +2,9 @@ use std::convert::TryFrom;
 
 use crate::Error;
 use libfindora::{asset::XfrAmount, evm::Action, transaction::OutputOperation, Address};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct EvmTransaction {
     pub chain_id: u64,
     pub from: Address,

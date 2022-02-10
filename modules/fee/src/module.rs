@@ -4,7 +4,7 @@ use abcf::{
     Application, TxnContext,
 };
 
-use crate::{transaction::FRA_FEE_AMOUNT, Transaction, Error};
+use crate::{transaction::FRA_FEE_AMOUNT, Error, Transaction};
 
 #[abcf::module(name = "fee", version = 1, impl_version = "0.1.1", target_height = 0)]
 pub struct FeeModule {
