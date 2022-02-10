@@ -16,7 +16,7 @@ pub struct Vicinity {
 impl Vicinity {
     pub fn mainnet() -> Self {
         Vicinity {
-            gas_price: U256::from(21000),
+            gas_price: U256::from(5),
             origin: Default::default(),
             chain_id: U256::from(0x868),
             block_hash: Default::default(),
@@ -24,14 +24,14 @@ impl Vicinity {
             block_coinbase: Default::default(),
             block_timestamp: Default::default(),
             block_difficulty: Default::default(),
-            block_gas_limit: Default::default(),
+            block_gas_limit: U256::from(u32::MAX),
             block_base_fee_per_gas: Default::default(),
         }
     }
 
     pub fn testnet() -> Self {
         Vicinity {
-            gas_price: U256::from(21000),
+            gas_price: U256::from(5),
             origin: Default::default(),
             chain_id: U256::from(0x869),
             block_hash: Default::default(),
@@ -39,7 +39,7 @@ impl Vicinity {
             block_coinbase: Default::default(),
             block_timestamp: Default::default(),
             block_difficulty: Default::default(),
-            block_gas_limit: Default::default(),
+            block_gas_limit: U256::from(u32::MAX),
             block_base_fee_per_gas: Default::default(),
         }
     }

@@ -7,12 +7,37 @@ use libfindora::{
 
 use crate::{Error, Result};
 
-pub fn transfer(
-    from: Address,
+pub fn mint(
     to: Address,
     amount: Amount,
     asset: AssetType,
     oid: OutputId,
+    outputs_sets: &mut impl MapStore<OutputId, Output>,
+    owned_outputs: &mut impl MapStore<Address, Vec<OutputId>>,
+) -> Result<()> {
+    let output = Output {
+        address: to.clone(),
+        amount: XfrAmount::NonConfidential(amount),
+        asset: XfrAssetType::NonConfidential(asset),
+        owner_memo: None,
+    };
+
+    outputs_sets.insert(oid.clone(), output)?;
+
+    if let Some(v) = owned_outputs.get_mut(&to)? {
+        v.push(oid);
+    } else {
+        let v = vec![oid];
+        owned_outputs.insert(to.clone(), v)?;
+    }
+
+    Ok(())
+}
+
+pub fn burn(
+    from: Address,
+    amount: Amount,
+    asset: AssetType,
     outputs_sets: &mut impl MapStore<OutputId, Output>,
     owned_outputs: &mut impl MapStore<Address, Vec<OutputId>>,
 ) -> Result<()> {
@@ -43,21 +68,21 @@ pub fn transfer(
         return Err(Error::InsufficientBalance);
     }
 
-    let output = Output {
-        address: to.clone(),
-        amount: XfrAmount::NonConfidential(amount),
-        asset: XfrAssetType::NonConfidential(asset),
-        owner_memo: None,
-    };
+    Ok(())
+}
 
-    outputs_sets.insert(oid.clone(), output)?;
+pub fn transfer(
+    from: Address,
+    to: Address,
+    amount: Amount,
+    asset: AssetType,
+    oid: OutputId,
+    outputs_sets: &mut impl MapStore<OutputId, Output>,
+    owned_outputs: &mut impl MapStore<Address, Vec<OutputId>>,
+) -> Result<()> {
+    burn(from, amount, asset, outputs_sets, owned_outputs)?;
 
-    if let Some(v) = owned_outputs.get_mut(&to)? {
-        v.push(oid);
-    } else {
-        let v = vec![oid];
-        owned_outputs.insert(to.clone(), v)?;
-    }
+    mint(to, amount, asset, oid, outputs_sets, owned_outputs)?;
 
     Ok(())
 }

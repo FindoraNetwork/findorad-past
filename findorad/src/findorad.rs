@@ -64,7 +64,7 @@ impl Findorad {
 
         let evm = EvmModule::new(fm_evm::evm::vicinity::Vicinity::mainnet());
 
-        let fee = FeeModule::new();
+        let fee = FeeModule::new(0);
 
         let coinbase = CoinbaseModule::new(0);
 
