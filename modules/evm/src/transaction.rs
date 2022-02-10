@@ -2,9 +2,8 @@ use std::convert::TryFrom;
 
 use crate::Error;
 use libfindora::{asset::XfrAmount, evm::Action, transaction::OutputOperation, Address};
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default)]
 pub struct EvmTransaction {
     pub chain_id: u64,
     pub from: Address,
@@ -36,6 +35,7 @@ fn inner(tx: &libfindora::Transaction) -> Result<Transaction, Error> {
         if let OutputOperation::EvmCall(e) = &output.operation {
             if let XfrAmount::NonConfidential(amount) = output.core.amount {
                 let chain_id = e.chain_id;
+                // TODO: validator to value.
                 let from = e.caller.clone();
                 let to = output.core.address.clone();
                 let nonce = e.nonce;

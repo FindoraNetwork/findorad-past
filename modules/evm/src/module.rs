@@ -13,9 +13,9 @@ use fm_utxo::UtxoModule;
 use primitive_types::{H160, H256, U256};
 
 use crate::{
-    evm::{account::Account, vicinity::Vicinity},
-    rpc::{self, EstimateGasResponse},
-    transaction::EvmTransaction,
+    evm::{account::Account, backend::Backend, vicinity::Vicinity},
+    precompile::Precompiles,
+    rpc::{self, CallRequest, CallResponse},
     utils, Transaction,
 };
 
@@ -51,16 +51,67 @@ impl EvmModule {
 
     pub async fn estimate_gas<'a>(
         &mut self,
-        _ctx: &mut RPCContext<'a, Self>,
-        _params: EvmTransaction,
-    ) -> RPCResponse<EstimateGasResponse> {
-        let result = utils::estimate_gas();
+        ctx: &mut RPCContext<'a, Self>,
+        req: CallRequest,
+    ) -> RPCResponse<CallResponse> {
+        let backend = Backend {
+            vicinity: &self.vicinity,
+            accounts: ctx.stateful.accounts.clone(),
+            storages: ctx.stateful.storages.clone(),
+            heights: ctx.deps.chain.stateless.heights.clone(),
+            outputs_sets: ctx.deps.utxo.stateful.outputs_set.clone(),
+            owned_outputs: ctx.deps.utxo.stateless.owned_outputs.clone(),
+        };
+
+        let precompile = Precompiles::new();
+
+        let result = utils::estimate_gas(req, &backend, &precompile);
 
         match result.0 {
-            evm::ExitReason::Succeed(_) => RPCResponse::new(EstimateGasResponse { gas: result.1 }),
+            evm::ExitReason::Succeed(_) => RPCResponse::new(CallResponse {
+                data: Vec::new(),
+                gas: result.2,
+            }),
             _ => RPCResponse {
                 code: 80001,
-                data: Some(EstimateGasResponse { gas: result.1 }),
+                data: Some(CallResponse {
+                    data: Vec::new(),
+                    gas: result.2,
+                }),
+                message: format!("estimate gas error: {:?}", result.0),
+            },
+        }
+    }
+
+    pub async fn call_methods<'a>(
+        &mut self,
+        ctx: &mut RPCContext<'a, Self>,
+        req: CallRequest,
+    ) -> RPCResponse<CallResponse> {
+        let backend = Backend {
+            vicinity: &self.vicinity,
+            accounts: ctx.stateful.accounts.clone(),
+            storages: ctx.stateful.storages.clone(),
+            heights: ctx.deps.chain.stateless.heights.clone(),
+            outputs_sets: ctx.deps.utxo.stateful.outputs_set.clone(),
+            owned_outputs: ctx.deps.utxo.stateless.owned_outputs.clone(),
+        };
+
+        let precompile = Precompiles::new();
+
+        let result = utils::call(req, &backend, &precompile);
+
+        match result.0 {
+            evm::ExitReason::Succeed(_) => RPCResponse::new(CallResponse {
+                data: Vec::new(),
+                gas: result.2,
+            }),
+            _ => RPCResponse {
+                code: 80001,
+                data: Some(CallResponse {
+                    data: Vec::new(),
+                    gas: result.2,
+                }),
                 message: format!("estimate gas error: {:?}", result.0),
             },
         }

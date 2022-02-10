@@ -72,7 +72,7 @@ where
         if let Ok(height) = number.as_u64().try_into() {
             match self.heights.get(&height) {
                 Ok(Some(e)) => H256::from(*e),
-                _ => H256::default()
+                _ => H256::default(),
             }
         } else {
             log::error!("convert number error");
