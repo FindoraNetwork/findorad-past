@@ -1,5 +1,6 @@
 use abcf::{tm_protos::abci::RequestDeliverTx, ToBytes};
 use bs3::backend::SledBackend;
+use fm_chain::ChainModule;
 use fm_evm::EvmModule;
 use libfindora::transaction::Transaction;
 use rand_chacha::ChaChaRng;
@@ -24,10 +25,11 @@ use crate::Result;
     transaction = "Transaction"
 )]
 pub struct FindoradManager {
+    pub chain: ChainModule,
     #[dependence(coinbase = "coinbase")]
     pub staking: StakingModule,
     pub asset: AssetModule,
-    #[dependence(utxo = "utxo")]
+    #[dependence(utxo = "utxo", chain = "chain")]
     pub evm: EvmModule,
     pub fee: FeeModule,
     #[dependence(utxo = "utxo")]

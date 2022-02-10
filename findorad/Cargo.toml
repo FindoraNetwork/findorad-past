@@ -34,6 +34,7 @@ fm-staking = { path = "../modules/staking" }
 fm-fee = { path = "../modules/fee" }
 fm-asset = { path = "../modules/asset" }
 fm-evm = { path = "../modules/evm" }
+fm-chain = { path = "../modules/chain" }
 
 libfn = { path = "../libfn" }
 

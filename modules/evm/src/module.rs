@@ -9,6 +9,7 @@ use abcf::{
     AppContext, Application, RPCContext, RPCResponse, TxnContext,
 };
 use fm_utxo::UtxoModule;
+use fm_chain::ChainModule;
 use primitive_types::{H160, H256, U256};
 
 use crate::{
@@ -19,7 +20,7 @@ use crate::{
 };
 
 #[abcf::module(name = "evm", version = 1, impl_version = "0.1.1", target_height = 0)]
-#[dependence(utxo = "UtxoModule")]
+#[dependence(utxo = "UtxoModule", chain = "ChainModule")]
 pub struct EvmModule {
     pub vicinity: Vicinity,
 

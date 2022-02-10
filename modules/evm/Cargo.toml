@@ -21,6 +21,7 @@ serde_json = "1.0.68"
 
 libfindora = { path = "../../libfindora" }
 fm-utxo = { path = "../utxo" }
+fm-chain = { path = "../chain" }
 
 primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
 
