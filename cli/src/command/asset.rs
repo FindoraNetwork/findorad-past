@@ -52,9 +52,15 @@ struct Create {
     /// Memo is a note for this new asset
     #[clap(short = 'e', long)]
     memo: Option<String>,
-    /// Is transferable for the new asset
-    #[clap(short = 'T', long)]
-    is_transferable: bool,
+    //
+    // FIXME:
+    // there is an issue of is_transferable when it is false the blockchain will not record it.
+    // the reason is findora server has not implemented this feature yet, so we simply comment it out here and force every assets to use is_transferable = true
+    //
+    // /// Is transferable for the new asset
+    // #[clap(short = 'T', long)]
+    // is_transferable: bool,
+    //
     /// Decimal place to mark the maximum in floating of the new asset
     #[clap(short, long, default_value = "6")]
     decimal_place: u8,
@@ -121,7 +127,9 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     let mut asset = entry_asset::Asset::new();
     let define = Entity::Define(EntityDefine {
         maximum,
-        transferable: cmd.is_transferable,
+        // FIXME: force to use transferable = true
+        // transferable: cmd.is_transferable,
+        transferable: true,
         keypair: secret.key.clone().into_keypair(),
         asset: asset.asset_type,
     });
@@ -146,7 +154,9 @@ fn create(cmd: &Create, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
     asset.memo = cmd.memo.clone();
     asset.decimal_place = cmd.decimal_place;
     asset.maximum = cmd.maximum;
-    asset.is_transferable = cmd.is_transferable;
+    // FIXME: force to use transferable = true
+    // asset.is_transferable = cmd.is_transferable;
+    asset.is_transferable = true;
     assets.create(&asset)?;
 
     Ok(Box::new(display_asset::Display::new(
@@ -188,8 +198,7 @@ fn show(cmd: &Show, home: &Path, addr: &str) -> Result<Box<dyn Display>> {
         // an asset that can be found in the blockchain will have below three attributes
         asset.address = address.clone();
         asset.is_issued = true;
-        // TODO: confirm this one,
-        // because while testing if an asset is not transferable will be not shown in the blockchain response
+        // FIXME: when is_transferable issue fixed, remove this line of hardcode
         asset.is_transferable = true;
 
         if let Ok(a) = assets.read(&address, &asset.get_asset_type_base64()) {
@@ -274,7 +283,8 @@ mod tests {
                 from_address: Some("0xf8d1fa7c6a8af4a78f862cac72fe05de0e308117".to_string()),
                 from_secret: None,
                 memo: None,
-                is_transferable: false,
+                // FIXME: comment out this due to is_transferable has an issue
+                // is_transferable: false,
                 decimal_place: 6,
                 maximum: None,
                 name: None,

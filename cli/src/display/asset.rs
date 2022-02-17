@@ -45,9 +45,15 @@ impl Display {
                     .map(|u| ((u as f64) / (10_f64.powf(a.0.decimal_place as f64))).to_string()),
                 amount: a.1.map(|u| {
                     if a.0.is_confidential_amount {
-                        "[(confidential)]".to_string()
+                        format!(
+                            "{} (Confidential)",
+                            ((u as f64) / (10_f64.powf(a.0.decimal_place as f64)))
+                        )
                     } else {
-                        ((u as f64) / (10_f64.powf(a.0.decimal_place as f64))).to_string()
+                        format!(
+                            "{} (Nonconfidential)",
+                            ((u as f64) / (10_f64.powf(a.0.decimal_place as f64)))
+                        )
                     }
                 }),
                 is_transferable: Some(a.0.is_transferable.to_string()),
