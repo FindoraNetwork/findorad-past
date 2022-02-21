@@ -9,7 +9,10 @@ description = "Findora Network command line tool."
 
 [dependencies]
 libfn = { path = "../libfn" }
+libfindora = { path = "../libfindora" }
 abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", features = ["http"] }
+abcf = {  git = "https://github.com/FindoraNetwork/abcf.git" }
+base64 = "0.13"
 clap = { version = "3.0.0-rc.8", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.5"
@@ -20,4 +23,6 @@ lazy_static = "1.4"
 console = "0.15"
 rand_chacha = "0.2" 
 futures = "0.3"
+async-compat = "0.2"
 regex = { version = "1.5", default-features = false, features = ["std"] }
+primitive-types = { version = "0.10", default-features = false }

@@ -76,6 +76,11 @@ impl Builder {
         for e in &v {
             match e {
                 Entity::Define(e) => {
+                    let keypair = e.keypair.clone();
+                    let address = Address::from(e.keypair.get_pk());
+
+                    self.fetch_owned_utxo(provider, &address, &keypair).await?;
+
                     let output = e.to_output();
                     self.outputs.push(output);
                 }
