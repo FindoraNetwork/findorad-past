@@ -22,7 +22,7 @@ tokio = { version = "1", features = ["full"] }
 
 sha3 = "0.9.1"
 
-abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git" }
+abcf-sdk = { git = "https://github.com/FindoraNetwork/abcf.git", features = ["http"] }
 
 libfindora = { path = "../libfindora" }
 libfn = { path = "../libfn" }
