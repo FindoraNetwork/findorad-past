@@ -82,7 +82,8 @@ impl<'a> TransferBuilder<'a> {
 
     pub fn build(self) -> Result<Transfer> {
         let mut asset_type: [u8; ASSET_TYPE_LENGTH] = Default::default();
-        asset_type.copy_from_slice(self.asset_type.as_bytes());
+        let b_astyp = base64::decode_config(self.asset_type, base64::URL_SAFE)?;
+        asset_type.copy_from_slice(&b_astyp);
 
         Ok(Transfer {
             from: types::SecretKey::from_base64(self.from)?.key.into_keypair(),

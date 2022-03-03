@@ -1,7 +1,7 @@
 pub mod dev;
 pub mod dev_staking;
 
-use clap::{AppSettings, Parser};
+use clap::Parser;
 
 /// Findora node.
 #[derive(Parser, Debug)]
@@ -25,7 +25,7 @@ pub struct Args {
 
 #[derive(clap::Subcommand, Debug)]
 pub enum Action {
-    #[clap(setting(AppSettings::Hidden))]
+    #[clap(hide = true)]
     StakingNode(Node),
 }
 

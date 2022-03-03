@@ -32,7 +32,7 @@ tm-abci = { git = "https://github.com/FindoraNetwork/tendermint-sys.git" }
 
 primitive-types = { version = "0.10.1", features = ["serde_no_std"] }
 
-clap = { version = "3.0.0", features = ["derive"] }
+clap = { version = "3.1.5", features = ["derive"] }
 
 fm-utxo = { path = "../modules/utxo" }
 fm-coinbase = { path = "../modules/coinbase" }

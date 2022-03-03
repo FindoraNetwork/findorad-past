@@ -45,7 +45,7 @@ impl Opts {
             SubCommand::Asset(c) => c.execute(&self.home, &config.node.address),
             SubCommand::Delegate(c) => c.execute(config),
             SubCommand::Setup(c) => c.execute(&mut config),
-            SubCommand::Transfer(c) => c.execute(&self.home),
+            SubCommand::Transfer(c) => c.execute(&self.home, &config.node.address),
             SubCommand::Wallet(c) => c.execute(&self.home),
         }
     }
@@ -59,7 +59,7 @@ enum SubCommand {
     Delegate(delegate::Command),
     /// Setup configuration entry
     Setup(setup::Command),
-    /// Transfer asset to other user
+    /// Transfer asset to another user
     Transfer(transfer::Command),
     /// Manage wallet
     Wallet(wallet::Command),

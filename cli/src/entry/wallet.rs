@@ -62,7 +62,11 @@ impl<'a> ReadBuilder<'a> {
 
         match result {
             Some(w) => Ok(w.clone()),
-            None => bail!("read connot find"),
+            None => bail!(
+                "wallet ReadBuilder cannot find: address:{:?}, secret:{:?}",
+                self.address,
+                self.secret
+            ),
         }
     }
 }
