@@ -1,4 +1,4 @@
-use zei::xfr::structs::ASSET_TYPE_LENGTH;
+pub use zei::xfr::structs::ASSET_TYPE_LENGTH;
 pub use zei::xfr::structs::{AssetType, XfrAmount, XfrAssetType};
 
 pub struct FraAsset {
