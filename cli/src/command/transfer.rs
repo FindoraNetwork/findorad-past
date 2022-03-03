@@ -5,19 +5,16 @@ use crate::{
     entry::{transfer as entry_transfer, wallet as entry_wallet},
 };
 
+use abcf_sdk::providers::HttpGetProvider;
 use anyhow::Result;
 use async_compat::Compat;
 use clap::{ArgGroup, Parser};
+use futures::executor::block_on;
 use libfn::{
     entity,
     types::{Address, SecretKey},
     Builder,
 };
-
-use abcf_sdk::providers::HttpGetProvider;
-use async_compat::Compat;
-use clap::{ArgGroup, Parser};
-use futures::executor::block_on;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaChaRng;
 
