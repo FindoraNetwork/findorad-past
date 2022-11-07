@@ -1,6 +1,6 @@
 use crate::{
+    input_capnp::input,
     transaction::{Input, InputOperation},
-    transaction_capnp::input,
     Result,
 };
 
@@ -14,11 +14,6 @@ pub fn build_input(input: &Input, builder: input::Builder) -> Result<()> {
 
     match &input.operation {
         InputOperation::TransferAsset => operation.set_transfer_asset(()),
-        InputOperation::EvmCall(e) => {
-            let mut call = operation.init_evm_call();
-
-            call.set_n(e.n);
-        }
     }
 
     Ok(())

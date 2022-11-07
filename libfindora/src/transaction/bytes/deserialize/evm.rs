@@ -1,9 +1,9 @@
-use primitive_types::H256;
+use primitive_types::{H160, H256};
 
 use crate::{
     evm::{Action, Create2, Evm},
     evm_capnp::{action, output},
-    Result,
+    Address, Result,
 };
 
 pub fn from_evm(input: output::Reader) -> Result<Evm> {
@@ -25,11 +25,16 @@ pub fn from_evm(input: output::Reader) -> Result<Evm> {
         }
     };
 
+    let gas_price = input.get_gas_price();
+    let caller = H160::from_slice(input.get_caller()?);
+
     Ok(Evm {
         nonce,
         gas_limit,
         data,
         action,
         chain_id,
+        gas_price,
+        caller: Address::from(caller),
     })
 }
